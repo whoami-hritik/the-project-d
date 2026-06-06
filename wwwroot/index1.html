@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monster-World</title>
+</head>
+<body>
+    <span id="content"></span>
+    <button id="send-req">Send Req</button>
+    <span id="content-2"></span>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+
+        // tg.expand(); // full screen
+
+        const initData = tg.initData;              // 🔥 secure string
+        const user = tg.initDataUnsafe.user;       // ⚠️ not secure
+
+        console.log(initData);
+        console.log(user);
+    </script>
+    <script src="./js/index.js"></script>
+</body>
+</html>

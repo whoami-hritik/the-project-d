@@ -1,0 +1,6331 @@
+[
+    {
+        "id": "scratch",
+        "title": "SCRATCH",
+        "desc": "Scratches the enemy to deal damage",
+        "kind": "none",
+        "effects": {
+            "attack": 18
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 200,
+                "action": "recoil:other",
+                "duration": 300,
+                "inHypno": "none"
+            },
+            {
+                "at": 250,
+                "action": "fx-scratch",
+                "duration": 300
+            },
+            {
+                "at": 250,
+                "action": "sfx-scratch",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "effect",
+                "duration": 80
+            }
+        ]
+    },
+    {
+        "id": "sonic_waves",
+        "title": "SONIC SHOCK",
+        "desc": "Attacks with a strong sound wave",
+        "kind": "none",
+        "effects": {
+            "attack": 18
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sonic_waves",
+                "duration": 2000,
+                "inHypno": "none"
+            },
+            {
+                "at": 100,
+                "action": "sfx-sonic_waves",
+                "duration": 1000,
+                "inHypno": "none"
+            },
+            {
+                "at": 400,
+                "action": "shake:other",
+                "duration": 1000
+            },
+            {
+                "at": 450,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "revive",
+        "title": "REVIVE",
+        "desc": "Restores a portion of your Dynamon's|HEALTH",
+        "kind": "none",
+        "effects": {
+            "heal_percent": "14-28"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-revive",
+                "duration": 10
+            },
+            {
+                "at": 150,
+                "action": "fx-revive",
+                "duration": 2000
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 1600
+            }
+        ]
+    },
+    {
+        "id": "rage",
+        "title": "ENRAGE",
+        "desc": "Increases ATTACK and gets RAGED,|making next attack stronger",
+        "kind": "none",
+        "effects": {
+            "incr_atk": 15,
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-rage:actor",
+                "duration": 500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 0,
+                "action": "sfx-rage",
+                "duration": 500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 500,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "confuse",
+        "title": "CONFUSE",
+        "desc": "Lowers the enemy's AIMING,|may cause HYPNO",
+        "kind": "none",
+        "effects": {
+            "decr_aim": 25,
+            "state_hypno": "1:3"
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "confuse:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 0,
+                "action": "sfx-confuse",
+                "duration": 200
+            },
+            {
+                "at": 1100,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 1150,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "flash",
+        "title": "FLASH",
+        "desc": "Attacks with a bright light,|does EXTRA damage to SICK enemies",
+        "kind": "none",
+        "effects": {
+            "attack": 17
+        },
+        "extraWhen": "sick",
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 150,
+                "action": "flash",
+                "duration": 1200
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "bite",
+        "title": "BITE",
+        "desc": "Bites strongly to deal damage",
+        "kind": "none",
+        "effects": {
+            "attack": 20
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 150,
+                "action": "fx-bite",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-bite",
+                "duration": 10
+            },
+            {
+                "at": 650,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 650,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "double_bite",
+        "title": "DOUBLE BITE",
+        "desc": "Deals more DAMAGE, weaken |enemy DEFENSE, increase your AIMING",
+        "kind": "dark",
+        "effects": {
+            "attack": 28,
+            "decr_def": 10,
+            "incr_aim": 20
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 150,
+                "action": "fx-double_bite",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-bite",
+                "duration": 10
+            },
+            {
+                "at": 650,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 650,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "poison_bite",
+        "title": "POISON BITE",
+        "desc": "Deals damage and makes the|enemy SICK",
+        "kind": "none",
+        "effects": {
+            "attack": 14,
+            "state_sick": "1:1"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 150,
+                "action": "fx-poison_bite",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-bite",
+                "duration": 10
+            },
+            {
+                "at": 650,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 650,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "tornado",
+        "title": "HURRICANE",
+        "desc": "Great winds deal damage and|lower the enemy's ATTACK",
+        "kind": "none",
+        "effects": {
+            "attack": 23,
+            "decr_atk": 15
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-tornado",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-tornado",
+                "duration": 400
+            },
+            {
+                "at": 150,
+                "action": "shake:other",
+                "duration": 900
+            },
+            {
+                "at": 155,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "shockwave",
+        "title": "SHOCKWAVE",
+        "desc": "A blast of air does damage and|lowers the enemy's DEFENSE",
+        "kind": "none",
+        "effects": {
+            "attack": 23,
+            "decr_def": 15
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "fx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 550,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 550,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "only"
+            },
+            {
+                "at": 750,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "none"
+            },
+            {
+                "at": 750,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "quick_attack",
+        "title": "QUICK ATTACK",
+        "desc": "An attack that deals 1-3 hits|and never misses",
+        "kind": "none",
+        "effects": {
+            "attack": 9
+        },
+        "noMiss": true,
+        "randomHits": "1-3",
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400
+            },
+            {
+                "at": 400,
+                "action": "fx-quickattack",
+                "duration": 400
+            },
+            {
+                "at": 200,
+                "action": "sfx-quick_attack",
+                "duration": 400
+            },
+            {
+                "at": 400,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 400,
+                "action": "effect",
+                "duration": 600
+            },
+            {
+                "at": 1300,
+                "action": "fx-appear",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "rain_fire",
+        "title": "FIRE STORM",
+        "desc": "Deals damage with a rain of fireballs",
+        "kind": "fire",
+        "effects": {
+            "attack": 21
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-rain_fire",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "fx-rain_fire",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 550
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 550
+            }
+        ]
+    },
+    {
+        "id": "heatwave",
+        "title": "FURNACE",
+        "desc": "Hot air deals damage and|improves your Dynamon's ATTACK",
+        "kind": "fire",
+        "effects": {
+            "attack": 20,
+            "incr_atk": 15
+        },
+        "noMiss": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "sfx-heatwave",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "heatwave",
+                "duration": 2000
+            },
+            {
+                "at": 1300,
+                "action": "shake:other",
+                "duration": 700
+            },
+            {
+                "at": 1300,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "smoke",
+        "title": "SMOKE SCREEN",
+        "desc": "Clouds of smoke deal damage to|the enemy and may cause SICK",
+        "kind": "fire",
+        "effects": {
+            "attack": 21,
+            "state_sick": "1:4"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 200,
+                "action": "sfx-smoke_screen",
+                "duration": 10
+            },
+            {
+                "at": 200,
+                "action": "fx-smoke",
+                "duration": 1800
+            },
+            {
+                "at": 500,
+                "action": "effect",
+                "duration": 2000
+            }
+        ]
+    },
+    {
+        "id": "enflame",
+        "title": "ENFLAME",
+        "desc": "Uses magical fire to improve|ATTACK and restore HEALTH",
+        "kind": "fire",
+        "effects": {
+            "incr_atk": 20,
+            "heal_percent": "15-25"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "enflame:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "sfx-enflame",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 650,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "healing_rain",
+        "title": "HEALING RAIN",
+        "desc": "Improves ATTACK and AIMING |and restores HEALTH",
+        "kind": "water",
+        "effects": {
+            "incr_atk": 20,
+            "incr_aim": 20,
+            "heal_percent": "15-25"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "healing_rain:actor",
+                "duration": 800,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "sfx-enflame",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 650,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "magma",
+        "title": "MAGMA ROCKS",
+        "desc": "Attacks by throwing magma,|reduces the enemy's DEFENSE",
+        "kind": "fire",
+        "effects": {
+            "attack": 25,
+            "decr_def": 18
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "magma:other",
+                "duration": 400
+            },
+            {
+                "at": 0,
+                "action": "sfx-boulder_pile",
+                "duration": 400
+            },
+            {
+                "at": 1700,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 1750,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "volcano",
+        "title": "VOLCANO",
+        "desc": "Blasts the enemy with an|eruption of lava",
+        "kind": "fire",
+        "effects": {
+            "attack": 22
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "jump:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 650,
+                "action": "sfx-volcano",
+                "duration": 10
+            },
+            {
+                "at": 700,
+                "action": "fx-volcano",
+                "duration": 400
+            },
+            {
+                "at": 700,
+                "action": "shake:other",
+                "duration": 500
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "fire_spin",
+        "title": "FLAME SWIRL",
+        "desc": "Attacks with spiraling fire,|may cause HYPNO",
+        "kind": "fire",
+        "effects": {
+            "attack": 24,
+            "state_hypno": "1:3"
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fire_spin",
+                "duration": 800
+            },
+            {
+                "at": 100,
+                "action": "sfx-fire_spin",
+                "duration": 800
+            },
+            {
+                "at": 400,
+                "action": "shake:other",
+                "duration": 500
+            },
+            {
+                "at": 700,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "hellfire",
+        "title": "HELLFIRE",
+        "desc": "Massive fire attack, does EXTRA damage|if your Dynamon's HEALTH is low",
+        "kind": "fire",
+        "effects": {
+            "attack": 28
+        },
+        "noMiss": true,
+        "extraWhen": "self_hurt",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-hellfire",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-fireblast",
+                "duration": 1000
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "fireworks",
+        "title": "FIREWORKS",
+        "desc": "Exploding rocks deal damage,|also improves your Dynamon's AIMING",
+        "kind": "fire",
+        "effects": {
+            "attack": 22,
+            "incr_aim": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fireworks:other",
+                "duration": 1500
+            },
+            {
+                "at": 100,
+                "action": "sfx-fireworks",
+                "duration": 600
+            },
+            {
+                "at": 900,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 950,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "inferno",
+        "title": "INFERNO",
+        "desc": "Does big DAMAGE and Improves your AIMING,| lower enemy ATTACK and DEFENSE",
+        "kind": "fire",
+        "effects": {
+            "attack": 37,
+            "incr_aim": 15,
+            "decr_atk": 14,
+            "decr_def": 14
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-inferno",
+                "duration": 1500
+            },
+            {
+                "at": 100,
+                "action": "sfx-fire_spin",
+                "duration": 800
+            },
+            {
+                "at": 500,
+                "action": "sfx-fire_spin",
+                "duration": 800
+            },
+            {
+                "at": 500,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 650,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 800,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 950,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 1100,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 800,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 1000,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 700,
+                "action": "earthquake",
+                "duration": 1000
+            },
+            {
+                "at": 1100,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "visi_inferno",
+        "icon": "inferno",
+        "title": "INFERNO",
+        "desc": "Does big DAMAGE and Improves your AIMING,| lower enemy ATTACK and DEFENSE",
+        "kind": "fire",
+        "effects": {
+            "attack": 37,
+            "incr_aim": 15,
+            "decr_atk": 14,
+            "decr_def": 14
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-visi_inferno",
+                "duration": 1500
+            },
+            {
+                "at": 100,
+                "action": "sfx-fire_spin",
+                "duration": 800
+            },
+            {
+                "at": 500,
+                "action": "sfx-fire_spin",
+                "duration": 800
+            },
+            {
+                "at": 500,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 650,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 800,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 950,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 1100,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 800,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 1000,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 700,
+                "action": "earthquake",
+                "duration": 1000
+            },
+            {
+                "at": 1100,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "king_visi_inferno",
+        "icon": "inferno",
+        "title": "INFERNO",
+        "desc": "Does big DAMAGE and Improves your AIMING,| lower enemy ATTACK and DEFENSE",
+        "kind": "fire",
+        "effects": {
+            "attack": 37,
+            "incr_aim": 15,
+            "decr_atk": 14,
+            "decr_def": 14
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-king_visi_inferno",
+                "duration": 1500
+            },
+            {
+                "at": 100,
+                "action": "sfx-fire_spin",
+                "duration": 800
+            },
+            {
+                "at": 500,
+                "action": "sfx-fire_spin",
+                "duration": 800
+            },
+            {
+                "at": 500,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 650,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 800,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 950,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 1200,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 800,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 1000,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 700,
+                "action": "earthquake",
+                "duration": 1000
+            },
+            {
+                "at": 2600,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "burning_stone",
+        "title": "BURNING STONE",
+        "desc": "Does big DAMAGE and makes|next attack stronger via rage",
+        "kind": "fire",
+        "effects": {
+            "attack": 37,
+            "state_rage": "1:1"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-burning_stone",
+                "duration": 2500
+            },
+            {
+                "at": 300,
+                "action": "sfx-fireworks",
+                "duration": 200
+            },
+            {
+                "at": 600,
+                "action": "sfx-fireworks",
+                "duration": 200
+            },
+            {
+                "at": 800,
+                "action": "sfx-fireworks",
+                "duration": 200
+            },
+            {
+                "at": 700,
+                "action": "earthquake",
+                "duration": 1000
+            },
+            {
+                "at": 1100,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "fire_star",
+        "title": "FIRE STAR",
+        "desc": "Deals big DAMAGE, weaken |enemy DEFENSE, increase your ATTACK",
+        "kind": "fire",
+        "effects": {
+            "attack": 34,
+            "decr_def": 10,
+            "incr_atk": 10
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-fire_star",
+                "duration": 4500
+            },
+            {
+                "at": 0,
+                "action": "sfx-enflame",
+                "duration": 200
+            },
+            {
+                "at": 300,
+                "action": "sfx-heatwave",
+                "duration": 200
+            },
+            {
+                "at": 300,
+                "action": "sfx-hellfire",
+                "duration": 200
+            },
+            {
+                "at": 1200,
+                "action": "sfx-hellfire",
+                "duration": 200
+            },
+            {
+                "at": 2000,
+                "action": "sfx-hellfire",
+                "duration": 200
+            },
+            {
+                "at": 2500,
+                "action": "sfx-thunder",
+                "duration": 200
+            },
+            {
+                "at": 4100,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "bubbles",
+        "title": "BUBBLE BURST",
+        "desc": "Deals damage with powerful bubbles",
+        "kind": "water",
+        "effects": {
+            "attack": 18
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "bubbles:other",
+                "duration": 1500
+            },
+            {
+                "at": 50,
+                "action": "sfx-bubbles",
+                "duration": 600
+            },
+            {
+                "at": 900,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 950,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "ice_splash",
+        "title": "ICEBERG",
+        "desc": "Attacks with an exploding iceberg",
+        "kind": "water",
+        "effects": {
+            "attack": 21
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "jump:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 650,
+                "action": "sfx-ice_splash",
+                "duration": 10
+            },
+            {
+                "at": 700,
+                "action": "fx-icesplash",
+                "duration": 400
+            },
+            {
+                "at": 700,
+                "action": "shake:other",
+                "duration": 500
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "subzero",
+        "title": "WINTER CHILLS",
+        "desc": "Improves AIMING, cuts the|enemy's ATTACK and may cause SICK",
+        "kind": "water",
+        "effects": {
+            "incr_aim": 12,
+            "decr_atk": 12,
+            "state_sick": "1:3"
+        },
+        "noMiss": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "sfx-winter_chills",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "subzero",
+                "duration": 2000
+            },
+            {
+                "at": 1300,
+                "action": "shake:other",
+                "duration": 700
+            },
+            {
+                "at": 1300,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "tentacles",
+        "title": "TENTACLE GRIP",
+        "desc": "Charges with toxic tentacles,|may cause SICK",
+        "kind": "water",
+        "effects": {
+            "attack": 19,
+            "state_sick": "1:3"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 200,
+                "action": "sfx-vine_squeeze",
+                "duration": 10
+            },
+            {
+                "at": 200,
+                "action": "grip_tentacle",
+                "duration": 1800
+            },
+            {
+                "at": 250,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "freeze",
+        "title": "FROZEN MIST",
+        "desc": "Arctic clouds deal damage and|weaken the enemy's ATTACK",
+        "kind": "water",
+        "effects": {
+            "attack": 20,
+            "decr_atk": 18
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 200,
+                "action": "sfx-smoke_screen",
+                "duration": 10
+            },
+            {
+                "at": 200,
+                "action": "fx-freeze",
+                "duration": 1800
+            },
+            {
+                "at": 500,
+                "action": "effect",
+                "duration": 2000
+            }
+        ]
+    },
+    {
+        "id": "ice_storm",
+        "title": "BLIZZARD",
+        "desc": "Hits with ice shards and cuts DEFENSE,|EXTRA powerful on SICK enemies",
+        "kind": "water",
+        "effects": {
+            "attack": 24,
+            "decr_def": 15
+        },
+        "extraWhen": "sick",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-ice_storm",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "fx-rain_ice",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 550
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 550
+            }
+        ]
+    },
+    {
+        "id": "ice_shield",
+        "title": "ICE SHIELD",
+        "desc": "Improves your Dynamon's DEFENSE|using a cover of ice",
+        "kind": "water",
+        "effects": {
+            "incr_def": 25
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-ice-shield:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 0,
+                "action": "sfx-rock_shield",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1000,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "dark_shield",
+        "title": "DARK SHIELD",
+        "desc": "Improves your Dynamon's DEFENSE|using a cover of dark energy",
+        "kind": "dark",
+        "effects": {
+            "incr_def": 30
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-dark-shield:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 0,
+                "action": "sfx-rock_shield",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1000,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "water_blast",
+        "title": "WATER BLAST",
+        "desc": "Massive water attack, EXTRA damage|if your Dynamon's HEALTH is low",
+        "kind": "water",
+        "effects": {
+            "attack": 27
+        },
+        "noMiss": true,
+        "extraWhen": "self_hurt",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-water_blast",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-waterblast",
+                "duration": 1000
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "avalanche",
+        "title": "AVALANCHE",
+        "desc": "Frozen blocks fall to deal damage|and cut the enemy's DEFENSE",
+        "kind": "water",
+        "effects": {
+            "attack": 26,
+            "decr_def": 15
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "avalanche:other",
+                "duration": 400
+            },
+            {
+                "at": 0,
+                "action": "sfx-avalanche",
+                "duration": 400
+            },
+            {
+                "at": 1700,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 1750,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "eel_cruncher",
+        "title": "EEL CRUNCHER",
+        "desc": "Deals DAMAGE, gain 10% HEALTH |and lowers enemy DEFENSE",
+        "kind": "water",
+        "effects": {
+            "attack": 35,
+            "heal_percent": "10-10",
+            "decr_def": 10
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-eel_cruncher",
+                "duration": 800
+            },
+            {
+                "at": 0,
+                "action": "sfx-ice_splash",
+                "duration": 200
+            },
+            {
+                "at": 200,
+                "action": "sfx-ice_splash",
+                "duration": 200
+            },
+            {
+                "at": 350,
+                "action": "sfx-bite",
+                "duration": 200
+            },
+            {
+                "at": 775,
+                "action": "blink",
+                "duration": 700
+            },
+            {
+                "at": 775,
+                "action": "earthquake",
+                "duration": 700
+            },
+            {
+                "at": 1200,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "ice_crusher",
+        "title": "ICE CRUSHER",
+        "desc": "Does big DAMAGE, decrease enemy|DEFENCE and causes sick",
+        "kind": "water",
+        "effects": {
+            "attack": 35,
+            "decr_def": 15,
+            "state_sick": "1:1"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "sfx-winter_chills",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "subzero",
+                "duration": 2000
+            },
+            {
+                "at": 200,
+                "action": "fx-ice_crusher",
+                "duration": 2000
+            },
+            {
+                "at": 200,
+                "action": "sfx-ice_splash",
+                "duration": 200
+            },
+            {
+                "at": 200,
+                "action": "sfx-ice_splash",
+                "duration": 200
+            },
+            {
+                "at": 950,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 1150,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 1200,
+                "action": "earthquake",
+                "duration": 700
+            },
+            {
+                "at": 1300,
+                "action": "effect",
+                "duration": 1200
+            }
+        ]
+    },
+    {
+        "id": "leaf_strike",
+        "title": "LEAF STRIKE",
+        "desc": "Attacks with a burst of sharp leaves",
+        "kind": "earth",
+        "effects": {
+            "attack": 18
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-leaf_strike",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "fx-rain_leaf",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 550
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 550
+            }
+        ]
+    },
+    {
+        "id": "spike_storm",
+        "title": "SPIKE STORM",
+        "desc": "Deals big damage and lowers |enemy defense and may cause hypno.",
+        "kind": "earth",
+        "effects": {
+            "attack": 34,
+            "decr_def": 10,
+            "state_hypno": "1:3"
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-rainbow",
+                "duration": 10
+            },
+            {
+                "at": 2500,
+                "action": "sfx-leaf_strike",
+                "duration": 10
+            },
+            {
+                "at": 1500,
+                "action": "sfx-leaf_strike",
+                "duration": 10
+            },
+            {
+                "at": 2000,
+                "action": "sfx-leaf_strike",
+                "duration": 10
+            },
+            {
+                "at": 0,
+                "action": "fx-spike_storm",
+                "duration": 6010
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 4500
+            }
+        ]
+    },
+    {
+        "id": "double_whip",
+        "title": "JUNGLE WHIP",
+        "desc": "Slaps with several vines,|weakens the enemy's DEFENSE",
+        "kind": "earth",
+        "effects": {
+            "attack": 17,
+            "decr_def": 17
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-double_whip",
+                "duration": 10
+            },
+            {
+                "at": 0,
+                "action": "fx-whip",
+                "duration": 800
+            },
+            {
+                "at": 50,
+                "action": "shake:other",
+                "duration": 750
+            },
+            {
+                "at": 250,
+                "action": "effect",
+                "duration": 80
+            }
+        ]
+    },
+    {
+        "id": "strangle",
+        "title": "VINE SQUEEZE",
+        "desc": "Crushes the enemy with strangling|vines, EXTRA powerful on SICK enemies",
+        "kind": "earth",
+        "effects": {
+            "attack": 21
+        },
+        "extraWhen": "sick",
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 200,
+                "action": "sfx-vine_squeeze",
+                "duration": 10
+            },
+            {
+                "at": 200,
+                "action": "grip_vine",
+                "duration": 1800
+            },
+            {
+                "at": 250,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "earth_shield",
+        "title": "ROCK SHIELD",
+        "desc": "Builds a shield of solid rock,|improving DEFENSE",
+        "kind": "earth",
+        "effects": {
+            "incr_def": 22
+        },
+        "noMiss": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-earth-shield:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 0,
+                "action": "sfx-rock_shield",
+                "duration": 1000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1000,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "boulders",
+        "title": "BOULDER PILE",
+        "desc": "Falling boulders deal damage,|lowers the enemy's AIMING",
+        "kind": "earth",
+        "effects": {
+            "attack": 24,
+            "decr_aim": 16
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "boulders:other",
+                "duration": 400
+            },
+            {
+                "at": 0,
+                "action": "sfx-boulder_pile",
+                "duration": 400
+            },
+            {
+                "at": 1700,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 1750,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "spores",
+        "title": "SPORE SHOT",
+        "desc": "Attacks by raining spores,|may cause HYPNO",
+        "kind": "earth",
+        "effects": {
+            "attack": 20,
+            "state_hypno": "1:4"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "fx-rain_pods",
+                "duration": 500
+            },
+            {
+                "at": 200,
+                "action": "sfx-spores",
+                "duration": 10
+            },
+            {
+                "at": 400,
+                "action": "spore_clouds",
+                "duration": 1900
+            },
+            {
+                "at": 450,
+                "action": "effect",
+                "duration": 1400
+            }
+        ]
+    },
+    {
+        "id": "poison_gas",
+        "title": "POISON GAS",
+        "desc": "Assaults with toxic gas,|may cause SICK",
+        "kind": "earth",
+        "effects": {
+            "attack": 21,
+            "state_sick": "1:4"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 200,
+                "action": "sfx-smoke_screen",
+                "duration": 10
+            },
+            {
+                "at": 200,
+                "action": "fx-poisongas",
+                "duration": 1800
+            },
+            {
+                "at": 500,
+                "action": "effect",
+                "duration": 2000
+            }
+        ]
+    },
+    {
+        "id": "rainbow",
+        "title": "RAINBOW BEAM",
+        "desc": "Massive earth attack, EXTRA damage|if your Dynamon's HEALTH is low",
+        "kind": "earth",
+        "effects": {
+            "attack": 28
+        },
+        "noMiss": true,
+        "extraWhen": "self_hurt",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-rainbow",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-rainbow",
+                "duration": 1000
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "earth_revenge_1",
+        "title": "SOLAR FIRE",
+        "desc": "Does devastating damage, but takes|a turn to charge and evoke RAGE",
+        "kind": "earth",
+        "effects": {
+            "give_ability": "earth_revenge_2",
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "fx-nature_circle",
+                "duration": 2000
+            },
+            {
+                "at": 150,
+                "action": "sfx-earth_revenge_1",
+                "duration": 2000
+            },
+            {
+                "at": 2000,
+                "action": "fx-rage:actor",
+                "duration": 300
+            },
+            {
+                "at": 2000,
+                "action": "sfx-rage:actor",
+                "duration": 300
+            },
+            {
+                "at": 2200,
+                "action": "effect",
+                "duration": 300
+            }
+        ]
+    },
+    {
+        "id": "rage_fire_ring",
+        "title": "RAGE FIRE RING",
+        "desc": "Increases DEFENSE and evokes RAGE",
+        "kind": "fire",
+        "effects": {
+            "incr_def": 15,
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "fx-rage_fire_ring",
+                "duration": 2000
+            },
+            {
+                "at": 150,
+                "action": "sfx-earth_revenge_1",
+                "duration": 2000
+            },
+            {
+                "at": 2000,
+                "action": "fx-rage:actor",
+                "duration": 300
+            },
+            {
+                "at": 2000,
+                "action": "sfx-rage:actor",
+                "duration": 300
+            },
+            {
+                "at": 2200,
+                "action": "effect",
+                "duration": 300
+            }
+        ]
+    },
+    {
+        "id": "earth_revenge_2",
+        "title": "SOLAR FIRE",
+        "desc": "Unleashes devastating damage",
+        "kind": "earth",
+        "effects": {
+            "attack": 32
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-nature_beam",
+                "duration": 400
+            },
+            {
+                "at": 0,
+                "action": "sfx-earth_revenge_2",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "fx-explosion",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 500
+            },
+            {
+                "at": 500,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "tree_crusher",
+        "title": "TREE CRUSHER",
+        "desc": "Deals big damage and lowers |enemy defense and attack",
+        "kind": "earth",
+        "effects": {
+            "attack": 34,
+            "decr_def": 10,
+            "decr_atk": 10
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "tree_crusher:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 750,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 0,
+                "action": "sfx-earth_revenge_2",
+                "duration": 400
+            },
+            {
+                "at": 750,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 750,
+                "action": "flash",
+                "duration": 30
+            },
+            {
+                "at": 750,
+                "action": "earthquake",
+                "duration": 1000
+            },
+            {
+                "at": 750,
+                "action": "shake:other",
+                "duration": 500
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "rockfall",
+        "title": "ROCKFALL",
+        "desc": "Does big damage and weaken DEFENSE,|may cause HYPNO.",
+        "kind": "earth",
+        "effects": {
+            "attack": 37,
+            "decr_def": 15,
+            "state_hypno": "1:4"
+        },
+        "costRv": 5,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-rockfall",
+                "duration": 4500
+            },
+            {
+                "at": 600,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 1150,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 1700,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 2250,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 2800,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 3350,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 500,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 1000,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 1500,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 2000,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 2500,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 3000,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 4800,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "shadow_slash",
+        "title": "SHADOW SLASH",
+        "desc": "A dark force scrathes the enemy",
+        "kind": "dark",
+        "effects": {
+            "attack": 23
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-shadow_slash",
+                "duration": 10
+            },
+            {
+                "at": 0,
+                "action": "fx-shadow_slash",
+                "duration": 500
+            },
+            {
+                "at": 150,
+                "action": "effect",
+                "duration": 300
+            }
+        ]
+    },
+    {
+        "id": "dark_beam",
+        "title": "DARK BEAM",
+        "desc": "Dark energy deals damage, EXTRA|strong against enemies with HYPNO",
+        "kind": "dark",
+        "effects": {
+            "attack": 28
+        },
+        "extraWhen": "hypno",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-darkbeam",
+                "duration": 1000
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "haunt",
+        "title": "HAUNT",
+        "desc": "Does terrifying damage and|weakens DEFENSE, may cause HYPNO",
+        "kind": "dark",
+        "effects": {
+            "attack": 26,
+            "decr_def": 15,
+            "state_hypno": "1:4"
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-haunt",
+                "duration": 2500
+            },
+            {
+                "at": 0,
+                "action": "sfx-haunt",
+                "duration": 2500
+            },
+            {
+                "at": 750,
+                "action": "effect",
+                "duration": 80
+            }
+        ]
+    },
+    {
+        "id": "suck_life",
+        "title": "SUCK LIFE",
+        "desc": "Absorbs a portion of HEALTH|from the enemy",
+        "kind": "dark",
+        "effects": {
+            "attack": 22,
+            "heal_percent": "15-20"
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-suck_life",
+                "duration": 2000
+            },
+            {
+                "at": 0,
+                "action": "sfx-suck_life",
+                "duration": 2000
+            },
+            {
+                "at": 200,
+                "action": "effect",
+                "duration": 1300
+            }
+        ]
+    },
+    {
+        "id": "dark_blast",
+        "title": "DARK BLAST",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "dark",
+        "effects": {
+            "attack": 32,
+            "incr_atk": 10,
+            "decr_def": 10
+        },
+        "locked": true,
+        "costRv": 5,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-dark_blast",
+                "duration": 4500
+            },
+            {
+                "at": 150,
+                "action": "sfx-dark_beam",
+                "duration": 500
+            },
+            {
+                "at": 1500,
+                "action": "sfx-hellfire",
+                "duration": 500
+            },
+            {
+                "at": 4300,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "eating_plant",
+        "title": "EATING PLANT",
+        "desc": "Absorbs a portion of HEALTH|from the enemy and decreases DEFENSE",
+        "kind": "earth",
+        "effects": {
+            "attack": 25,
+            "heal_percent": "20-25",
+            "decr_def": 15
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-plant_leech",
+                "duration": 2000
+            },
+            {
+                "at": 0,
+                "action": "sfx-suck_life",
+                "duration": 2000
+            },
+            {
+                "at": 150,
+                "action": "fx-eating_plant",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-bite",
+                "duration": 10
+            },
+            {
+                "at": 650,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 650,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "rock_smasher",
+        "title": "ROCK SMASHER",
+        "desc": "Does big DAMAGE,|lower enemy ATTACK and DEFENSE",
+        "kind": "earth",
+        "effects": {
+            "attack": 35,
+            "decr_atk": 15,
+            "decr_def": 15
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400
+            },
+            {
+                "at": 200,
+                "action": "fx-rock_smasher",
+                "duration": 3000
+            },
+            {
+                "at": 300,
+                "action": "sfx-shockwave",
+                "duration": 200
+            },
+            {
+                "at": 750,
+                "action": "sfx-fireworks",
+                "duration": 200
+            },
+            {
+                "at": 1350,
+                "action": "effect",
+                "duration": 200
+            },
+            {
+                "at": 1700,
+                "action": "fx-appear",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "tail_smash",
+        "title": "TAIL SMASH",
+        "desc": "Does big DAMAGE and Improves your |AIM, lower enemy ATTACK and DEFENSE",
+        "kind": "earth",
+        "effects": {
+            "attack": 35,
+            "incr_aim": 10,
+            "decr_def": 10,
+            "decr_atk": 10
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-tail_smash",
+                "duration": 4000
+            },
+            {
+                "at": 0,
+                "action": "sfx-scratch",
+                "duration": 200
+            },
+            {
+                "at": 1100,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 1100,
+                "action": "earthquake",
+                "duration": 1000
+            },
+            {
+                "at": 1100,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 3000,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "nightfall",
+        "title": "NIGHTFALL",
+        "desc": "Darkness that cuts the enemy's AIMING|and raises your Dynamon's ATTACK",
+        "kind": "dark",
+        "effects": {
+            "incr_atk": 18,
+            "decr_aim": 15
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "sfx-nightfall",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "nightfall",
+                "duration": 2000
+            },
+            {
+                "at": 1300,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "electric_punch",
+        "title": "ELECTRIC PUNCH",
+        "desc": "Punches the enemy with a charged fist",
+        "kind": "elec",
+        "effects": {
+            "attack": 23
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 150,
+                "action": "fx-electric_punch",
+                "duration": 300
+            },
+            {
+                "at": 150,
+                "action": "sfx-electric_punch",
+                "duration": 300
+            },
+            {
+                "at": 450,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 450,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "ion_beam",
+        "title": "ION BEAM",
+        "desc": "Deals great damage, EXTRA strong|if your Dynamon's HEALTH is low",
+        "kind": "elec",
+        "effects": {
+            "attack": 28
+        },
+        "extraWhen": "self_hurt",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-ion_beam",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-ionbeam",
+                "duration": 1000
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "ultra_voltage",
+        "title": "ULTRA VOLTAGE",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "elec",
+        "costRv": 5,
+        "effects": {
+            "attack": 36,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-ultra_voltage",
+                "duration": 5500,
+                "inHypno": "none"
+            },
+            {
+                "at": 2050,
+                "action": "shake:other",
+                "duration": 1700,
+                "inHypno": "only"
+            },
+            {
+                "at": 5600,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "sparks",
+        "title": "SPARKS",
+        "desc": "Burst of electric particles|damage the enemy",
+        "kind": "elec",
+        "effects": {
+            "attack": 23
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 250,
+                "action": "sfx-sparks",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "fx-sparks",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 550
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 550
+            }
+        ]
+    },
+    {
+        "id": "lightning_ball",
+        "title": "LIGHTNING BALL",
+        "desc": "Deals big damage and lowers |enemy defense and may cause hypno.",
+        "kind": "elec",
+        "effects": {
+            "attack": 30,
+            "decr_def": 10,
+            "state_hypno": "1:3"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "fx-lightning_ball",
+                "duration": 200,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "sfx-sparks",
+                "duration": 200
+            },
+            {
+                "at": 750,
+                "action": "shake:other",
+                "duration": 1150
+            },
+            {
+                "at": 650,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 800,
+                "action": "flash",
+                "duration": 1000
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "thunderstorm",
+        "title": "THUNDER BLAST",
+        "desc": "Attacks with 2-4 lightning strikes|and lowers the enemy's DEFENSE",
+        "kind": "elec",
+        "effects": {
+            "attack": 7,
+            "decr_def": 14
+        },
+        "randomHits": "2-4",
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 300,
+                "action": "fx-thunderstorm",
+                "duration": 1000
+            },
+            {
+                "at": 350,
+                "action": "shake:other",
+                "duration": 800
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "bee_blaster",
+        "title": "BEE BLASTER",
+        "desc": "Does big DAMAGE, lower enemy DEFENSE",
+        "kind": "elec",
+        "effects": {
+            "attack": 35,
+            "decr_def": 14
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400
+            },
+            {
+                "at": 800,
+                "action": "sfx-direct_hit_2",
+                "duration": 100
+            },
+            {
+                "at": 1000,
+                "action": "sfx-direct_hit_2",
+                "duration": 100
+            },
+            {
+                "at": 1200,
+                "action": "sfx-direct_hit_2",
+                "duration": 100
+            },
+            {
+                "at": 1400,
+                "action": "sfx-direct_hit_2",
+                "duration": 100
+            },
+            {
+                "at": 1600,
+                "action": "sfx-direct_hit_2",
+                "duration": 100
+            },
+            {
+                "at": 300,
+                "action": "fx-bee_blaster",
+                "duration": 1000
+            },
+            {
+                "at": 2600,
+                "action": "effect",
+                "duration": 500
+            },
+            {
+                "at": 2800,
+                "action": "fx-appear",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "static_shock",
+        "title": "STATIC SHOCK",
+        "desc": "Surrounds the enemy with|damaging charge, may cause SICK",
+        "kind": "elec",
+        "effects": {
+            "attack": 21,
+            "state_sick": "1:3"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-static_shock",
+                "duration": 3500
+            },
+            {
+                "at": 0,
+                "action": "sfx-static_shock",
+                "duration": 3500
+            },
+            {
+                "at": 250,
+                "action": "shake:other",
+                "duration": 1500
+            },
+            {
+                "at": 300,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "direct_hit_1",
+        "title": "DIRECT HIT",
+        "desc": "Unleashes a strong shocking|attack and increase AIMING",
+        "kind": "elec",
+        "effects": {
+            "incr_aim": 15,
+            "attack": 30
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-direct_hit",
+                "duration": 400
+            },
+            {
+                "at": 100,
+                "action": "sfx-direct_hit_2",
+                "duration": 200
+            },
+            {
+                "at": 200,
+                "action": "shake:other",
+                "duration": 600
+            },
+            {
+                "at": 600,
+                "action": "fx-explosion",
+                "duration": 400
+            },
+            {
+                "at": 400,
+                "action": "effect",
+                "duration": 300
+            }
+        ]
+    },
+    {
+        "id": "electric_hurricane",
+        "title": "ELECTRIC HURRICANE",
+        "desc": "Deals great damage, may cause HYPNO",
+        "kind": "elec",
+        "effects": {
+            "attack": 28,
+            "state_hypno": "1:3"
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-tornado",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-electric_hurricane",
+                "duration": 400
+            },
+            {
+                "at": 150,
+                "action": "shake:other",
+                "duration": 900
+            },
+            {
+                "at": 155,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "electric_breath",
+        "title": "ELECTRIC BREATH",
+        "desc": "Deals big DAMAGE and improves|your ATTACK and AIMING",
+        "kind": "elec",
+        "locked": true,
+        "costRv": 5,
+        "effects": {
+            "attack": 35,
+            "incr_atk": 15,
+            "incr_aim": 15
+        },
+        "visualSteps": [
+            {
+                "at": 250,
+                "action": "sfx-earth_revenge_1",
+                "duration": 2000
+            },
+            {
+                "at": 50,
+                "action": "fx-electric_breath",
+                "duration": 5000
+            },
+            {
+                "at": 3155,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "diamond_scratch",
+        "title": "DIAMOND SCRATCH",
+        "desc": "Deals more DAMAGE and lowers enemy DEFENSE",
+        "kind": "diamond",
+        "effects": {
+            "attack": 20,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 200,
+                "action": "recoil:other",
+                "duration": 300,
+                "inHypno": "none"
+            },
+            {
+                "at": 250,
+                "action": "fx-diamond_scratch",
+                "duration": 300
+            },
+            {
+                "at": 250,
+                "action": "sfx-scratch",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "effect",
+                "duration": 80
+            }
+        ]
+    },
+    {
+        "id": "diamond_bite",
+        "title": "DIAMOND BITE",
+        "desc": "Deals DAMAGE and gain 15% HEALTH",
+        "kind": "diamond",
+        "effects": {
+            "attack": 14,
+            "heal_percent": "15"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 150,
+                "action": "fx-diamond_bite",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-bite",
+                "duration": 10
+            },
+            {
+                "at": 650,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 650,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "diamond_revive",
+        "title": "DIAMOND REVIVE",
+        "desc": "Restore HEALTH and increase AIM |and increase DEFENSE",
+        "kind": "diamond",
+        "effects": {
+            "heal_percent": "14-28",
+            "incr_def": 10,
+            "incr_aim": 10
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-revive",
+                "duration": 10
+            },
+            {
+                "at": 150,
+                "action": "fx-revive",
+                "duration": 2000
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 1600
+            }
+        ]
+    },
+    {
+        "id": "diamond_fog",
+        "title": "DIAMOND FOG",
+        "desc": "Lowers enemy DEFENSE and AIMING and ATTACK",
+        "kind": "diamond",
+        "effects": {
+            "decr_def": 20,
+            "decr_aim": 20,
+            "decr_atk": 20
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "sfx-nightfall",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "diamond_fog",
+                "duration": 2000
+            },
+            {
+                "at": 1300,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "rain_diamond",
+        "title": "DIAMOND RAIN",
+        "desc": "Deals DAMAGE and cuts DEFENSE and ATTACK",
+        "kind": "diamond",
+        "effects": {
+            "attack": 18,
+            "decr_def": 10,
+            "decr_atk": 10
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-leaf_strike",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "fx-rain_diamond",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 550
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 550
+            }
+        ]
+    },
+    {
+        "id": "diamond_blaster",
+        "title": "DIAMOND BLASTER",
+        "desc": "Deals DAMAGE cuts AIMING",
+        "kind": "diamond",
+        "effects": {
+            "attack": 25,
+            "decr_aim": 20
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-rain_fire",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "fx-diamond_blaster",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 550
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 550
+            }
+        ]
+    },
+    {
+        "id": "diamond_sky",
+        "title": "DIAMOND SKY",
+        "desc": "Deals DAMAGE and weaken DEFENSE,|may cause HYPNO",
+        "kind": "diamond",
+        "effects": {
+            "attack": 26,
+            "decr_def": 15,
+            "state_hypno": "1:4"
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "diamond_sky:other",
+                "duration": 400
+            },
+            {
+                "at": 0,
+                "action": "sfx-avalanche",
+                "duration": 400
+            },
+            {
+                "at": 1700,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 1750,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "rhino_force",
+        "title": "RHINO FORCE",
+        "desc": "Deals big damage and lowers |enemy defense and may cause sick",
+        "kind": "diamond",
+        "effects": {
+            "attack": 30,
+            "decr_def": 15,
+            "state_sick": "1:3"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 700,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "fx-rhino_force",
+                "duration": 450,
+                "inHypno": "none"
+            },
+            {
+                "at": 550,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 750,
+                "action": "shake:other",
+                "duration": 200,
+                "inHypno": "only"
+            },
+            {
+                "at": 750,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 1050,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 1050,
+                "action": "shake:other",
+                "duration": 200,
+                "inHypno": "only"
+            },
+            {
+                "at": 1350,
+                "action": "shake:other",
+                "duration": 300,
+                "inHypno": "none"
+            },
+            {
+                "at": 1350,
+                "action": "sfx-shockwave",
+                "duration": 300,
+                "inHypno": "none"
+            },
+            {
+                "at": 1350,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "double_claw",
+        "title": "DOUBLE CLAW",
+        "desc": "Deals more DAMAGE and lowers enemy DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "attack": 20,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 200,
+                "action": "recoil:other",
+                "duration": 300,
+                "inHypno": "none"
+            },
+            {
+                "at": 250,
+                "action": "fx-double_claw",
+                "duration": 700
+            },
+            {
+                "at": 200,
+                "action": "sfx-scratch",
+                "duration": 10
+            },
+            {
+                "at": 500,
+                "action": "sfx-scratch",
+                "duration": 10
+            },
+            {
+                "at": 600,
+                "action": "effect",
+                "duration": 80
+            }
+        ]
+    },
+    {
+        "id": "double_shockwave",
+        "title": "DOUBLE SHOCKWAVE",
+        "desc": "Deals big damage and lowers | enemy defense and attack",
+        "kind": "gold",
+        "effects": {
+            "attack": 23,
+            "decr_def": 15,
+            "decr_atk": 20
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 700,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "fx-double_golden_shockwave",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 550,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 700,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "only"
+            },
+            {
+                "at": 750,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 750,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "only"
+            },
+            {
+                "at": 650,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 750,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "none"
+            },
+            {
+                "at": 750,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "golden_scream",
+        "title": "TERROR SCREAM",
+        "desc": "Does big DAMAGE and Improves your DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "attack": 40,
+            "incr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 550,
+                "action": "fx-golden_scream",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 550,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 0,
+                "action": "sfx-heatwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 0,
+                "action": "sfx-nightfall",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 0,
+                "action": "sfx-heatwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 0,
+                "action": "sfx-nightfall",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 0,
+                "action": "sfx-heatwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 0,
+                "action": "sfx-nightfall",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 800,
+                "action": "earthquake",
+                "duration": 1500
+            },
+            {
+                "at": 750,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 950,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 1150,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 1350,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 1400,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 1350,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "golden_ultra_blast",
+        "title": "GOLDEN ULTRA BLAST",
+        "desc": "Gold energy deals damage",
+        "kind": "gold",
+        "effects": {
+            "attack": 35
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-water_blast",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-golden_ultra_blast",
+                "duration": 1000
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "sky_basher",
+        "title": "SKY BASHER",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "attack": 35,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 50,
+                "action": "fx-sky_basher",
+                "duration": 3700
+            },
+            {
+                "at": 650,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 1450,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 2250,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1450,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2250,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 3200,
+                "action": "fx-appear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 3000,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "sky_claws",
+        "title": "SKY CLAWS",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "dark",
+        "effects": {
+            "attack": 35,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 50,
+                "action": "fx-sky_claws",
+                "duration": 3700
+            },
+            {
+                "at": 650,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 1450,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 2250,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1450,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2250,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 3200,
+                "action": "fx-appear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 3000,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "king_sky_claws",
+        "title": "SKY CLAWS",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "dark",
+        "icon": "sky_claws",
+        "effects": {
+            "attack": 35,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-king_sky_claws",
+                "duration": 3900,
+                "inHypno": "none"
+            },
+            {
+                "at": 450,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 1250,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 2050,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 450,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1150,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2050,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2700,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "golden_sword",
+        "title": "GOLDEN SWORD",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "attack": 36,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-golden_sword",
+                "duration": 4000
+            },
+            {
+                "at": 300,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 350,
+                "action": "sfx-scratch",
+                "duration": 200
+            },
+            {
+                "at": 800,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 850,
+                "action": "sfx-scratch",
+                "duration": 200
+            },
+            {
+                "at": 2500,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "crocynos_golden_sword",
+        "title": "GOLDEN SWORD",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "attack": 36,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-crocynos_golden_sword",
+                "duration": 4000
+            },
+            {
+                "at": 1000,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 1050,
+                "action": "sfx-scratch",
+                "duration": 200
+            },
+            {
+                "at": 1500,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 1550,
+                "action": "sfx-scratch",
+                "duration": 200
+            },
+            {
+                "at": 3200,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "king_crocynos_golden_sword",
+        "title": "GOLDEN SWORD",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "gold",
+        "icon": "crocynos_golden_sword",
+        "effects": {
+            "attack": 36,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-king_crocynos_golden_sword",
+                "duration": 3000,
+                "inHypno": "none"
+            },
+            {
+                "at": 1000,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 1050,
+                "action": "sfx-scratch",
+                "duration": 200
+            },
+            {
+                "at": 1500,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 1550,
+                "action": "sfx-scratch",
+                "duration": 200
+            },
+            {
+                "at": 3000,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "double_poison",
+        "title": "DOUBLE POISON",
+        "desc": "Does big DAMAGE and gives|the enemy double sickness",
+        "kind": "gold",
+        "effects": {
+            "attack": 35,
+            "state_double-sick": "1:1"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-double_poison",
+                "duration": 3000
+            },
+            {
+                "at": 2500,
+                "action": "effect",
+                "duration": 900
+            },
+            {
+                "at": 1000,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "only"
+            },
+            {
+                "at": 1550,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "only"
+            },
+            {
+                "at": 0,
+                "action": "sfx-haunt",
+                "duration": 2500
+            },
+            {
+                "at": 450,
+                "action": "sfx-haunt",
+                "duration": 2500
+            }
+        ]
+    },
+    {
+        "id": "head_smasher",
+        "title": "HEAD SMASHER",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "attack": 35,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-head_smasher",
+                "duration": 4000
+            },
+            {
+                "at": 350,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 600,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 850,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1000,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1250,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1500,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 2000
+            }
+        ]
+    },
+    {
+        "id": "king_head_smasher",
+        "title": "HEAD SMASHER",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "gold",
+        "icon": "head_smasher",
+        "effects": {
+            "attack": 35,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-king_head_smasher",
+                "duration": 4000,
+                "inHypno": "none"
+            },
+            {
+                "at": 350,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 600,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 850,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1000,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1250,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1500,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 3000,
+                "action": "effect",
+                "duration": 1000
+            }
+        ]
+    },
+    {
+        "id": "golden_beam",
+        "title": "GOLDEN BEAM",
+        "desc": "Gold energy deals damage, EXTRA|strong against enemies with HYPNO",
+        "kind": "gold",
+        "effects": {
+            "attack": 28
+        },
+        "extraWhen": "hypno",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 500,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-golden_beam",
+                "duration": 1500
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "golden_fireballs",
+        "title": "GOLDEN FIREBALLS",
+        "desc": "Deals big DAMAGE and improves|your ATTACK and AIMING",
+        "kind": "gold",
+        "locked": true,
+        "costRv": 5,
+        "effects": {
+            "attack": 35,
+            "incr_atk": 15,
+            "incr_aim": 15
+        },
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-golden_fireballs",
+                "duration": 3500
+            },
+            {
+                "at": 0,
+                "action": "sfx-fire_spin",
+                "duration": 10
+            },
+            {
+                "at": 300,
+                "action": "sfx-fire_spin",
+                "duration": 10
+            },
+            {
+                "at": 600,
+                "action": "sfx-fire_spin",
+                "duration": 10
+            },
+            {
+                "at": 900,
+                "action": "sfx-fire_spin",
+                "duration": 10
+            },
+            {
+                "at": 1200,
+                "action": "sfx-fire_spin",
+                "duration": 10
+            },
+            {
+                "at": 1500,
+                "action": "sfx-fire_spin",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "diamond_beam",
+        "title": "DIAMOND BEAM",
+        "desc": "Diamond energy deals damage, EXTRA|strong against enemies with HYPNO",
+        "kind": "diamond",
+        "effects": {
+            "attack": 28
+        },
+        "extraWhen": "hypno",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 500,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-diamond_beam",
+                "duration": 1500
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "diamond_bombs",
+        "title": "DIAMOND BOMBS",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "diamond",
+        "effects": {
+            "attack": 35,
+            "incr_atk": 12,
+            "decr_def": 12
+        },
+        "locked": true,
+        "costRv": 5,
+        "visualSteps": [
+            {
+                "at": 550,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 550,
+                "action": "earthquake",
+                "duration": 200
+            },
+            {
+                "at": 850,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 850,
+                "action": "earthquake",
+                "duration": 200
+            },
+            {
+                "at": 1150,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 1150,
+                "action": "earthquake",
+                "duration": 200
+            },
+            {
+                "at": 1450,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 1450,
+                "action": "earthquake",
+                "duration": 200
+            },
+            {
+                "at": 50,
+                "action": "fx-diamond_bombs",
+                "duration": 3500
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 2900
+            }
+        ]
+    },
+    {
+        "id": "firebreath",
+        "title": "FIRE BREATH",
+        "desc": "Deals huge fire DAMAGE, cuts DEFENSE, EXTRA|strong against SICK enemies",
+        "kind": "fire",
+        "effects": {
+            "attack": 30,
+            "decr_def": 10
+        },
+        "extraWhen": "sick",
+        "noMiss": true,
+        "noBackfire": true,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-hellfire",
+                "duration": 1500
+            },
+            {
+                "at": 50,
+                "action": "fx-firebreath",
+                "duration": 1500
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "dark_breath",
+        "title": "DARK BREATH",
+        "desc": "Deals big DAMAGE and makes|next attack stronger via rage",
+        "kind": "dark",
+        "effects": {
+            "attack": 37,
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-hellfire",
+                "duration": 1500
+            },
+            {
+                "at": 500,
+                "action": "sfx-hellfire",
+                "duration": 1500
+            },
+            {
+                "at": 950,
+                "action": "sfx-hellfire",
+                "duration": 1500
+            },
+            {
+                "at": 50,
+                "action": "fx-dark_breath",
+                "duration": 4200
+            },
+            {
+                "at": 3000,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "toxic_slime",
+        "title": "TOXIC SLIME",
+        "desc": "Does big DAMAGE and 100% chance to make|enemy sick and lower enemy DEFENCE",
+        "kind": "dark",
+        "effects": {
+            "attack": 34,
+            "decr_def": 15,
+            "state_sick": "1:1"
+        },
+        "noBackfire": true,
+        "visualSteps": [
+            {
+                "at": 200,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 700,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 1200,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 1700,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 2200,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 2700,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 3200,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 3700,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 0,
+                "action": "fx-toxic_slime",
+                "duration": 7000
+            },
+            {
+                "at": 4100,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "doomstrike",
+        "title": "DOOMSTRIKE",
+        "desc": "Deals BIG DAMAGE cuts ATTACK",
+        "kind": "dark",
+        "effects": {
+            "attack": 34,
+            "decr_atk": 20
+        },
+        "locked": true,
+        "costRv": 5,
+        "noBackfire": true,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-doomstrike",
+                "duration": 5500
+            },
+            {
+                "at": 200,
+                "action": "sfx-sparks",
+                "duration": 200
+            },
+            {
+                "at": 1750,
+                "action": "sfx-sparks",
+                "duration": 200
+            },
+            {
+                "at": 2000,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 3450,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 5000,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "king_doomstrike",
+        "title": "DOOMSTRIKE",
+        "icon": "doomstrike",
+        "desc": "Deals BIG DAMAGE cuts ATTACK",
+        "kind": "dark",
+        "effects": {
+            "attack": 34,
+            "decr_atk": 20
+        },
+        "noBackfire": true,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-king_doomstrike",
+                "duration": 4800
+            },
+            {
+                "at": 200,
+                "action": "sfx-sparks",
+                "duration": 200
+            },
+            {
+                "at": 1750,
+                "action": "sfx-sparks",
+                "duration": 200
+            },
+            {
+                "at": 2000,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 3450,
+                "action": "sfx-flash",
+                "duration": 200
+            },
+            {
+                "at": 3800,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "golden_bite",
+        "title": "GOLDEN BITE",
+        "desc": "Deals DAMAGE, gain 15% HEALTH |and lowers enemy DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "attack": 14,
+            "heal_percent": "15",
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "ram:actor",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 150,
+                "action": "fx-golden_bite",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-bite",
+                "duration": 10
+            },
+            {
+                "at": 650,
+                "action": "shake:other",
+                "duration": 400
+            },
+            {
+                "at": 650,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "golden_revive",
+        "title": "GOLDEN REVIVE",
+        "desc": "Restore HEALTH and increase AIM |and increase DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "heal_percent": "14-28",
+            "incr_def": 10,
+            "incr_aim": 10
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-revive",
+                "duration": 10
+            },
+            {
+                "at": 150,
+                "action": "fx-revive",
+                "duration": 2000
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 1600
+            }
+        ]
+    },
+    {
+        "id": "golden_shield",
+        "title": "GOLDEN SHIELD",
+        "desc": "Builds a shield of solid gold,|improving DEFENSE",
+        "kind": "gold",
+        "effects": {
+            "incr_def": 35
+        },
+        "noMiss": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-golden_shield:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 0,
+                "action": "sfx-rock_shield",
+                "duration": 1000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1000,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "golden_shockwave",
+        "title": "GOLDEN SHOCKWAVE",
+        "desc": "A blast of golden air does damage and|lowers the enemy's AIM",
+        "kind": "gold",
+        "effects": {
+            "attack": 23,
+            "decr_aim": 15
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 550,
+                "action": "fx-golden_shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 550,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 550,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "only"
+            },
+            {
+                "at": 750,
+                "action": "shake:other",
+                "duration": 500,
+                "inHypno": "none"
+            },
+            {
+                "at": 750,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "golden_blaster",
+        "title": "GOLDEN BLASTER",
+        "desc": "Deals DAMAGE cuts ATTACK",
+        "kind": "gold",
+        "effects": {
+            "attack": 25,
+            "decr_atk": 20
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-rain_fire",
+                "duration": 10
+            },
+            {
+                "at": 250,
+                "action": "fx-golden_blaster",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 550
+            },
+            {
+                "at": 550,
+                "action": "effect",
+                "duration": 550
+            }
+        ]
+    },
+    {
+        "id": "recharge",
+        "title": "RECHARGE",
+        "desc": "Your Dynamon absorbs electrical|charge to gain HEALTH and DEFENSE",
+        "kind": "elec",
+        "effects": {
+            "heal_percent": "15-25",
+            "incr_def": 15
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 200,
+                "action": "fx-recharge:actor",
+                "duration": 1000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 700,
+                "action": "sfx-recharge",
+                "duration": 10
+            },
+            {
+                "at": 700,
+                "action": "effect",
+                "duration": 300
+            }
+        ]
+    },
+    {
+        "id": "spirit_force",
+        "title": "SPIRIT FORCE",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "spirit",
+        "effects": {
+            "attack": 35,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 50,
+                "action": "fx-spirit_force",
+                "duration": 3700
+            },
+            {
+                "at": 650,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 1450,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 2250,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 650,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1450,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2250,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 3200,
+                "action": "fx-appear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 3000,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "spirit_shield",
+        "title": "SPIRIT SHIELD",
+        "desc": "Improves your Dynamon's DEFENSE",
+        "kind": "spirit",
+        "effects": {
+            "incr_def": 25
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-spirit_shield:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 0,
+                "action": "sfx-rock_shield",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1000,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "death_claw",
+        "title": "DEATH CLAW",
+        "desc": "Does big DAMAGE, lower enemy ATTACK |and DEFENSE and causes SICK",
+        "kind": "spirit",
+        "noMiss": true,
+        "noBackfire": true,
+        "effects": {
+            "attack": 35,
+            "state_sick": "1:1",
+            "decr_def": 10,
+            "decr_atk": 10
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 300,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 500,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 500,
+                "action": "fx-death_claw:other",
+                "duration": 1600,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2100,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "bite_of_death",
+        "title": "BITE OF DEATH",
+        "desc": "Does big DAMAGE and Improves your|HEALTH by 10%",
+        "kind": "spirit",
+        "effects": {
+            "attack": 35,
+            "heal_percent": "10-10"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-bite_of_death",
+                "duration": 800
+            },
+            {
+                "at": 0,
+                "action": "sfx-ice_splash",
+                "duration": 200
+            },
+            {
+                "at": 200,
+                "action": "sfx-ice_splash",
+                "duration": 200
+            },
+            {
+                "at": 350,
+                "action": "sfx-bite",
+                "duration": 200
+            },
+            {
+                "at": 775,
+                "action": "blink",
+                "duration": 700
+            },
+            {
+                "at": 775,
+                "action": "earthquake",
+                "duration": 700
+            },
+            {
+                "at": 1200,
+                "action": "effect",
+                "duration": 800
+            }
+        ]
+    },
+    {
+        "id": "spirit_bomb",
+        "title": "SPIRIT BOMB",
+        "desc": "Deals great damage, may cause HYPNO",
+        "kind": "spirit",
+        "effects": {
+            "attack": 30,
+            "state_hypno": "1:3"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 300,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 600,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 900,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 500,
+                "action": "fx-spirit_bomb",
+                "duration": 1400
+            },
+            {
+                "at": 500,
+                "action": "shake:other",
+                "duration": 500
+            },
+            {
+                "at": 1500,
+                "action": "effect",
+                "duration": 200
+            }
+        ]
+    },
+    {
+        "id": "spirit_ultra_blast",
+        "title": "SPIRIT ULTRA BLAST",
+        "desc": "Deals DAMAGE cuts AIMING",
+        "kind": "spirit",
+        "effects": {
+            "attack": 30,
+            "decr_aim": 15
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-water_blast",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-spirit_ultra_blast",
+                "duration": 1000
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "spirit_myst",
+        "title": "SPIRIT MYST",
+        "desc": "Lowers enemy DEFENSE and AIMING and ATTACK",
+        "kind": "spirit",
+        "effects": {
+            "decr_def": 20,
+            "decr_aim": 20,
+            "decr_atk": 20
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 100,
+                "action": "sfx-nightfall",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "spirit_myst",
+                "duration": 2000
+            },
+            {
+                "at": 1300,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "spirit_fury",
+        "title": "SPIRIT FURY",
+        "desc": "Deals BIG DAMAGE cuts ATTACK",
+        "kind": "spirit",
+        "effects": {
+            "attack": 35,
+            "decr_atk": 20
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 600,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1450,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 1850,
+                "action": "sfx-shockwave",
+                "duration": 200,
+                "inHypno": "none"
+            },
+            {
+                "at": 1700,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 2100,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 800,
+                "action": "fx-spirit_fury",
+                "duration": 2000
+            },
+            {
+                "at": 2400,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "unicorn_kick",
+        "title": "UNICORN KICK",
+        "desc": "Deals big DAMAGE and makes|next attack stronger via rage",
+        "kind": "spirit",
+        "effects": {
+            "attack": 35,
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 0,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 600,
+                "action": "fx-unicorn_kick",
+                "duration": 4000
+            },
+            {
+                "at": 1200,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 2250,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 3200,
+                "action": "fx-appear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 4000,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "king_unicorn_kick",
+        "title": "UNICORN KICK",
+        "desc": "Deals big DAMAGE and makes|next attack stronger via rage",
+        "kind": "spirit",
+        "icon": "unicorn_kick",
+        "effects": {
+            "attack": 35,
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-king_unicorn_kick",
+                "duration": 3700
+            },
+            {
+                "at": 1000,
+                "action": "sfx-thunder",
+                "duration": 400
+            },
+            {
+                "at": 2050,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 3100,
+                "action": "effect",
+                "duration": 700
+            }
+        ]
+    },
+    {
+        "id": "spirit_tornado",
+        "title": "SPIRIT TORNADO",
+        "desc": "Deals DAMAGE and increase AIM",
+        "kind": "spirit",
+        "effects": {
+            "attack": 30,
+            "incr_aim": 15
+        },
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 300,
+                "action": "sfx-tornado",
+                "duration": 10
+            },
+            {
+                "at": 600,
+                "action": "sfx-tornado",
+                "duration": 10
+            },
+            {
+                "at": 900,
+                "action": "sfx-tornado",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-spirit_tornado",
+                "duration": 1000
+            },
+            {
+                "at": 1000,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "skull_beam",
+        "title": "SKULL BEAM",
+        "desc": "Spirit energy deals damage, EXTRA|strong against enemies with HYPNO",
+        "kind": "spirit",
+        "effects": {
+            "attack": 28
+        },
+        "extraWhen": "hypno",
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 500,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "fx-skull_beam",
+                "duration": 2500
+            },
+            {
+                "at": 2100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "scorpion_venom",
+        "title": "SCORPION VENOM",
+        "desc": "Does big DAMAGE and causes SICK",
+        "kind": "spirit",
+        "effects": {
+            "attack": 35,
+            "state_sick": "1:1"
+        },
+        "noBackfire": true,
+        "cooldown": 1,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-scorpion_venom",
+                "duration": 3500
+            },
+            {
+                "at": 0,
+                "action": "sfx-haunt",
+                "duration": 2500
+            },
+            {
+                "at": 450,
+                "action": "sfx-haunt",
+                "duration": 2500
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 3000
+            }
+        ]
+    },
+    {
+        "id": "rapid_fire",
+        "title": "RAPID FIRE",
+        "desc": "Deals huge DAMAGE, cuts DEFENSE, EXTRA|strong against SICK enemies",
+        "kind": "spirit",
+        "effects": {
+            "attack": 32,
+            "decr_def": 10
+        },
+        "locked": true,
+        "costRv": 5,
+        "extraWhen": "sick",
+        "noBackfire": true,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-rapid_fire",
+                "duration": 4700
+            },
+            {
+                "at": 4000,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "chaos_claw",
+        "title": "CHAOS CLAW",
+        "desc": "Does big DAMAGE and Improves your DEFENSE",
+        "kind": "spirit",
+        "effects": {
+            "attack": 32,
+            "incr_def": 15
+        },
+        "noBackfire": true,
+        "locked": true,
+        "costRv": 5,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-chaos_claw",
+                "duration": 2700
+            },
+            {
+                "at": 2700,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "spirit_revenge",
+        "title": "SPIRIT REVENGE",
+        "desc": "Deals big DAMAGE cuts AIMING|and makes next attack stronger via rage",
+        "kind": "spirit",
+        "effects": {
+            "attack": 32,
+            "state_rage": "1-1",
+            "decr_aim": 15
+        },
+        "noBackfire": true,
+        "locked": true,
+        "costRv": 5,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400,
+                "inHypno": "none"
+            },
+            {
+                "at": 250,
+                "action": "fx-spirit_revenge",
+                "duration": 4300
+            },
+            {
+                "at": 250,
+                "action": "sfx-sparks",
+                "duration": 200
+            },
+            {
+                "at": 900,
+                "action": "sfx-sparks",
+                "duration": 200
+            },
+            {
+                "at": 1450,
+                "action": "sfx-sparks",
+                "duration": 200
+            },
+            {
+                "at": 2100,
+                "action": "sfx-fire_spin",
+                "duration": 200
+            },
+            {
+                "at": 4300,
+                "action": "effect",
+                "duration": 500
+            },
+            {
+                "at": 2800,
+                "action": "earthquake",
+                "duration": 500
+            },
+            {
+                "at": 4400,
+                "action": "fx-appear",
+                "duration": 400,
+                "inHypno": "none"
+            }
+        ]
+    },
+    {
+        "id": "item-heal_spray",
+        "title": "HEAL SPRAY",
+        "kind": "none",
+        "effects": {
+            "heal_percent": "50-50"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "heal_spray:actor",
+                "duration": 3000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1200,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "item-level_up_snack",
+        "title": "LEVEL UP SNACK",
+        "desc": "level up snack description",
+        "kind": "none",
+        "cooldown": 0
+    },
+    {
+        "id": "item-antidote",
+        "title": "ANTIDOTE SPRAY",
+        "kind": "none",
+        "effects": {
+            "antidote": "antidote"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "antidote:actor",
+                "duration": 3000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1200,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "item-aim_shroom",
+        "title": "FOCUS FUNGUS",
+        "kind": "none",
+        "effects": {
+            "incr_aim": 41
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "aim_shroom:actor",
+                "duration": 2000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1500,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "item-atk_pepper",
+        "title": "POWER PEPPER",
+        "kind": "none",
+        "effects": {
+            "incr_atk": 41
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "atk_pepper:actor",
+                "duration": 2000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1500,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "item-def_berry",
+        "title": "BUNKER BERRY",
+        "kind": "none",
+        "effects": {
+            "incr_def": 41
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "def_berry:actor",
+                "duration": 2000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1500,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "item-rage_root",
+        "title": "RAGE ROOT",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "state_rage": "1:1"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "rage_root:actor",
+                "duration": 2000,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1500,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "item-syringe",
+        "title": "SYRINGE",
+        "desc": "",
+        "kind": "none",
+        "cooldown": 0,
+        "localOnly": true,
+        "visualSteps": [
+            {
+                "at": 150,
+                "action": "syringe:actor",
+                "duration": 2000,
+                "inHypno": "noChange"
+            }
+        ]
+    },
+    {
+        "id": "can-confuse",
+        "title": "CONFUSE CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "confuse"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_confuse:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-tornado",
+        "title": "HURRICANE CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "tornado"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_tornado:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-fire_spin",
+        "title": "FLAME SWIRL CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "fire_spin"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_fire_spin:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-hellfire",
+        "title": "HELLFIRE CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "hellfire"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_hellfire:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-water_blast",
+        "title": "WATER BLAST CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "water_blast"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_water_blast:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-avalanche",
+        "title": "AVALANCHE CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "avalanche"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_avalanche:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-golden_ultra_blast",
+        "title": "GOLDEN ULTRA BLAST CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "golden_ultra_blast"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_golden_ultra_blast:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-poison_gas",
+        "title": "POISON GAS CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "poison_gas"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_poison_gas:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-rainbow",
+        "title": "RAINBOW BEAM CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "rainbow"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_rainbow:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-dark_beam",
+        "title": "DARK BEAM CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "dark_beam"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_dark_beam:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "can-thunderstorm",
+        "title": "THUNDER BLAST CAN",
+        "desc": "",
+        "kind": "none",
+        "effects": {
+            "give_ability": "thunderstorm"
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "can_thunderstorm:actor",
+                "duration": 1500,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2000,
+                "action": "effect",
+                "duration": 400
+            }
+        ]
+    },
+    {
+        "id": "horse_stomp",
+        "title": "HORSE STOMP",
+        "desc": "Does big DAMAGE and Improves your AIM,| lower enemy ATTACK and DEFENSE",
+        "kind": "fire",
+        "effects": {
+            "attack": 35,
+            "incr_aim": 10,
+            "decr_def": 10,
+            "decr_atk": 10
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 300,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 300,
+                "action": "sfx-volcano",
+                "duration": 10
+            },
+            {
+                "at": 400,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 500,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 400,
+                "action": "shake:other",
+                "duration": 300
+            },
+            {
+                "at": 600,
+                "action": "jump:actor",
+                "duration": 300,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 900,
+                "action": "sfx-volcano",
+                "duration": 10
+            },
+            {
+                "at": 1000,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 1100,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1000,
+                "action": "shake:other",
+                "duration": 300
+            },
+            {
+                "at": 1200,
+                "action": "jump:actor",
+                "duration": 300,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1500,
+                "action": "sfx-volcano",
+                "duration": 10
+            },
+            {
+                "at": 1600,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 1700,
+                "action": "fx-dust:actor",
+                "duration": 400,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 1600,
+                "action": "shake:other",
+                "duration": 300
+            },
+            {
+                "at": 100,
+                "action": "heatwave",
+                "duration": 1800
+            },
+            {
+                "at": 2200,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "fire_claw",
+        "title": "FIRE CLAW",
+        "desc": "Deals big DAMAGE and makes|next attack stronger via rage",
+        "kind": "fire",
+        "effects": {
+            "attack": 37,
+            "state_rage": "1:1"
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "locked": true,
+        "costRv": 5,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-fire_claw",
+                "duration": 300
+            },
+            {
+                "at": 50,
+                "action": "sfx-fire_spin",
+                "duration": 500
+            },
+            {
+                "at": 500,
+                "action": "sfx-fire_spin",
+                "duration": 500
+            },
+            {
+                "at": 1000,
+                "action": "sfx-fire_spin",
+                "duration": 500
+            },
+            {
+                "at": 50,
+                "action": "sfx-scratch",
+                "duration": 10
+            },
+            {
+                "at": 600,
+                "action": "sfx-scratch",
+                "duration": 10
+            },
+            {
+                "at": 1200,
+                "action": "sfx-scratch",
+                "duration": 10
+            },
+            {
+                "at": 2700,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "ultra_fireball",
+        "title": "ULTRA FIREBALL",
+        "desc": "Deals DAMAGE, gain 10% HEALTH |and lowers enemy DEFENSE",
+        "kind": "fire",
+        "effects": {
+            "attack": 35,
+            "heal_percent": "10-10",
+            "decr_def": 10
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-ultra_fireball",
+                "duration": 4000
+            },
+            {
+                "at": 50,
+                "action": "sfx-fire_spin",
+                "duration": 500
+            },
+            {
+                "at": 500,
+                "action": "sfx-fire_spin",
+                "duration": 500
+            },
+            {
+                "at": 1000,
+                "action": "sfx-fire_spin",
+                "duration": 500
+            },
+            {
+                "at": 1600,
+                "action": "sfx-hellfire",
+                "duration": 500
+            },
+            {
+                "at": 2500,
+                "action": "sfx-thunder",
+                "duration": 500
+            },
+            {
+                "at": 4700,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "geyser",
+        "title": "WATER GEYSER",
+        "desc": "Does big DAMAGE, lower enemy ATTACK |and DEFENSE and causes SICK",
+        "kind": "water",
+        "noMiss": true,
+        "noBackfire": true,
+        "effects": {
+            "attack": 35,
+            "state_sick": "1:1",
+            "decr_def": 10,
+            "decr_atk": 10
+        },
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "jump:actor",
+                "duration": 300,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 500,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 500,
+                "action": "fx-geyser:other",
+                "duration": 1600,
+                "inHypno": "noChange"
+            },
+            {
+                "at": 2100,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "spear_stabber",
+        "title": "SPEAR STABBER",
+        "desc": "Does big DAMAGE and evokes RAGE",
+        "kind": "earth",
+        "effects": {
+            "attack": 35,
+            "state_rage": "1:1"
+        },
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-spear_stabber",
+                "duration": 4000
+            },
+            {
+                "at": 1350,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1600,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1850,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2000,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2250,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2500,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 2000
+            }
+        ]
+    },
+    {
+        "id": "king_spear_stabber",
+        "title": "SPEAR STABBER",
+        "desc": "Does big DAMAGE and evokes RAGE",
+        "kind": "earth",
+        "icon": "spear_stabber",
+        "effects": {
+            "attack": 35,
+            "state_rage": "1:1"
+        },
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-king_spear_stabber",
+                "duration": 3500,
+                "inHypno": "none"
+            },
+            {
+                "at": 1350,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1600,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 1850,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2000,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2250,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 2500,
+                "action": "sfx-flash",
+                "duration": 10
+            },
+            {
+                "at": 3200,
+                "action": "effect",
+                "duration": 1000
+            }
+        ]
+    },
+    {
+        "id": "ice_breath",
+        "title": "ICE BREATH",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "water",
+        "effects": {
+            "attack": 32,
+            "incr_atk": 15,
+            "decr_def": 15
+        },
+        "noBackfire": true,
+        "locked": true,
+        "costRv": 5,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 200,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 700,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 1200,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 1700,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 2200,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 2700,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 3200,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 3700,
+                "action": "sfx-water_blast",
+                "duration": 1600
+            },
+            {
+                "at": 0,
+                "action": "fx-ice_breath",
+                "duration": 7000
+            },
+            {
+                "at": 4100,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "giant_claws",
+        "title": "GIANT CLAWS",
+        "desc": "Does big DAMAGE,| lower enemy ATTACK and DEFENSE and AIM",
+        "kind": "dark",
+        "effects": {
+            "attack": 35,
+            "decr_aim": 10,
+            "decr_def": 10,
+            "decr_atk": 10
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "fx-disappear",
+                "duration": 400
+            },
+            {
+                "at": 600,
+                "action": "fx-appear",
+                "duration": 400
+            },
+            {
+                "at": 1000,
+                "action": "fx-giant_claws",
+                "duration": 300,
+                "inHypno": "none"
+            },
+            {
+                "at": 1300,
+                "action": "sfx-shadow_slash",
+                "duration": 10
+            },
+            {
+                "at": 1300,
+                "action": "fx-shadow_slash",
+                "duration": 500
+            },
+            {
+                "at": 1800,
+                "action": "sfx-shadow_slash",
+                "duration": 10
+            },
+            {
+                "at": 1800,
+                "action": "fx-shadow_slash",
+                "duration": 500
+            },
+            {
+                "at": 1800,
+                "action": "effect",
+                "duration": 500
+            }
+        ]
+    },
+    {
+        "id": "laser_eyes",
+        "title": "LASER EYES",
+        "desc": "Does big DAMAGE and Improves your AIM,|lower enemy ATTACK and DEFENSE, EXTRA|strong against enemies with HYPNO",
+        "kind": "elec",
+        "effects": {
+            "attack": 35,
+            "incr_aim": 15,
+            "decr_atk": 10,
+            "decr_def": 10
+        },
+        "extraWhen": "hypno",
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-hellfire",
+                "duration": 1500
+            },
+            {
+                "at": 50,
+                "action": "sfx-static_shock",
+                "duration": 1500
+            },
+            {
+                "at": 50,
+                "action": "fx-laser_eyes",
+                "duration": 1500
+            },
+            {
+                "at": 100,
+                "action": "earthquake",
+                "duration": 300
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "lightning_orb",
+        "title": "LIGHTNING ORB",
+        "desc": "Does big DAMAGE and Improves your DEFENSE",
+        "kind": "elec",
+        "effects": {
+            "attack": 37,
+            "incr_def": 10
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-lightning_orb",
+                "duration": 4500
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "ice_trident",
+        "title": "ICE TRIDENT",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "water",
+        "effects": {
+            "attack": 32,
+            "incr_atk": 10,
+            "decr_def": 10
+        },
+        "noBackfire": true,
+        "locked": true,
+        "costRv": 5,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-ice_trident",
+                "duration": 4500
+            },
+            {
+                "at": 250,
+                "action": "sfx-confuse",
+                "duration": 200
+            },
+            {
+                "at": 500,
+                "action": "sfx-avalanche",
+                "duration": 200
+            },
+            {
+                "at": 100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "horzaryx_ice_trident",
+        "icon": "ice_trident",
+        "title": "ICE TRIDENT",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "water",
+        "effects": {
+            "attack": 32,
+            "incr_atk": 10,
+            "decr_def": 10
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-horzaryx_ice_trident",
+                "duration": 4500
+            },
+            {
+                "at": 950,
+                "action": "sfx-confuse",
+                "duration": 200
+            },
+            {
+                "at": 1200,
+                "action": "sfx-avalanche",
+                "duration": 200
+            },
+            {
+                "at": 2100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "king_horzaryx_ice_trident",
+        "icon": "ice_trident",
+        "title": "ICE TRIDENT",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "water",
+        "effects": {
+            "attack": 32,
+            "incr_atk": 10,
+            "decr_def": 10
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-king_horzaryx_ice_trident",
+                "duration": 3700
+            },
+            {
+                "at": 1000,
+                "action": "sfx-avalanche",
+                "duration": 200
+            },
+            {
+                "at": 2100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "ocean_fury",
+        "title": "OCEAN FURY",
+        "desc": "Does big DAMAGE and evokes RAGE",
+        "kind": "water",
+        "effects": {
+            "attack": 34,
+            "state_rage": "1:1"
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "sfx-hellfire",
+                "duration": 1500
+            },
+            {
+                "at": 500,
+                "action": "sfx-hellfire",
+                "duration": 1500
+            },
+            {
+                "at": 950,
+                "action": "sfx-hellfire",
+                "duration": 1500
+            },
+            {
+                "at": 50,
+                "action": "fx-ocean_fury",
+                "duration": 4700
+            },
+            {
+                "at": 4000,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "ancient_vist",
+        "title": "ANCIENT VIST",
+        "desc": "Deals great damage and cause HYPNO",
+        "kind": "spirit",
+        "effects": {
+            "attack": 40,
+            "state_hypno": "1:1"
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "lockUntil": "2865_guard",
+        "unlockIfReseted": "guardian_tomb",
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-ancient_vist",
+                "duration": 5000
+            },
+            {
+                "at": 1350,
+                "action": "sfx-thunder",
+                "duration": 100
+            },
+            {
+                "at": 2100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    },
+    {
+        "id": "spirit_breath",
+        "title": "SPIRIT BREATH",
+        "desc": "Ultra strong all types,improves your ATTACK,|lower enemy DEFENSE and AIM",
+        "kind": "spirit",
+        "effects": {
+            "attack": 45,
+            "incr_atk": 10,
+            "decr_def": 10,
+            "decr_aim": 10,
+            "strong_against": [
+                "all"
+            ]
+        },
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 50,
+                "action": "fx-spirit_breath",
+                "duration": 5000
+            },
+            {
+                "at": 50,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 500,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 1050,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 1500,
+                "action": "sfx-dark_beam",
+                "duration": 10
+            },
+            {
+                "at": 50,
+                "action": "sfx-haunt",
+                "duration": 10
+            },
+            {
+                "at": 500,
+                "action": "sfx-haunt",
+                "duration": 10
+            },
+            {
+                "at": 1050,
+                "action": "sfx-haunt",
+                "duration": 10
+            },
+            {
+                "at": 1500,
+                "action": "sfx-haunt",
+                "duration": 10
+            },
+            {
+                "at": 4100,
+                "action": "effect",
+                "duration": 900
+            }
+        ]
+    }
+]

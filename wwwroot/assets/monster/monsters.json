@@ -1,0 +1,87 @@
+{
+  "aqua-leviathan": {
+    "name": "aqua-leviathan",
+    "type": "water",
+    "baseStats": {
+      "level": 1,
+      "hp": 60,
+      "attack": 18,
+      "defense": 10,
+      "speed": 12
+    },
+    "growth": {
+      "hp": 6,
+      "attack": 3,
+      "defense": 2,
+      "speed": 2
+    },
+    "skills": ["aqua-blast", "tornado-strike"],
+    "captureRate": 0.4
+  },
+
+  "volt-draco": {
+    "name": "vol-draco",
+    "type": "electric",
+    "baseStats": {
+      "level": 1,
+      "hp": 70,
+      "attack": 15,
+      "defense": 14,
+      "speed": 10
+    },
+    "growth": {
+      "hp": 7,
+      "attack": 2,
+      "defense": 3,
+      "speed": 2
+    },
+    "skills": ["lightning-shard", "tornado-strike"],
+    "captureRate": 0.5
+  },
+   "igni-beast": {
+    "name": "igni-beast",
+    "type": "fire",
+    "baseStats": {
+      "level": 1,
+      "hp": 75,
+      "attack": 17,
+      "defense": 12,
+      "speed": 9
+    },
+    "growth": {
+      "hp": 7,
+      "attack": 2,
+      "defense": 3,
+      "speed": 2
+    },
+    "skills": ["volcanic-eruption", "lava-blast"],
+    "captureRate": 0.5
+  },
+   "terra-behomth": {
+    "name": "terra-behomth",
+    "type": "grass",
+    "baseStats": {
+      "level": 1,
+      "hp": 80,
+      "attack": 10,
+      "defense": 20,
+      "speed": 7
+    },
+    "growth": {
+      "hp": 7,
+      "attack": 2,
+      "defense": 3,
+      "speed": 2
+    },
+    "skills": ["poision-gas", "smoke-cloud","shadow-smoke","nuclear-blast"],
+    "captureRate": 0.5
+  },
+  "dune-striker": {
+    "name": "dune-striker",
+    "type": "electric",
+    "baseStats": { "hp": 65, "attack": 22, "defense": 14, "speed": 18 },
+    "growth": { "hp": 6, "attack": 3, "defense": 2, "speed": 2 },
+    "skills": ["lava-blast", "lightning-shard", "tornado-strike"],
+    "captureRate": 0.45
+  }
+}

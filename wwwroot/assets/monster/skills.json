@@ -1,0 +1,488 @@
+{
+  "scratch": {
+    "skillId": "scratch",
+    "name": "Scratch",
+    "description": "A basic physical attack that deals direct damage.",
+    "type": "Normal",
+    "category": "Physical",
+    "power": 40,
+    "accuracy": 100,
+    "energyCost": 0,
+    "effects": [],
+    "animationKey": "vfx_scratch"
+  },
+  "quick_attack": {
+    "skillId": "quick_attack",
+    "name": "Quick Attack",
+    "description": "A fast attack dealing 1-3 hits that never misses.",
+    "type": "Normal",
+    "category": "Physical",
+    "power": 20,
+    "accuracy": 1000,
+    "energyCost": 15,
+    "effects": [
+      {
+        "type": "multiHit",
+        "target": "enemy",
+        "minHits": 1,
+        "maxHits": 3,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_quick_strike"
+  },
+  "hurricane": {
+    "skillId": "hurricane",
+    "name": "Hurricane",
+    "description": "Great winds that deal damage and lower the enemy's attack stat.",
+    "type": "Normal",
+    "category": "Special",
+    "power": 65,
+    "accuracy": 90,
+    "energyCost": 20,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "enemy",
+        "stat": "attack",
+        "amount": -1,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_hurricane"
+  },
+  "sonic_shock": {
+    "skillId": "sonic_shock",
+    "name": "Sonic Shock",
+    "description": "An attack that hits the opponent with a strong sound wave.",
+    "type": "Normal",
+    "category": "Special",
+    "power": 55,
+    "accuracy": 95,
+    "energyCost": 15,
+    "effects": [],
+    "animationKey": "vfx_sonic_wave"
+  },
+  "confuse": {
+    "skillId": "confuse",
+    "name": "Confuse",
+    "description": "Lowers the enemy's aiming and has a chance to cause the Hypno status.",
+    "type": "Normal",
+    "category": "Status",
+    "power": 0,
+    "accuracy": 85,
+    "energyCost": 15,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "enemy",
+        "stat": "accuracy",
+        "amount": -1,
+        "chance": 100
+      },
+      {
+        "type": "applyStatus",
+        "target": "enemy",
+        "statusId": "hypno",
+        "chance": 40
+      }
+    ],
+    "animationKey": "vfx_confuse"
+  },
+  "enrage": {
+    "skillId": "enrage",
+    "name": "Enrage",
+    "description": "Increases the user's attack and applies the Raged status.",
+    "type": "Normal",
+    "category": "Status",
+    "power": 0,
+    "accuracy": 100,
+    "energyCost": 20,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "user",
+        "stat": "attack",
+        "amount": 2,
+        "chance": 100
+      },
+      {
+        "type": "applyStatus",
+        "target": "user",
+        "statusId": "raged",
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_enrage_buff"
+  },
+  "revive": {
+    "skillId": "revive",
+    "name": "Revive",
+    "description": "A support move that restores a portion of health.",
+    "type": "Normal",
+    "category": "Status",
+    "power": 0,
+    "accuracy": 100,
+    "energyCost": 35,
+    "effects": [
+      {
+        "type": "healHp",
+        "target": "user",
+        "healPercentOfMax": 0.5,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_healing_light"
+  },
+  "fireworks": {
+    "skillId": "fireworks",
+    "name": "Fireworks",
+    "description": "Exploding rocks that deal damage and improve the user's aiming.",
+    "type": "Fire",
+    "category": "Special",
+    "power": 50,
+    "accuracy": 95,
+    "energyCost": 15,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "user",
+        "stat": "accuracy",
+        "amount": 1,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_fireworks"
+  },
+  "enflame": {
+    "skillId": "enflame",
+    "name": "Enflame",
+    "description": "Uses magical fire to improve the user's attack and restore health.",
+    "type": "Fire",
+    "category": "Status",
+    "power": 0,
+    "accuracy": 100,
+    "energyCost": 25,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "user",
+        "stat": "attack",
+        "amount": 1,
+        "chance": 100
+      },
+      {
+        "type": "healHp",
+        "target": "user",
+        "healPercentOfMax": 0.25,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_enflame_aura"
+  },
+  "hellfire": {
+    "skillId": "hellfire",
+    "name": "Hellfire",
+    "description": "A massive fire attack that deals extra damage if the user's health is low.",
+    "type": "Fire",
+    "category": "Special",
+    "power": 90,
+    "accuracy": 95,
+    "energyCost": 30,
+    "effects": [
+      {
+        "type": "conditionalDamage",
+        "target": "enemy",
+        "condition": "userHpBelow30",
+        "multiplier": 1.5,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_hellfire"
+  },
+  "volcano": {
+    "skillId": "volcano",
+    "name": "Volcano",
+    "description": "Blasts the enemy with an eruption of lava.",
+    "type": "Fire",
+    "category": "Special",
+    "power": 100,
+    "accuracy": 85,
+    "energyCost": 35,
+    "effects": [
+      {
+        "type": "applyStatus",
+        "target": "enemy",
+        "statusId": "burn",
+        "chance": 30
+      }
+    ],
+    "animationKey": "vfx_volcano"
+  },
+  "smoke_screen": {
+    "skillId": "smoke_screen",
+    "name": "Smoke Screen",
+    "description": "Clouds of smoke that deal damage and may cause the Sick status.",
+    "type": "Fire",
+    "category": "Special",
+    "power": 40,
+    "accuracy": 100,
+    "energyCost": 15,
+    "effects": [
+      {
+        "type": "applyStatus",
+        "target": "enemy",
+        "statusId": "sick",
+        "chance": 40
+      }
+    ],
+    "animationKey": "vfx_smoke_cloud"
+  },
+  "burning_stone": {
+    "skillId": "burning_stone",
+    "name": "Burning Stone",
+    "description": "A legendary skill that launches giant burning stones and induces Rage.",
+    "type": "Fire",
+    "category": "Special",
+    "power": 120,
+    "accuracy": 80,
+    "energyCost": 40,
+    "effects": [
+      {
+        "type": "applyStatus",
+        "target": "user",
+        "statusId": "raged",
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_meteor_strike"
+  },
+  "bubble_burst": {
+    "skillId": "bubble_burst",
+    "name": "Bubble Burst",
+    "description": "Deals damage with a powerful barrage of bubbles.",
+    "type": "Water",
+    "category": "Special",
+    "power": 65,
+    "accuracy": 100,
+    "energyCost": 20,
+    "effects": [],
+    "animationKey": "vfx_bubbles"
+  },
+  "ice_shield": {
+    "skillId": "ice_shield",
+    "name": "Ice Shield",
+    "description": "A support skill that improves defense using a cover of ice.",
+    "type": "Water",
+    "category": "Status",
+    "power": 0,
+    "accuracy": 100,
+    "energyCost": 15,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "user",
+        "stat": "defense",
+        "amount": 2,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_ice_barrier"
+  },
+  "tentacle_grip": {
+    "skillId": "tentacle_grip",
+    "name": "Tentacle Grip",
+    "description": "Charges with toxic tentacles, potentially causing the Sick status.",
+    "type": "Water",
+    "category": "Physical",
+    "power": 55,
+    "accuracy": 95,
+    "energyCost": 15,
+    "effects": [
+      {
+        "type": "applyStatus",
+        "target": "enemy",
+        "statusId": "sick",
+        "chance": 30
+      }
+    ],
+    "animationKey": "vfx_tentacles"
+  },
+  "blizzard": {
+    "skillId": "blizzard",
+    "name": "Blizzard",
+    "description": "A heavy ice-based attack.",
+    "type": "Water",
+    "category": "Special",
+    "power": 70,
+    "accuracy": 95,
+    "energyCost": 20,
+    "effects": [],
+    "animationKey": "vfx_blizzard"
+  },
+  "iceberg": {
+    "skillId": "iceberg",
+    "name": "Iceberg",
+    "description": "A massive block of ice is dropped on the opponent.",
+    "type": "Water",
+    "category": "Special",
+    "power": 90,
+    "accuracy": 85,
+    "energyCost": 30,
+    "effects": [],
+    "animationKey": "vfx_iceberg_drop"
+  },
+  "avalanche": {
+    "skillId": "avalanche",
+    "name": "Avalanche",
+    "description": "A devastating cascade of snow and ice.",
+    "type": "Water",
+    "category": "Special",
+    "power": 110,
+    "accuracy": 80,
+    "energyCost": 40,
+    "effects": [],
+    "animationKey": "vfx_avalanche"
+  },
+  "frozen_mist": {
+    "skillId": "frozen_mist",
+    "name": "Frozen Mist",
+    "description": "A cold area-of-effect attack that chills the opponent.",
+    "type": "Water",
+    "category": "Special",
+    "power": 45,
+    "accuracy": 100,
+    "energyCost": 15,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "enemy",
+        "stat": "speed",
+        "amount": -1,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_frost_mist"
+  },
+  "water_geyser": {
+    "skillId": "water_geyser",
+    "name": "Water Geyser",
+    "description": "An exclusive high-powered water blast.",
+    "type": "Water",
+    "category": "Special",
+    "power": 105,
+    "accuracy": 90,
+    "energyCost": 35,
+    "effects": [],
+    "animationKey": "vfx_geyser_blast"
+  },
+  "leaf_strike": {
+    "skillId": "leaf_strike",
+    "name": "Leaf Strike",
+    "description": "A swift physical plant-based attack.",
+    "type": "Plant",
+    "category": "Physical",
+    "power": 55,
+    "accuracy": 100,
+    "energyCost": 10,
+    "effects": [],
+    "animationKey": "vfx_leaf_slash"
+  },
+  "jungle_whip": {
+    "skillId": "jungle_whip",
+    "name": "Jungle Whip",
+    "description": "Strikes the opponent using tough vines.",
+    "type": "Plant",
+    "category": "Physical",
+    "power": 65,
+    "accuracy": 95,
+    "energyCost": 15,
+    "effects": [],
+    "animationKey": "vfx_vine_whip"
+  },
+  "electric_punch": {
+    "skillId": "electric_punch",
+    "name": "Electric Punch",
+    "description": "Deals damage with a fist covered in electricity.",
+    "type": "Electric",
+    "category": "Physical",
+    "power": 65,
+    "accuracy": 100,
+    "energyCost": 15,
+    "effects": [],
+    "animationKey": "vfx_spark_punch"
+  },
+  "thunder_blast": {
+    "skillId": "thunder_blast",
+    "name": "Thunder Blast",
+    "description": "Hits the opposing monster with lightning, lowering their defense.",
+    "type": "Electric",
+    "category": "Special",
+    "power": 85,
+    "accuracy": 90,
+    "energyCost": 25,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "enemy",
+        "stat": "defense",
+        "amount": -1,
+        "chance": 40
+      }
+    ],
+    "animationKey": "vfx_thunder_bolt"
+  },
+  "giant_claws": {
+    "skillId": "giant_claws",
+    "name": "Giant Claws",
+    "description": "Slashes the enemy, reducing all of their combat parameters.",
+    "type": "Dark",
+    "category": "Physical",
+    "power": 75,
+    "accuracy": 95,
+    "energyCost": 30,
+    "effects": [
+      {
+        "type": "statChange",
+        "target": "enemy",
+        "stat": "attack",
+        "amount": -1,
+        "chance": 30
+      },
+      {
+        "type": "statChange",
+        "target": "enemy",
+        "stat": "defense",
+        "amount": -1,
+        "chance": 30
+      },
+      {
+        "type": "statChange",
+        "target": "enemy",
+        "stat": "speed",
+        "amount": -1,
+        "chance": 30
+      }
+    ],
+    "animationKey": "vfx_dark_slash"
+  },
+  "suck_life": {
+    "skillId": "suck_life",
+    "name": "Suck Life",
+    "description": "Drains health from the opposing monster to restore the user's health.",
+    "type": "Dark",
+    "category": "Special",
+    "power": 60,
+    "accuracy": 100,
+    "energyCost": 25,
+    "effects": [
+      {
+        "type": "lifesteal",
+        "target": "user",
+        "healPercentageOfDamage": 0.5,
+        "chance": 100
+      }
+    ],
+    "animationKey": "vfx_drain"
+  }
+}

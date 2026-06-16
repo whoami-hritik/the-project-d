@@ -35,7 +35,7 @@ namespace TGBOT
 
         public static bool IsUnderMaintenance { get; set; } = false;
         public static string MaintenanceMessage { get; set; } = "";
-        private readonly List<string> TopUpItems = new() {"TON", "GOLD", "CRYSTAL"};
+        private readonly List<string> TopUpItems = new() {"TON", "GOLD"};
     
         public TelegramBot(ITelegramBotClient bot, AppDbContext dbContext, UserService userService)
         {
@@ -127,7 +127,7 @@ namespace TGBOT
 
                         string helpMsg = "⚙️ *Admin Commands List*:\n\n" +
                                          "• `/help` - Show this help message\n" +
-                                         "• `/topup <uid> <currency/item> <amount>` - Top up user currencies (TON, GOLD, CRYSTAL, EGGS) or items (MonstaBall, HealSpell, etc.)\n" +
+                                         "• `/topup <uid> <currency/item> <amount>` - Top up user currencies (TON, GOLD, EGGS) or items (MonstaBall, HealSpell, etc.)\n" +
                                          "• `/user <uid>` - Inspect user data, balances, items, and monsters\n" +
                                          "• `/totalplayers` - View total registered players\n" +
                                          "• `/resetdb <password>` - Wipe all user data (requires password: `AdminDBReset2026!`)\n" +
@@ -196,13 +196,13 @@ namespace TGBOT
                         if (!isItem)
                         {
                             string currencyUpper = TopupItem.ToUpper();
-                            if (currencyUpper == "TON" || currencyUpper == "GOLD" || currencyUpper == "CRYSTAL" || currencyUpper == "EGGS")
+                            if (currencyUpper == "TON" || currencyUpper == "GOLD" || currencyUpper == "EGGS")
                             {
                                 User.Credit(currencyUpper, topupAmt, "admintopup");
                             }
                             else
                             {
-                                await _bot.SendMessage(commander.Chatid, "❌ Invalid currency or item. Currencies: TON, GOLD, CRYSTAL, EGGS. Items: MonstaBall, HealSpell, etc.");
+                                await _bot.SendMessage(commander.Chatid, "❌ Invalid currency or item. Currencies: TON, GOLD, EGGS. Items: MonstaBall, HealSpell, etc.");
                                 return;
                             }
                         }

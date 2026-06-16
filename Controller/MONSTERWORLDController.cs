@@ -163,7 +163,7 @@ namespace monster_world.Controller
             {
                 UserID = User.ID,
                 Amount = tonAmount,
-                Balance = new Balance { TON = User.Balance.TON, GOLD = User.Balance.GOLD, CRYSTAL = User.Balance.CRYSTAL },
+                Balance = new Balance { TON = User.Balance.TON, GOLD = User.Balance.GOLD, CRYSTAL = 0 },
                 Successful = true,
                 Completed = true,
                 Hash = update.TxHash,
@@ -188,7 +188,7 @@ namespace monster_world.Controller
                 return Ok();
             }
 
-            string AdminMsg = $"Deposit Done!\n\n ID: {User.ID}\nDeposit Amt: {tonAmount:F2}\nHash: {update.TxHash}\nTON Bal: {User.Balance.TON}\nGOLD Bal: {User.Balance.GOLD}\nCRYSTAL Bal: {User.Balance.CRYSTAL}\nRegistered At: {User.RegistrationDate}";
+            string AdminMsg = $"Deposit Done!\n\n ID: {User.ID}\nDeposit Amt: {tonAmount:F2}\nHash: {update.TxHash}\nTON Bal: {User.Balance.TON}\nGOLD Bal: {User.Balance.GOLD}\nRegistered At: {User.RegistrationDate}";
             await _tgbot.Notify(User.ID, $"Deposit confirmed! {tonAmount:F2} TON added to your balance.");
             await _tgbot.NotifyAdmin(AdminMsg);
             return Ok();
@@ -573,8 +573,7 @@ namespace monster_world.Controller
             User.Bonus = true;
 
             
-            User.Credit("CRYSTAL", SignUpBonus.Currency["CRYSTAL"], "signupbonus=" + monster.InstanceId);
-
+            
 
             User.AddItems("MonstaBall", SignUpBonus.Items["MonstaBall"], $"signupbonus={monster.InstanceId}");
             User.AddItems("HealSpell", SignUpBonus.Items["HealSpell"], $"signupbonus={monster.InstanceId}");
@@ -1977,7 +1976,7 @@ namespace monster_world.Controller
             }
 
             // Mark mission as complete, add to User's completed list, and credit reward
-            if (mission.RewardCurrency == "GOLD" || mission.RewardCurrency == "TON" || mission.RewardCurrency == "CRYSTAL" || mission.RewardCurrency == "EGGS")
+            if (mission.RewardCurrency == "GOLD" || mission.RewardCurrency == "TON" || mission.RewardCurrency == "EGGS")
             {
                 User.Credit(mission.RewardCurrency, mission.RewardAmount, $"mission_verify={mission.MissionId}");
             }

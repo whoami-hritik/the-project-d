@@ -88,7 +88,7 @@ namespace monster_world.Services
                         {
                             TON = 0,
                             GOLD = 10,
-                            CRYSTAL = 100,
+                            CRYSTAL = 0,
                             EGGS = 0
                         },
                         Items = new()

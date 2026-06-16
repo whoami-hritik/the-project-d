@@ -175,8 +175,38 @@ export class LabScene extends Phaser.Scene {
         // Show level up button only when monster XP reaches to MAX XP
         if (this.monsInfo.xp >= (this.monsInfo.maxXP || 100)) {
             const levelUpX = healBtn ? 245 : 125;
-            const LEVELUP_BTN = this.add.image(levelUpX, 550, "btn_levelup").setDisplaySize(95, 38).setOrigin(0).setInteractive({ useHandCursor: true });
-            LEVELUP_BTN.on("pointerup", () => {
+            const levelUpGoldCost = 100 * this.monsInfo.level;
+            
+            // Create premium level up button container
+            const levelupContainer = this.add.container(levelUpX, 550);
+            
+            const graphics = this.add.graphics();
+            // Golden gradient with border highlight
+            graphics.fillGradientStyle(0xffd700, 0xffa500, 0xff8c00, 0xff8c00, 1);
+            graphics.fillRoundedRect(0, 0, 115, 38, 10);
+            graphics.lineStyle(2, 0xffffff, 0.9);
+            graphics.strokeRoundedRect(0, 0, 115, 38, 10);
+            
+            const text = this.add.text(57.5, 19, `LEVEL UP\n${levelUpGoldCost} GOLD`, {
+                fontFamily: "Lilita One, sans-serif",
+                fontSize: "11px",
+                color: "#ffffff",
+                align: "center",
+                lineSpacing: -2
+            }).setOrigin(0.5, 0.5);
+            text.setStroke("#4a2306", 3);
+            
+            levelupContainer.add([graphics, text]);
+            levelupContainer.setSize(115, 38);
+            levelupContainer.setInteractive({ useHandCursor: true });
+            
+            // Hover micro-animations
+            levelupContainer.on("pointerover", () => { levelupContainer.setScale(1.05); });
+            levelupContainer.on("pointerout", () => { levelupContainer.setScale(1.0); });
+            levelupContainer.on("pointerdown", () => { levelupContainer.setScale(0.95); });
+            
+            levelupContainer.on("pointerup", () => {
+                levelupContainer.setScale(1.05);
                 api.LevelUpMonster(this.monsInfo.instanceId).then(result => {
                     if (result && result.success) {
                         showNotification(this, "Monster Leveled Up!");
@@ -379,16 +409,42 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                 ease: "Power2",
                 onComplete: () => {
                     if (monsInfo.xp >= monsInfo.maxXP) {
-                        const levelUp = scene.add.image(150, 465, "btn_levelup").setOrigin(0).setDisplaySize(97, 44);
-                        levelUp.setInteractive({ useHandCursor: true });
-
-                        const levelUpText = scene.add.text(160, 470, 0, "{Amonut} {GOLD icon } LEVEL UP", { font: "24px Arial", fill: "#fff", fontWeight: "bold" });
-                        const btn_later = scene.add.image(175, 510, "btn_later").setOrigin(0).setDisplaySize(50, 25);
+                        const levelUpGoldCost = 100 * monsInfo.level;
+                        
+                        // Create a premium container for Level Up button
+                        const levelUpBtnContainer = scene.add.container(105, 455);
+                        
+                        const graphics = scene.add.graphics();
+                        graphics.fillGradientStyle(0xffd700, 0xffa500, 0xff8c00, 0xff8c00, 1);
+                        graphics.fillRoundedRect(0, 0, 140, 44, 12);
+                        graphics.lineStyle(2, 0xffffff, 0.9);
+                        graphics.strokeRoundedRect(0, 0, 140, 44, 12);
+                        
+                        const text = scene.add.text(70, 22, `LEVEL UP\n${levelUpGoldCost} GOLD`, {
+                            fontFamily: "Lilita One, sans-serif",
+                            fontSize: "12px",
+                            color: "#ffffff",
+                            align: "center",
+                            lineSpacing: -2
+                        }).setOrigin(0.5, 0.5);
+                        text.setStroke("#4a2306", 3);
+                        
+                        levelUpBtnContainer.add([graphics, text]);
+                        levelUpBtnContainer.setSize(140, 44);
+                        levelUpBtnContainer.setInteractive({ useHandCursor: true });
+                        
+                        // Hover micro-animations
+                        levelUpBtnContainer.on("pointerover", () => { levelUpBtnContainer.setScale(1.05); });
+                        levelUpBtnContainer.on("pointerout", () => { levelUpBtnContainer.setScale(1.0); });
+                        levelUpBtnContainer.on("pointerdown", () => { levelUpBtnContainer.setScale(0.95); });
+                        
+                        const btn_later = scene.add.image(150, 510, "btn_later").setOrigin(0).setDisplaySize(50, 25);
                         btn_later.setInteractive({ useHandCursor: true });
-                        container.add([levelUp, btn_later]);
-
-                        levelUp.on("pointerup", () => {
-
+                        
+                        container.add([levelUpBtnContainer, btn_later]);
+                        
+                        levelUpBtnContainer.on("pointerup", () => {
+                            levelUpBtnContainer.setScale(1.05);
                             api.LevelUpMonster(monsInfo.instanceId).then((result) => {
                                 if (result.success) {
                                     const fx = scene.add.sprite(monster.x, monster.y, "anim_levelup_blast");
@@ -396,9 +452,7 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                                     fx.anims.play("anim_levelup_blast");
 
                                     fx.on("animationcomplete", () => {
-
                                         fx.destroy();
-
                                         scene.tweens.add({
                                             targets: container,
                                             x: scene.scale.width,
@@ -418,8 +472,6 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                                     })
                                 }
                             })
-
-
                         });
 
 

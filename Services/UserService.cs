@@ -83,6 +83,7 @@ namespace monster_world.Services
                         TotalCaptured = 0,
                         TotalVictory = 0,
                         Bonus = false,
+                        Level = 1,
                         Balance = new()
                         {
                             TON = 0,
@@ -184,6 +185,10 @@ namespace monster_world.Services
                 }
                 else
                 {
+                    if (user.Level == 0)
+                    {
+                        user.Level = 1;
+                    }
                     var today = DateTime.UtcNow.Date;
                     if (user.LastLoginDate == null)
                     {

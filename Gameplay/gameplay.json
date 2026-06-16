@@ -667,21 +667,18 @@
             "brasko"
         ],
         "currency": {
-            "CRYSTAL": 100,
             "GOLD": 15
         },
         "items": {
             "MonstaBall": 2,
-            "HealSpell": 2,
-            "RagePotion": 1,
-            "DarkSpell": 1
+            "HealSpell": 1,
+            "RagePotion": 1
         }
     },
     "referralRewards": {
         "referrer": {
             "currency": {
-                "GOLD": 2,
-                "CRYSTAL": 10
+                "GOLD": 2
             },
             "items": {
                 "MonstaBall": 1
@@ -689,11 +686,9 @@
         },
         "referee": {
             "currency": {
-                "CRYSTAL": 5
+                "GOLD": 1
             },
-            "items": {
-                "MonstaBall": 1
-            }
+            "items": {}
         }
     },
     "battleData": {

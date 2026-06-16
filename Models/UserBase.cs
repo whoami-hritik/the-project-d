@@ -62,7 +62,7 @@ namespace monster_world.Models
         public int TotalCaptured { get; set; }
         public bool Tutorial { get; set; }
         public bool HasAcceptedAgreement { get; set; } = false;
-        public int Level { get; set; } = 0;
+        public int Level { get; set; } = 1;
         public DateTime RegistrationDate { get; set; }
         public int LoginStreak { get; set; } = 0;
         public DateTime? LastLoginDate { get; set; } = null;

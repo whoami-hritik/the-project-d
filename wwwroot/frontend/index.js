@@ -9,17 +9,17 @@ document.addEventListener("DOMContentLoaded", () => {
     spanText.innerHTML = tg.initData;
     console.log("start");
     sendReq.addEventListener("click", async () => {
-        
+
         console.log("initData:", tg.initData);
-console.log("initDataUnsafe:", tg.initDataUnsafe);
-        
+        console.log("initDataUnsafe:", tg.initDataUnsafe);
+
 
         try {
-            const res = await fetch("https://pan-rebel-separated-environment.trycloudflare.com/monsterworld/user", {
+            const res = await fetch("https://monsterworld.qzz.io/monsterworld/user", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "InitData": tg.initData   // ✅ your approach
+                    "InitData": tg.initData
                 }
             });
 

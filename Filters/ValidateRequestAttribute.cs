@@ -44,7 +44,8 @@ namespace monster_world.Filters
             bool verify = TelegramUtility.VerifyTelegramInitData(
                 init,
                 out long UID,
-                out TelegramUser user);
+                out TelegramUser user,
+                out string startParam);
 
             if (!verify)
             {
@@ -58,8 +59,10 @@ namespace monster_world.Filters
                 return;
             }
 
+
             context.HttpContext.Items["ID"] = UID;
             context.HttpContext.Items["User"] = user;
+            context.HttpContext.Items["StartParam"] = startParam;
 
             var userLock = _userLocks.GetOrAdd(
                 UID,

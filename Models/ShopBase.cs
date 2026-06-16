@@ -5,7 +5,7 @@ namespace monster_world.Models
         public class Listed
         {
             public Guid ID { get; set; }
-            public string PayloadId { get; set; }  // buyhealspray
+            public string PayloadId { get; set; }  // buy=healspray
             public string Name { get; set; }
             public string Category { get; set; }
             public string Description { get; set; }

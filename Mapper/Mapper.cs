@@ -19,15 +19,25 @@ namespace monster_world.Mapper
                 AllowsWriteToPm = user.AllowsWriteToPm,
                 TON = user.Balance.TON,
                 GOLD = user.Balance.GOLD,
+                UnlockedWorlds = user.UnlockedWorlds,
                 CRYSTAL = user.Balance.CRYSTAL,
+                EGGS = user.Balance.EGGS,
                 Bonus = user.Bonus,
                 TotalVictory = user.TotalVictory,
                 TotalBattles = user.TotalBattles,
                 TotalCaptured = user.TotalCaptured,
                 Tutorial = user.Tutorial,
+                HasAcceptedAgreement = user.HasAcceptedAgreement,
                 Level = user.Level,
-                RegistrationDate = user.RegistrationDate
-                
+                Transactions = user.Transactions,
+                RegistrationDate = user.RegistrationDate,
+                LoginStreak = user.LoginStreak,
+                LastLoginDate = user.LastLoginDate,
+                StreakClaimed = user.StreakClaimed,
+                DailyVictory = user.DailyVictory,
+                DailyBattles = user.DailyBattles,
+                DailyHealedHP = user.DailyHealedHP,
+                DailyChestsOpened = user.DailyChestsOpened
             };
 
             return User;

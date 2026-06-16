@@ -102,6 +102,35 @@
         ]
     },
     {
+        "id": "revive",
+        "title": "REVIVE",
+        "desc": "Restores a portion of your Dynamon's|HEALTH",
+        "kind": "none",
+        "effects": {
+            "heal_percent": "14-28"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0,
+        "visualSteps": [
+            {
+                "at": 0,
+                "action": "sfx-revive",
+                "duration": 10
+            },
+            {
+                "at": 150,
+                "action": "fx-revive",
+                "duration": 2000
+            },
+            {
+                "at": 800,
+                "action": "effect",
+                "duration": 1600
+            }
+        ]
+    },
+    {
         "id": "rage",
         "title": "ENRAGE",
         "desc": "Increases ATTACK and gets RAGED,|making next attack stronger",
@@ -6274,58 +6303,6 @@
             ]
         },
         "noBackfire": true,
-        "cooldown": 0,
-        "visualSteps": [
-            {
-                "at": 50,
-                "action": "fx-spirit_breath",
-                "duration": 5000
-            },
-            {
-                "at": 50,
-                "action": "sfx-dark_beam",
-                "duration": 10
-            },
-            {
-                "at": 500,
-                "action": "sfx-dark_beam",
-                "duration": 10
-            },
-            {
-                "at": 1050,
-                "action": "sfx-dark_beam",
-                "duration": 10
-            },
-            {
-                "at": 1500,
-                "action": "sfx-dark_beam",
-                "duration": 10
-            },
-            {
-                "at": 50,
-                "action": "sfx-haunt",
-                "duration": 10
-            },
-            {
-                "at": 500,
-                "action": "sfx-haunt",
-                "duration": 10
-            },
-            {
-                "at": 1050,
-                "action": "sfx-haunt",
-                "duration": 10
-            },
-            {
-                "at": 1500,
-                "action": "sfx-haunt",
-                "duration": 10
-            },
-            {
-                "at": 4100,
-                "action": "effect",
-                "duration": 900
-            }
-        ]
+        "cooldown": 0
     }
 ]

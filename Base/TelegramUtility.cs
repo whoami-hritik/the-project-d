@@ -8,10 +8,11 @@ namespace monster_world.Base
     public static class TelegramUtility
     {
         private static string botToken = "8758601978:AAEL44gqPqNQey3CLpyaElRvR3PnVcWbEMI";
-        public static bool VerifyTelegramInitData(string initData, out long userId, out TelegramUser user)
+        public static bool VerifyTelegramInitData(string initData, out long userId, out TelegramUser user, out string startParam)
         {
             userId = 0;
             user = null;
+            startParam = "";
 
             var parsed = System.Web.HttpUtility.ParseQueryString(initData);
 
@@ -55,6 +56,7 @@ namespace monster_world.Base
             var userDoc = JsonDocument.Parse(userJson);
             user = JsonSerializer.Deserialize<TelegramUser>(userJson);
             userId = userDoc.RootElement.GetProperty("id").GetInt64();
+            startParam = parsed["start_param"] ?? "";
 
             return true;
         }

@@ -49,6 +49,7 @@ namespace monster_world.Models
         public long TotalVictory { get; set; }
         public bool Bonus { get; set; }
         public long ReferrerID { get; set; }
+        public bool ReferrerRewarded { get; set; } = false;
         public List<string> UnlockedWorlds { get; set; }
         public List<string> Monsters { get; set; }
         public Items Items { get; set; }
@@ -60,15 +61,19 @@ namespace monster_world.Models
         public int TotalBattles { get; set; }
         public int TotalCaptured { get; set; }
         public bool Tutorial { get; set; }
+        public bool HasAcceptedAgreement { get; set; } = false;
         public int Level { get; set; } = 0;
         public DateTime RegistrationDate { get; set; }
+        public int LoginStreak { get; set; } = 0;
+        public DateTime? LastLoginDate { get; set; } = null;
+        public bool StreakClaimed { get; set; } = false;
+        public int DailyVictory { get; set; } = 0;
+        public int DailyBattles { get; set; } = 0;
+        public int DailyHealedHP { get; set; } = 0;
+        public int DailyChestsOpened { get; set; } = 0;
         public UserBase()
         {
-            UnlockedWorlds = new List<string>()
-            {
-                "bootcamp",
-                "riverfall"
-            };
+            UnlockedWorlds = new List<string>();
             Monsters = new List<string>();
             Transactions = new List<string>();
             Payloads = new List<string>();
@@ -94,6 +99,28 @@ namespace monster_world.Models
 
             Transactions.Add(DateTime.UtcNow+"|"+Currency+"|"+Amount+"|"+Action);
         }
+
+
+        public void AddItems(string Item, int Quantity, string Action)
+        {
+            Items = new Items
+            {
+                MonstaBall = (string.Equals(Item, "MonstaBall", StringComparison.OrdinalIgnoreCase)) ? Items.MonstaBall + Quantity: Items.MonstaBall,
+                RagePotion = (string.Equals(Item, "RagePotion", StringComparison.OrdinalIgnoreCase)) ? Items.RagePotion + Quantity: Items.RagePotion,
+                LavaSpell = (string.Equals(Item, "LavaSpell", StringComparison.OrdinalIgnoreCase)) ? Items.LavaSpell + Quantity: Items.LavaSpell,
+                AvalancheSpell = (string.Equals(Item, "AvalancheSpell", StringComparison.OrdinalIgnoreCase)) ? Items.AvalancheSpell + Quantity: Items.AvalancheSpell,
+                WindSpell = (string.Equals(Item, "WindSpell", StringComparison.OrdinalIgnoreCase)) ? Items.WindSpell + Quantity: Items.WindSpell,
+                WaterFallSpell = (string.Equals(Item, "WaterFallSpell", StringComparison.OrdinalIgnoreCase)) ? Items.WaterFallSpell + Quantity: Items.WaterFallSpell,
+                ThunderSpell = (string.Equals(Item, "ThunderSpell", StringComparison.OrdinalIgnoreCase)) ? Items.ThunderSpell + Quantity: Items.ThunderSpell,
+                DarkSpell = (string.Equals(Item, "DarkSpell", StringComparison.OrdinalIgnoreCase)) ? Items.DarkSpell + Quantity: Items.DarkSpell,
+                HealSpell = (string.Equals(Item, "HealSpell", StringComparison.OrdinalIgnoreCase)) ? Items.HealSpell + Quantity: Items.HealSpell,
+                Shield = (string.Equals(Item, "Shield", StringComparison.OrdinalIgnoreCase)) ? Items.Shield + Quantity: Items.Shield,
+                Poison = (string.Equals(Item, "Poison", StringComparison.OrdinalIgnoreCase)) ? Items.Poison + Quantity: Items.Poison,
+                Hallucinogen = (string.Equals(Item, "Hallucinogen", StringComparison.OrdinalIgnoreCase)) ? Items.Hallucinogen + Quantity: Items.Hallucinogen,
+            };
+
+            Transactions.Add(DateTime.UtcNow+"|"+Item+"|"+Quantity+"|"+Action);
+        }
     }
 
 
@@ -102,7 +129,7 @@ namespace monster_world.Models
         [Key]
         public Guid RefID { get; set; }
         public long ID { get; set; }
-        public ICollection<long> Referrals { get; set; }
+        public List<long> Referrals { get; set; } = new List<long>();
     }
     public class UserMission
     {
@@ -110,6 +137,20 @@ namespace monster_world.Models
         public Guid MissionId { get; set; }
         public DateTime? StartedAt { get; set; }
         public bool Active { get; set; }
+    }
+
+    public class Mission
+    {
+        [Key]
+        public Guid MissionId { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public double RewardAmount { get; set; }
+        public string RewardCurrency { get; set; }
+        public string VerificationType { get; set; }
+        public string VerificationUrl { get; set; }
+        public bool IsActive { get; set; } = true;
+        public string Category { get; set; } = "Daily";
     }
 
     public class Deposit
@@ -192,32 +233,7 @@ namespace monster_world.Models
         public bool Completed { get; set; }
     }
 
-    public class Monster
-    {
-        [Key]
-        public int GlobalID { get; set; }
-        public string InstanceId { get; set; }      // unique per captured instance
-        public string Id { get; set; }         // "armadigo" → look up MonsterDef
-        public string Title { get; set; }         // denormalized for display speed
-        public long OwnerID { get; set; }
-        public string Kind { get; set; }
-        public int Level { get; set; }
-        public int XP { get; set; }
-        public bool IsFighting { get; set; } = false;
-        public DateTime CaptureAt { get; set; }
-        public DateTime? HealTime { get; set; }
-        
-        // Live state
-        public int CurrentHP { get; set; } = 100;        
-        public List<string> Logs { get; set; } = new List<string>();
-
-
-        public void Log(string monster, int level, string action)
-        {
-            Logs.Add(DateTime.UtcNow+"|"+monster+"|"+level+"|"+action);
-        }
-    }
-
+   
 
 
     // public enum MonsterType

@@ -2,6 +2,7 @@ using System.IO.Compression;
 using System.Text;
 using System;
 using System.Security.Cryptography;
+using Telegram.Bot.Types.Enums;
 namespace monster_world.Extentions
 {
     public static class Extentions
@@ -38,5 +39,31 @@ namespace monster_world.Extentions
 
             return "0x" + BitConverter.ToString(bytes).Replace("-", "").ToLower();
         }
+
+        public static int RandomBetween(string value, string sep)
+        {
+            // sep = ":" || "-"
+            int value1 = int.Parse(value.Split(sep)[0]);
+            int value2 = int.Parse(value.Split(sep)[1]);
+
+            Random random = new Random();
+
+            return random.Next(value1, value2 + 1);
+        }
+
+        public static double RandomDoubleBetween(string value, string sep)
+        {
+            // sep = ":" || "-"
+            double value1 = double.Parse(value.Split(sep)[0], System.Globalization.CultureInfo.InvariantCulture);
+            double value2 = double.Parse(value.Split(sep)[1], System.Globalization.CultureInfo.InvariantCulture);
+
+            Random random = new Random();
+
+            return value1 + (random.NextDouble() * (value2 - value1));
+        }
+
+
+
+        
     }
 }

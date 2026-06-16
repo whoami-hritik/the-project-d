@@ -1,0 +1,916 @@
+{
+    "common": [
+        {
+            "monsterid": "quabble",
+            "desc": "",
+            "title": "QUABBLE",
+            "element": "water",
+            "rarity": "common",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "freeze",
+                    "getsAt": 3
+                },
+                {
+                    "id": "rage",
+                    "getsAt": 5
+                },
+                {
+                    "id": "ice_splash",
+                    "getsAt": 10
+                },
+                {
+                    "id": "ice_storm",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "grunko",
+            "desc": "",
+            "title": "GRUNKO",
+            "element": "earth",
+            "rarity": "common",
+            "role": "defensive",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "flash",
+                    "getsAt": 3
+                },
+                {
+                    "id": "earth_shield",
+                    "getsAt": 5
+                },
+                {
+                    "id": "strangle",
+                    "getsAt": 7
+                },
+                {
+                    "id": "poison_gas",
+                    "getsAt": 10
+                }
+            ]
+        },
+        {
+            "monsterid": "blazik",
+            "desc": "",
+            "title": "BLAZIK",
+            "element": "fire",
+            "rarity": "common",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "flash",
+                    "getsAt": 3
+                },
+                {
+                    "id": "rain_fire",
+                    "getsAt": 5
+                },
+                {
+                    "id": "enflame",
+                    "getsAt": 7
+                },
+                {
+                    "id": "fire_spin",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "chompy",
+            "desc": "",
+            "title": "CHOMPY",
+            "element": "fire",
+            "rarity": "common",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "quick_attack",
+                    "getsAt": 3
+                },
+                {
+                    "id": "smoke",
+                    "getsAt": 5
+                },
+                {
+                    "id": "magma",
+                    "getsAt": 7
+                },
+                {
+                    "id": "hellfire",
+                    "getsAt": 20
+                }
+            ]
+        },
+        {
+            "monsterid": "buzzle",
+            "desc": "",
+            "title": "BUZZLE",
+            "element": "electric",
+            "rarity": "common",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "tornado",
+                    "getsAt": 3
+                },
+                {
+                    "id": "recharge",
+                    "getsAt": 5
+                },
+                {
+                    "id": "sparks",
+                    "getsAt": 10
+                },
+                {
+                    "id": "direct_hit_1",
+                    "getsAt": 13
+                }
+            ]
+        },
+        {
+            "monsterid": "peblo",
+            "desc": "",
+            "title": "PEBLO",
+            "element": "water",
+            "rarity": "common",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "revive",
+                    "getsAt": 4
+                },
+                {
+                    "id": "flash",
+                    "getsAt": 4
+                },
+                {
+                    "id": "tentacles",
+                    "getsAt": 7
+                },
+                {
+                    "id": "ice_splash",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "groffy",
+            "desc": "",
+            "title": "GROFFY",
+            "element": "earth",
+            "rarity": "common",
+            "role": "defensive",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "shockwave",
+                    "getsAt": 3
+                },
+                {
+                    "id": "earth_shield",
+                    "getsAt": 5
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 7
+                },
+                {
+                    "id": "boulders",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "blubbo",
+            "desc": "",
+            "title": "BLUBBO",
+            "element": "water",
+            "rarity": "common",
+            "role": "defensive",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "bubbles",
+                    "getsAt": 3
+                },
+                {
+                    "id": "flash",
+                    "getsAt": 5
+                },
+                {
+                    "id": "freeze",
+                    "getsAt": 7
+                },
+                {
+                    "id": "bubbles",
+                    "getsAt": 10
+                },
+                {
+                    "id": "ice_storm",
+                    "getsAt": 13
+                }
+            ]
+        }
+    ],
+    "rare": [
+        {
+            "monsterid": "wingo",
+            "desc": "",
+            "title": "WINGO",
+            "element": "earth",
+            "rarity": "rare",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "tornado",
+                    "getsAt": 4
+                },
+                {
+                    "id": "bite",
+                    "getsAt": 4
+                },
+                {
+                    "id": "leaf_strike",
+                    "getsAt": 7
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 7
+                },
+                {
+                    "id": "eating_plant",
+                    "getsAt": 10
+                },
+                {
+                    "id": "boulders",
+                    "getsAt": 15
+                },
+                {
+                    "id": "earth_revenge_1",
+                    "getsAt": 19
+                }
+            ]
+        },
+        {
+            "monsterid": "slumbo",
+            "desc": "",
+            "title": "SLUMBO",
+            "element": "water",
+            "rarity": "rare",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 4
+                },
+                {
+                    "id": "bubbles",
+                    "getsAt": 4
+                },
+                {
+                    "id": "ice_shield",
+                    "getsAt": 7
+                },
+                {
+                    "id": "tentacles",
+                    "getsAt": 10
+                },
+                {
+                    "id": "ice_splash",
+                    "getsAt": 18
+                }
+            ]
+        },
+        {
+            "monsterid": "wavvy",
+            "desc": "",
+            "title": "WAVVY",
+            "element": "earth",
+            "rarity": "rare",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "eating_plant",
+                    "getsAt": 3
+                },
+                {
+                    "id": "tornado",
+                    "getsAt": 5
+                },
+                {
+                    "id": "bite",
+                    "getsAt": 7
+                },
+                {
+                    "id": "earth_revenge_1",
+                    "getsAt": 10
+                },
+                {
+                    "id": "poison_gas",
+                    "getsAt": 10
+                }
+            ]
+        },
+        {
+            "monsterid": "fynox",
+            "desc": "",
+            "title": "FYNOX",
+            "element": "earth",
+            "rarity": "rare",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "leaf_strike",
+                    "getsAt": 3
+                },
+                {
+                    "id": "quick_attack",
+                    "getsAt": 5
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 7
+                },
+                {
+                    "id": "eating_plant",
+                    "getsAt": 10
+                },
+                {
+                    "id": "rainbow",
+                    "getsAt": 13
+                }
+            ]
+        },
+        {
+            "monsterid": "gourdo",
+            "desc": "",
+            "title": "GOURDO",
+            "element": "earth",
+            "rarity": "rare",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "flash",
+                    "getsAt": 1
+                },
+                {
+                    "id": "shockwave",
+                    "getsAt": 1
+                },
+                {
+                    "id": "earth_shield",
+                    "getsAt": 4
+                },
+                {
+                    "id": "spores",
+                    "getsAt": 10
+                },
+                {
+                    "id": "boulders",
+                    "getsAt": 13
+                }
+            ]
+        },
+        {
+            "monsterid": "scarfy",
+            "desc": "",
+            "title": "SCARFY",
+            "element": "dark",
+            "rarity": "rare",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "bite",
+                    "getsAt": 3
+                },
+                {
+                    "id": "shadow_slash",
+                    "getsAt": 5
+                },
+                {
+                    "id": "rage",
+                    "getsAt": 10
+                },
+                {
+                    "id": "nightfall",
+                    "getsAt": 10
+                }
+            ]
+        }
+    ],
+    "epic": [
+        {
+            "monsterid": "cobrix",
+            "desc": "",
+            "title": "COBRIX",
+            "element": "dark",
+            "rarity": "epic",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "quick_attack",
+                    "getsAt": 1
+                },
+                {
+                    "id": "poison_bite",
+                    "getsAt": 3
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 5
+                },
+                {
+                    "id": "dark_beam",
+                    "getsAt": 7
+                },
+                {
+                    "id": "haunt",
+                    "getsAt": 10
+                }
+            ]
+        },
+        {
+            "monsterid": "brasko",
+            "desc": "",
+            "title": "BRASKO",
+            "element": "fire",
+            "rarity": "epic",
+            "role": "aggressive",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "volcano",
+                    "getsAt": 1
+                },
+                {
+                    "id": "rage",
+                    "getsAt": 4
+                },
+                {
+                    "id": "fireworks",
+                    "getsAt": 7
+                },
+                {
+                    "id": "fire_spin",
+                    "getsAt": 13
+                }
+            ]
+        },
+        {
+            "monsterid": "aquos",
+            "desc": "",
+            "title": "AQUOS",
+            "element": "water",
+            "rarity": "epic",
+            "role": "aggressive",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "bubbles",
+                    "getsAt": 3
+                },
+                {
+                    "id": "tentacles",
+                    "getsAt": 5
+                },
+                {
+                    "id": "quick_attack",
+                    "getsAt": 7
+                },
+                {
+                    "id": "freeze",
+                    "getsAt": 10
+                },
+                {
+                    "id": "ice_splash",
+                    "getsAt": 10
+                },
+                {
+                    "id": "ice_storm",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "nocty",
+            "desc": "",
+            "title": "NOCTY",
+            "element": "dark",
+            "rarity": "epic",
+            "role": "aggressive",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "bite",
+                    "getsAt": 3
+                },
+                {
+                    "id": "nightfall",
+                    "getsAt": 5
+                },
+                {
+                    "id": "suck_life",
+                    "getsAt": 7
+                },
+                {
+                    "id": "haunt",
+                    "getsAt": 10
+                }
+            ]
+        },
+        {
+            "monsterid": "umbrik",
+            "desc": "",
+            "title": "UMBRIK",
+            "element": "dark",
+            "rarity": "epic",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "tornado",
+                    "getsAt": 3
+                },
+                {
+                    "id": "shadow_slash",
+                    "getsAt": 5
+                },
+                {
+                    "id": "nightfall",
+                    "getsAt": 10
+                },
+                {
+                    "id": "dark_beam",
+                    "getsAt": 13
+                },
+                {
+                    "id": "ion_beam",
+                    "getsAt": 20
+                }
+            ]
+        }
+    ],
+    "legendary": [
+        {
+            "monsterid": "torky",
+            "desc": "",
+            "title": "TORKY",
+            "element": "earth",
+            "rarity": "legendary",
+            "role": "defensive",
+            "abilities": [
+                {
+                    "id": "poison_bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "rainbow",
+                    "getsAt": 5
+                },
+                {
+                    "id": "leaf_strike",
+                    "getsAt": 7
+                },
+                {
+                    "id": "eating_plant",
+                    "getsAt": 8
+                },
+                {
+                    "id": "poison_gas",
+                    "getsAt": 10
+                },
+                {
+                    "id": "earth_revenge_1",
+                    "getsAt": 13
+                },
+                {
+                    "id": "spores",
+                    "getsAt": 15
+                },
+                {
+                    "id": "revive",
+                    "getsAt": 21
+                },
+                {
+                    "id": "tree_crusher",
+                    "getsAt": 25
+                }
+            ]
+        },
+        {
+            "monsterid": "krimson",
+            "title": "KRIMSON",
+            "desc": "Krimson, the Fire|Dragon. Some say his|breath can melt rocks.",
+            "element": "fire",
+            "isLegendary": true,
+            "rarity": "legendary",
+            "role": "aggressive",
+            "abilities": [
+                {
+                    "id": "bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "poison_bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "tornado",
+                    "getsAt": 4
+                },
+                {
+                    "id": "volcano",
+                    "getsAt": 4
+                },
+                {
+                    "id": "fire_spin",
+                    "getsAt": 10
+                },
+                {
+                    "id": "hellfire",
+                    "getsAt": 13
+                }
+            ]
+        },
+        {
+            "monsterid": "malakite",
+            "title": "MALAKITE",
+            "desc": "Malakite, the Earth|Dragon. Legends tell|of his mighty roar.",
+            "element": "earth",
+            "isLegendary": true,
+            "rarity": "legendary",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "poison_bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "shockwave",
+                    "getsAt": 4
+                },
+                {
+                    "id": "spores",
+                    "getsAt": 7
+                },
+                {
+                    "id": "rainbow",
+                    "getsAt": 10
+                },
+                {
+                    "id": "earth_revenge_1",
+                    "getsAt": 13
+                }
+            ]
+        },
+        {
+            "monsterid": "kobalt",
+            "title": "KOBALT",
+            "desc": "Kobalt, the Water|Dragon. Some believe|he can create oceans.",
+            "element": "water",
+            "isLegendary": true,
+            "rarity": "legendary",
+            "role": "defensive",
+            "abilities": [
+                {
+                    "id": "bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "poison_bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "tornado",
+                    "getsAt": 4
+                },
+                {
+                    "id": "subzero",
+                    "getsAt": 7
+                },
+                {
+                    "id": "water_blast",
+                    "getsAt": 10
+                },
+                {
+                    "id": "avalanche",
+                    "getsAt": 13
+                }
+            ]
+        },
+        {
+            "monsterid": "zenix",
+            "title": "ZENIX",
+            "desc": "The Legendary Dynamon|known for its strength",
+            "element": "dark",
+            "isLegendary": true,
+            "rarity": "legendary",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "poison_bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "shockwave",
+                    "getsAt": 3
+                },
+                {
+                    "id": "haunt",
+                    "getsAt": 7
+                },
+                {
+                    "id": "dark_beam",
+                    "getsAt": 7
+                },
+                {
+                    "id": "nightfall",
+                    "getsAt": 10
+                }
+            ]
+        },
+        {
+            "monsterid": "xomox",
+            "title": "XOMOX",
+            "desc": "Xomox is the |evolution of Zomok",
+            "element": "water",
+            "isLegendary": true,
+            "rarity": "legendary",
+            "role": "defensive",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "revive",
+                    "getsAt": 4
+                },
+                {
+                    "id": "flash",
+                    "getsAt": 4
+                },
+                {
+                    "id": "tentacles",
+                    "getsAt": 7
+                },
+                {
+                    "id": "freeze",
+                    "getsAt": 9
+                },
+                {
+                    "id": "water_blast",
+                    "getsAt": 10
+                },
+                {
+                    "id": "ice_storm",
+                    "getsAt": 15
+                },
+                {
+                    "id": "ice_shield",
+                    "getsAt": 20
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 21
+                },
+                {
+                    "id": "ice_splash",
+                    "getsAt": 22
+                },
+                {
+                    "id": "avalanche",
+                    "getsAt": 23
+                },
+                {
+                    "id": "bubbles",
+                    "getsAt": 24
+                },
+                {
+                    "id": "subzero",
+                    "getsAt": 25
+                }
+            ]
+        },
+        {
+            "monsterid": "kitine",
+            "title": "KITINE",
+            "desc": "Kitine the legendary|Electric Dynamon",
+            "element": "electric",
+            "isLegendary": true,
+            "rarity": "legendary",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "poison_bite",
+                    "getsAt": 1
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 3
+                },
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 5
+                },
+                {
+                    "id": "direct_hit_1",
+                    "getsAt": 7
+                },
+                {
+                    "id": "recharge",
+                    "getsAt": 7
+                },
+                {
+                    "id": "electric_punch",
+                    "getsAt": 10
+                },
+                {
+                    "id": "sparks",
+                    "getsAt": 12
+                },
+                {
+                    "id": "thunderstorm",
+                    "getsAt": 20
+                },
+                {
+                    "id": "shockwave",
+                    "getsAt": 22
+                },
+                {
+                    "id": "static_shock",
+                    "getsAt": 25
+                }
+            ]
+        }
+    ]
+}

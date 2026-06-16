@@ -26,22 +26,26 @@
         }
     
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Coiny&family=Press+Start+2P&family=Rubik+Spray+Paint&display=swap" rel="stylesheet">
-   
-
+    <!-- Importing Nunito, Coiny, Press Start 2P, Rubik Spray Paint, and Lilita One -->
+    <link href="https://fonts.googleapis.com/css2?family=Coiny&family=Press+Start+2P&family=Rubik+Spray+Paint&family=Lilita+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Hidden DOM elements using the web fonts to force browser caching/preloading -->
+    <div style="font-family: 'Lilita One'; position: absolute; left: -9999px; visibility: hidden;">Lilita One Preload</div>
+    <div style="font-family: 'Coiny'; position: absolute; left: -9999px; visibility: hidden;">Coiny Preload</div>
+    <div style="font-family: 'Press Start 2P'; position: absolute; left: -9999px; visibility: hidden;">Press Start 2P Preload</div>
+    <div style="font-family: 'Rubik Spray Paint'; position: absolute; left: -9999px; visibility: hidden;">Rubik Spray Paint Preload</div>
+    <div style="font-family: 'Nunito'; position: absolute; left: -9999px; visibility: hidden;">Nunito Preload</div>
+
     <div id="game-container"></div>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser3-rex-plugins/dist/rexvirtualjoystickplugin.min.js"></script>
 
+    <script src="js/tonconnect-ui.min.js?v=1"></script>
     <script  type="module" src="frontend/core.js"></script>
-    
-  
 </body>
 </html>

@@ -1,0 +1,968 @@
+{
+    "eggEmission": [
+        {
+            "winType": "jackpot",
+            "prize": "0.4-6",
+            "chance": 0.05
+        },
+        {
+            "winType": "bigwin",
+            "prize": "0.3-4",
+            "chance": 0.1
+        },
+        {
+            "winType": "goodwin",
+            "prize": "0.2-0.3",
+            "chance": 0.2
+        },
+        {
+            "winType": "nowin",
+            "prize": "0-0",
+            "chance": 1
+        }
+    ],
+    "rarityMultipler": {
+        "common": 1.1,
+        "rare": 1.2,
+        "epic": 1.5,
+        "legendary": 2
+    },
+    "maps": [
+        {
+            "map": "bootcamp",
+            "active": true,
+            "unlockCost": {
+                "TON": 0,
+                "GOLD": 0
+            },
+            "unlockAt": 1,
+            "bossBattle": "daily",
+            "goldMultiplier": 1,
+            "totalItemDrops": "1:1",
+            "maxDropItemQuantity": "1:2",
+            "itemsDrop": {
+                "MonstaBall": "10:25",
+                "HealSpell": "10:15",
+                "RagePotion": "10:20",
+                "Shield": "15:30",
+                "DarkSpell": "30:40",
+                "LavaSpell": "30:40",
+                "AvalancheSpell": "30:40"
+            }
+        },
+        {
+            "map": "riverfall",
+            "active": false,
+            "unlockCost": {
+                "TON": 1
+            },
+            "unlockAt": 3,
+            "bossBattle": "daily",
+            "goldMultiplier": 1.2,
+            "totalItemDrops": "1-2",
+            "maxDropItemQuantity": "1:2",
+            "itemsDrop": {
+                "MonstaBall": "10:25",
+                "HealSpell": "10:15",
+                "RagePotion": "10:20",
+                "Shield": "15:30",
+                "DarkSpell": "30:40",
+                "LavaSpell": "30:40",
+                "AvalancheSpell": "30:40"
+            }
+        },
+        {
+            "map": "costa-gueta",
+            "active": false,
+            "unlockCost": {
+                "TON": 1.5
+            },
+            "unlockAt": 5,
+            "bossBattle": "daily",
+            "goldMultiplier": 1.5,
+            "totalItemDrops": "1-3",
+            "maxDropItemQuantity": "1:2",
+            "itemsDrop": {
+                "MonstaBall": "10:25",
+                "HealSpell": "10:15",
+                "RagePotion": "10:20",
+                "Shield": "15:30",
+                "DarkSpell": "30:40",
+                "LavaSpell": "30:40",
+                "AvalancheSpell": "30:40"
+            }
+        },
+        {
+            "map": "volcano",
+            "active": false,
+            "unlockCost": {
+                "TON": 3
+            },
+            "unlockAt": 8,
+            "bossBattle": "daily",
+            "goldMultiplier": 2,
+            "totalItemDrops": "2-3",
+            "maxDropItemQuantity": "1:2",
+            "itemsDrop": {
+                "MonstaBall": "10:25",
+                "HealSpell": "10:15",
+                "RagePotion": "10:20",
+                "Shield": "15:30",
+                "DarkSpell": "30:40",
+                "LavaSpell": "30:40",
+                "AvalancheSpell": "30:40"
+            }
+        }
+    ],
+    "mapLocations": {
+        "bootcamp": [
+            {
+                "name": "A",
+                "x": 320,
+                "y": 500,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "torky",
+                    "slumbo"
+                ]
+            },
+            {
+                "name": "B",
+                "x": 241,
+                "y": 526,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "torky"
+                ]
+            },
+            {
+                "name": "C",
+                "x": 154,
+                "y": 502,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "torky"
+                ]
+            },
+            {
+                "name": "D",
+                "x": 118,
+                "y": 435,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "torky",
+                    "chompy"
+                ]
+            },
+            {
+                "name": "E",
+                "x": 208,
+                "y": 402,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "torky",
+                    "slumbo"
+                ]
+            },
+            {
+                "name": "F",
+                "x": 300,
+                "y": 420,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "cobrix"
+                ]
+            },
+            {
+                "name": "G",
+                "x": 159,
+                "y": 352,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "torky",
+                    "slumbo"
+                ]
+            },
+            {
+                "name": "H",
+                "x": 240,
+                "y": 315,
+                "monsters": [
+                    "quabble",
+                    "grunko",
+                    "torky",
+                    "slumbo",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "I",
+                "x": 173,
+                "y": 275,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "torky",
+                    "slumbo",
+                    "cobrix",
+                    "chompy"
+                ]
+            },
+            {
+                "name": "J",
+                "x": 310,
+                "y": 283,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "torky",
+                    "chompy",
+                    "cobrix",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "K",
+                "x": 385,
+                "y": 275,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "torky",
+                    "chompy",
+                    "cobrix",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "L",
+                "x": 474,
+                "y": 256,
+                "monsters": [
+                    "grunko",
+                    "torky",
+                    "chompy",
+                    "cobrix",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "M",
+                "x": 561,
+                "y": 279,
+                "monsters": [
+                    "blazik",
+                    "grunko",
+                    "torky",
+                    "chompy",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "N",
+                "x": 608,
+                "y": 228,
+                "monsters": [
+                    "blazik",
+                    "torky",
+                    "chompy",
+                    "cobrix",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "O",
+                "x": 706,
+                "y": 236,
+                "monsters": [
+                    "grunko",
+                    "torky",
+                    "chompy",
+                    "cobrix",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "P",
+                "x": 759,
+                "y": 346,
+                "monsters": [
+                    "blazik",
+                    "quabble",
+                    "grunko",
+                    "torky",
+                    "slumbo"
+                ]
+            },
+            {
+                "name": "Q",
+                "x": 643,
+                "y": 383,
+                "monsters": [
+                    "quabble",
+                    "grunko",
+                    "torky",
+                    "chompy",
+                    "cobrix",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "R",
+                "x": 729,
+                "y": 425,
+                "monsters": [
+                    "blazik",
+                    "grunko",
+                    "torky",
+                    "chompy"
+                ]
+            },
+            {
+                "name": "S",
+                "x": 621,
+                "y": 482,
+                "monsters": [
+                    "blazik",
+                    "grunko",
+                    "torky",
+                    "chompy"
+                ]
+            },
+            {
+                "name": "T",
+                "x": 699,
+                "y": 515,
+                "monsters": [
+                    "grunko",
+                    "torky",
+                    "slumbo",
+                    "chompy",
+                    "cobrix",
+                    "buzzle"
+                ]
+            },
+            {
+                "name": "BOSS",
+                "x": 180,
+                "y": 340,
+                "monsters": []
+            }
+        ],
+        "riverfall": []
+    },
+    "bosses": [
+        "torky",
+        "krimson",
+        "malakite",
+        "kobalt",
+        "zenix",
+        "xomox",
+        "kitine"
+    ],
+    "bossLvl": [
+        {
+            "playerLevel": "1:3",
+            "bossLevel": "5:7"
+        },
+        {
+            "playerLevel": "4:5",
+            "bossLevel": "7:12"
+        },
+        {
+            "playerLevel": "6:8",
+            "bossLevel": "13:15"
+        },
+        {
+            "playerLevel": "9:12",
+            "bossLevel": "16:20"
+        },
+        {
+            "playerLevel": "13:15",
+            "bossLevel": "21:25"
+        },
+        {
+            "playerLevel": "16:50",
+            "bossLevel": "26:30"
+        }
+    ],
+    "mapMonsters": [
+        {
+            "map": "bootcamp",
+            "monsters": [
+                "quabble",
+                "grunko",
+                "blazik",
+                "chompy",
+                "slumbo",
+                "torky",
+                "cobrix",
+                "buzzle",
+                "torky"
+            ],
+            "rarityChance": {
+                "common": 0.80,
+                "rare": 0.15,
+                "epic": 0.05,
+                "legendary": 0
+            }
+        },
+        {
+            "map": "riverfall",
+            "monsters": [
+                "flamboar",
+                "podapod",
+                "flowingo",
+                "tacofox",
+                "quabble",
+                "grubble",
+                "hydron",
+                "pumpking",
+                "aviatos",
+                "foxcarf",
+                "vampix",
+                "shadowl",
+                "snorky"
+            ],
+            "rarityChance": {
+                "common": 0.64,
+                "rare": 0.24,
+                "epic": 0.1,
+                "legendary": 0.02
+            }
+        }
+    ],
+    "catchOddRanges": [
+        {
+            "rarity": "common",
+            "odds": [
+                {
+                    "hpWhen": "90:200",
+                    "chance": 0.05
+                },
+                {
+                    "hpWhen": "70:90",
+                    "chance": 0.2
+                },
+                {
+                    "hpWhen": "50:70",
+                    "chance": 0.3
+                },
+                {
+                    "hpWhen": "0:50",
+                    "chance": 0.4
+                }
+            ]
+        },
+        {
+            "rarity": "rare",
+            "odds": [
+                {
+                    "hpWhen": "90:220",
+                    "chance": 0.02
+                },
+                {
+                    "hpWhen": "70:90",
+                    "chance": 0.15
+                },
+                {
+                    "hpWhen": "50:70",
+                    "chance": 0.25
+                },
+                {
+                    "hpWhen": "0:50",
+                    "chance": 0.3
+                }
+            ]
+        },
+        {
+            "rarity": "epic",
+            "odds": [
+                {
+                    "hpWhen": "90:240",
+                    "chance": 0
+                },
+                {
+                    "hpWhen": "70:90",
+                    "chance": 0.1
+                },
+                {
+                    "hpWhen": "50:70",
+                    "chance": 0.12
+                },
+                {
+                    "hpWhen": "0:50",
+                    "chance": 0.25
+                }
+            ]
+        },
+        {
+            "rarity": "legendary",
+            "odds": [
+                {
+                    "hpWhen": "90:260",
+                    "chance": 0
+                },
+                {
+                    "hpWhen": "70:90",
+                    "chance": 0.03
+                },
+                {
+                    "hpWhen": "50:70",
+                    "chance": 0.05
+                },
+                {
+                    "hpWhen": "0:50",
+                    "chance": 0.1
+                }
+            ]
+        }
+    ],
+    "strongAgainst": {
+        "fire": [
+            "grass",
+            "electric"
+        ],
+        "grass": [
+            "electric",
+            "water"
+        ],
+        "electric": [
+            "dark",
+            "water"
+        ],
+        "water": [
+            "dark",
+            "fire"
+        ],
+        "dark": [
+            "fire",
+            "grass"
+        ]
+    },
+    "elementMultiplier": {
+        "weak": 0.8,
+        "same": 1,
+        "strong": 1.2
+    },
+    "exchange-pairs": [
+        "EGGS-TON",
+        "TON-GOLD",
+        "HEALSPELL-GOLD",
+        "MONSTABALL-GOLD"
+    ],
+    "exchange-rate": [
+        {
+            "pair": "EGGS-TON",
+            "rate": "0:0",
+            "limit": "30%dailypool"
+        },
+        {
+            "pair": "TON-GOLD",
+            "rate": "1:100",
+            "limit": "nolimit"
+        },
+        {
+            "pair": "HEALSPELL-GOLD",
+            "rate": "1:10",
+            "limit": "nolimit"
+        },
+        {
+            "pair": "MONSTABALL-GOLD",
+            "rate": "1:25",
+            "limit": "nolimit"
+        }
+    ],
+    "rarity": [
+        "common",
+        "rare",
+        "epic",
+        "legendary"
+    ],
+    "rarityBudget": {
+        "common": "180:200",
+        "rare": "190:220",
+        "epic": "200:230",
+        "legendary": "240-260"
+    },
+    "baseStat": [
+        {
+            "role": "aggressive",
+            "atk": "20:45",
+            "def": "15:30",
+            "spd": "20:30"
+        },
+        {
+            "role": "defensive",
+            "atk": "15:30",
+            "def": "30:50",
+            "spd": "10:25"
+        },
+        {
+            "role": "speed",
+            "atk": "10:35",
+            "def": "15:25",
+            "spd": "20:35"
+        },
+        {
+            "role": "control",
+            "atk": "25:35",
+            "def": "20:30",
+            "spd": "15:30"
+        }
+    ],
+    "statsUp": [
+        {
+            "role": "aggressive",
+            "hp": "5:7",
+            "atk": "3:5",
+            "def": "0:2",
+            "spd": "0:1",
+            "xp": "20:30"
+        },
+        {
+            "role": "defensive",
+            "hp": "6:8",
+            "atk": "1:3",
+            "def": "2:5",
+            "spd": "0:1",
+            "xp": "20:30"
+        },
+        {
+            "role": "speed",
+            "hp": "4:7",
+            "atk": "2:5",
+            "def": "1:2",
+            "spd": "1:2",
+            "xp": "20:30"
+        },
+        {
+            "role": "control",
+            "hp": "4:6",
+            "atk": "2:4",
+            "def": "1:3",
+            "spd": "0:1",
+            "xp": "20:30"
+        }
+    ],
+    "signupBonus": {
+        "monsters": [
+            "grunko",
+            "blubbo",
+            "brasko"
+        ],
+        "currency": {
+            "CRYSTAL": 100,
+            "GOLD": 15
+        },
+        "items": {
+            "MonstaBall": 2,
+            "HealSpell": 2,
+            "RagePotion": 1,
+            "DarkSpell": 1
+        }
+    },
+    "referralRewards": {
+        "referrer": {
+            "currency": {
+                "GOLD": 2,
+                "CRYSTAL": 10
+            },
+            "items": {
+                "MonstaBall": 1
+            }
+        },
+        "referee": {
+            "currency": {
+                "CRYSTAL": 5
+            },
+            "items": {
+                "MonstaBall": 1
+            }
+        }
+    },
+    "battleData": {
+        "sickDamage": 6,
+        "rageFactor": 1.4,
+        "extraByHurtThreshold": 0.5,
+        "extraDamageFactor": 1.1,
+        "hypnoChanceBonus": {
+            "isSick": 0.1,
+            "isWeak": 0.2,
+            "isStrong": -0.2,
+            "levelDiff": "5-0.1"
+        },
+        "critChance": [
+            {
+                "hpWhen": "10:20",
+                "crit": 0.5
+            },
+            {
+                "hpWhen": "90:100",
+                "crit": 0.1
+            },
+            {
+                "hpWhen": "30:50",
+                "crit": 0.2
+            }
+        ],
+        "criticalDamage": 1.2,
+        "missChance": [
+            {
+                "aim": "90:100",
+                "miss": 0
+            },
+            {
+                "aim": "70:90",
+                "miss": 0.1
+            },
+            {
+                "aim": "50:70",
+                "miss": 0.2
+            },
+            {
+                "aim": "30:50",
+                "miss": 0.3
+            },
+            {
+                "aim": "20:30",
+                "miss": 0.5
+            },
+            {
+                "aim": "0-20",
+                "miss": 0.6
+            }
+        ],
+        "hypnoBackfireChance": "1:2",
+        "backfireDamageFactor": 0.5,
+        "changeAim": "10:25",
+        "changeAtk": 0.1,
+        "changeDef": 0.1
+    },
+    "shopItems": {
+        "HealSpell": {
+            "payload": "buy=HealSpell",
+            "cost": {
+                "GOLD": 5
+            }
+        },
+        "MonstaBall": {
+            "payload": "buy=MonstaBall",
+            "cost": {
+                "GOLD": 10
+            }
+        },
+        "RagePotion": {
+            "payload": "buy=RagePotion",
+            "cost": {
+                "GOLD": 5
+            }
+        },
+        "DarkSpell": {
+            "payload": "buy=DarkSpell",
+            "cost": {
+                "GOLD": 5
+            }
+        },
+        "AvalancheSpell": {
+            "payload": "buy=AvalancheSpell",
+            "cost": {
+                "GOLD": 5
+            }
+        },
+        "WindSpell": {
+            "payload": "buy=WindSpell",
+            "cost": {
+                "GOLD": 5
+            }
+        },
+        "WaterFallSpell": {
+            "payload": "buy=WaterFallSpell",
+            "cost": {
+                "GOLD": 5
+            }
+        },
+        "LavaSpell": {
+            "payload": "buy=LavaSpell",
+            "cost": {
+                "GOLD": 5
+            }
+        },
+        "ThunderSpell": {
+            "payload": "buy=ThunderSpell",
+            "cost": {
+                "GOLD": 5
+            }
+        },
+        "Shield": {
+            "payload": "buy=Shield",
+            "cost": {
+                "GOLD": 5
+            }
+        }
+    },
+    "leaderboard": {
+        "startDate": "2026-06-12T00:00:00Z",
+        "endDate": "2026-06-20T00:00:00Z",
+        "rewardCurrency": "EGGS",
+        "totalPool": 500,
+        "distribution": [
+            {
+                "rank": 1,
+                "percentage": 50.0
+            },
+            {
+                "rank": 2,
+                "percentage": 26.0
+            },
+            {
+                "rank": 3,
+                "percentage": 17.0
+            },
+            {
+                "rank": 4,
+                "percentage": 1.0
+            },
+            {
+                "rank": 5,
+                "percentage": 1.0
+            },
+            {
+                "rank": 6,
+                "percentage": 1.0
+            },
+            {
+                "rank": 7,
+                "percentage": 1.0
+            },
+            {
+                "rank": 8,
+                "percentage": 1.0
+            },
+            {
+                "rank": 9,
+                "percentage": 1.0
+            },
+            {
+                "rank": 10,
+                "percentage": 1.0
+            }
+        ]
+    },
+    "missionToSeed": [
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000001",
+            "Title": "Defeat 10 monsters",
+            "Description": "Defeat wild monsters on the map",
+            "RewardAmount": 15.0,
+            "RewardCurrency": "GOLD",
+            "VerificationType": "defeat_monsters",
+            "VerificationUrl": "",
+            "IsActive": true,
+            "Category": "Daily"
+        },
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000002",
+            "Title": "Complete 3 battles",
+            "Description": "Fight against any monsters in battle",
+            "RewardAmount": 10.0,
+            "RewardCurrency": "GOLD",
+            "VerificationType": "complete_battles",
+            "VerificationUrl": "",
+            "IsActive": true,
+            "Category": "Daily"
+        },
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000003",
+            "Title": "Heal in total 200 HP",
+            "Description": "Heal your injured monsters",
+            "RewardAmount": 2.0,
+            "RewardCurrency": "HealSpell",
+            "VerificationType": "heal_hp",
+            "VerificationUrl": "",
+            "IsActive": true,
+            "Category": "Daily"
+        },
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000005",
+            "Title": "Defeat 50 monsters",
+            "Description": "Global wild monster defeat target",
+            "RewardAmount": 100.0,
+            "RewardCurrency": "GOLD",
+            "VerificationType": "defeat_monsters_weekly",
+            "VerificationUrl": "",
+            "IsActive": true,
+            "Category": "Weekly"
+        },
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000006",
+            "Title": "Complete 20 battles",
+            "Description": "Fight battles to test your strength",
+            "RewardAmount": 5.0,
+            "RewardCurrency": "HealSpell",
+            "VerificationType": "complete_battles_weekly",
+            "VerificationUrl": "",
+            "IsActive": true,
+            "Category": "Weekly"
+        },
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000007",
+            "Title": "Level 10 Monster",
+            "Description": "Train a monster to level 10",
+            "RewardAmount": 100.0,
+            "RewardCurrency": "GOLD",
+            "VerificationType": "monster_level_achievement",
+            "VerificationUrl": "",
+            "IsActive": true,
+            "Category": "Achievement"
+        },
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000008",
+            "Title": "Collect 5 Monsters",
+            "Description": "Capture 5 unique monster kinds",
+            "RewardAmount": 50.0,
+            "RewardCurrency": "GOLD",
+            "VerificationType": "collect_monsters_achievement",
+            "VerificationUrl": "",
+            "IsActive": true,
+            "Category": "Achievement"
+        },
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000009",
+            "Title": "Daily Login Streak",
+            "Description": "Log in every day for rewards",
+            "RewardAmount": 7.0,
+            "RewardCurrency": "Days",
+            "VerificationType": "daily_login_streak",
+            "VerificationUrl": "",
+            "IsActive": true,
+            "Category": "Daily"
+        },
+        {
+            "MissionId": "00000000-0000-0000-0000-000000000010",
+            "Title": "Join Telegram Channel",
+            "Description": "Join our official TG channel",
+            "RewardAmount": 10.0,
+            "RewardCurrency": "GOLD",
+            "VerificationType": "telegram_join",
+            "VerificationUrl": "https://t.me/ProjectD_Official",
+            "IsActive": true,
+            "Category": "Task"
+        }
+    ]
+}

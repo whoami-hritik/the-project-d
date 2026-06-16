@@ -8,53 +8,30 @@ import { BattleScene } from "./battle.js";
 import { LabScene } from "./lab.js";
 import { ItemScene } from "./item.js";
 import { ShopScene } from "./shop.js";
+import { ReferralScene } from "./referral.js";
+import { TestScene } from "./testEffect.js";
+import { LeaderboardScene } from "./leaderboard.js";
+import { NotificationScene } from "./notification.js";
+import { MissionScene } from "./mission.js";
+import { ProfileScene } from "./profile.js";
+import { StreakScene } from "./streak.js";
 
-class MainScene extends Phaser.Scene{
-    constructor(){
-        super({key: "MainScene"});
+class MainScene extends Phaser.Scene {
+    constructor() {
+        super({ key: "MainScene" });
     }
 
-    preload(){
-        // this.load.image("loading-bg", "assets/world/landing.png");
-        // this.load.image("play-button", "assets/world/play.png");
-        // this.load.audio("bg-music","assets/audio/background-music.ogg");
-        // this.load.audio("click-sfx", "assets/audio/click.ogg");
-        // this.load.audio("battleground-music", "assets/audio/battleground.ogg");
-        // this.load.audio("pop-up", "assets/audio/pop_1.wav");
+    preload() {
+        this.load.image("loading_bg", "images/bgs/loading_bg.png");
         console.log("Main loaded");
     }
 
-    create(){
-        const { width, height } = this.scale;
-        // Background
-        const bg = this.add.image(0, 0, "loading-bg")
-            .setOrigin(0)
-            .setDepth(100)
-            .setDisplaySize(width, height);
-
-        // this.game.bgMusic = this.sound.add("bg-music", {
-        //     loop: true,
-        //     volume: 0.5
-        // });
-        // this.game.battleMusic = this.sound.add("battleground-music", {
-        //     loop: true,
-        //     volume: 0.5
-        // });
- 
-        // this.game.clickSFX = this.sound.add("click-sfx", {
-        //     volume: 1
-        // });
-
-        // this.game.popupSFX = this.sound.add("pop-up", {
-        //     volume: 1
-        // });
-        
+    create() {
         this.scene.start("PreloadScene");
     }
-    
 }
 
-export function startGame(){
+export function startGame() {
     const config = {
         type: Phaser.AUTO,
         width: 400,
@@ -62,28 +39,24 @@ export function startGame(){
         backgroundColor: "#ffffff",
         parent: 'game-container',
         physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 }, // or 300 if platformer
-            debug: false // optional
+            default: 'arcade',
+            arcade: {
+                gravity: { y: 0 }, // or 300 if platformer
+                debug: false // optional
             }
         },
         scale: {
             mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH
         },
-        scene: [MainScene, PreloadScene, WorldScene, MapScene, InventoryScene, LabScene, BattleScene, ItemScene, ShopScene],
+        scene: [MainScene, PreloadScene, WorldScene, MapScene, InventoryScene, LabScene, BattleScene, ItemScene, ShopScene, ReferralScene, TestScene, LeaderboardScene, NotificationScene, MissionScene, ProfileScene, StreakScene],
         plugins: {
-        scene: [{
-            key: 'rexVirtualJoystick',
-            plugin: window.rexvirtualjoystickplugin, 
-            mapping: 'rexVirtualJoystick'
-        }]
+            scene: [{
+                key: 'rexVirtualJoystick',
+                plugin: window.rexvirtualjoystickplugin,
+                mapping: 'rexVirtualJoystick'
+            }]
         },
-        render: {
-                pixelArt: false,
-                roundPixels: true
-        }
     }
 
     const game = new Phaser.Game(config);

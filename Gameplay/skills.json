@@ -1,0 +1,852 @@
+[
+    {
+        "id": "scratch",
+        "title": "SCRATCH",
+        "desc": "Scratches the enemy to deal damage",
+        "element": "none",
+        "effects": {
+            "attackMultiplier": 1.18
+        },
+        "energyCost": 0,
+        "cooldown": 0
+    },
+    {
+        "id": "sonic_waves",
+        "title": "SONIC SHOCK",
+        "desc": "Attacks with a strong sound wave",
+        "element": "none",
+        "effects": {
+            "attackMultiplier": 1.18
+        },
+        "energyCost": 0,
+        "cooldown": 0
+    },
+    {
+        "id": "revive",
+        "title": "REVIVE",
+        "desc": "Restores a portion of your Dynamon's|HEALTH",
+        "element": "none",
+        "effects": {
+            "heal_percent": "14-28"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "energyCost": 0,
+        "cooldown": 0
+    },
+    {
+        "id": "rage",
+        "title": "ENRAGE",
+        "desc": "Increases ATTACK and gets RAGED,|making next attack stronger",
+        "element": "none",
+        "effects": {
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "energyCost": 0,
+        "cooldown": 1
+    },
+    {
+        "id": "confuse",
+        "title": "CONFUSE",
+        "desc": "Lowers the enemy's AIMING,|may cause HYPNO",
+        "element": "none",
+        "effects": {
+            "decr_aim": 0.25,
+            "state_hypno": "1:3"
+        },
+        "energyCost": 0,
+        "cooldown": 1
+    },
+    {
+        "id": "flash",
+        "title": "FLASH",
+        "desc": "Attacks with a bright light,|does EXTRA damage to SICK enemies",
+        "element": "none",
+        "effects": {
+            "attackMultiplier": 1.17
+        },
+        "extraWhen": "sick",
+        "energyCost": 0,
+        "cooldown": 0
+    },
+    {
+        "id": "bite",
+        "title": "BITE",
+        "desc": "Bites strongly to deal damage",
+        "element": "none",
+        "effects": {
+            "attackMultiplier": 1.2
+        },
+        "energyCost": 0,
+        "cooldown": 0
+    },
+    {
+        "id": "double_bite",
+        "title": "DOUBLE BITE",
+        "desc": "Deals more DAMAGE, weaken |enemy DEFENSE, increase your AIMING",
+        "element": "dark",
+        "effects": {
+            "attackMultiplier": 1.28,
+            "decr_def": 0.1,
+            "incr_aim": 0.2
+        },
+        "energyCost": 0,
+        "cooldown": 0
+    },
+    {
+        "id": "poison_bite",
+        "title": "POISON BITE",
+        "desc": "Deals damage and makes the|enemy SICK",
+        "element": "none",
+        "effects": {
+            "attackMultiplier": 1.14,
+            "state_sick": "1:1"
+        },
+        "energyCost": 0,
+        "cooldown": 0
+    },
+    {
+        "id": "tornado",
+        "title": "HURRICANE",
+        "desc": "Great winds deal damage and|lower the enemy's ATTACK",
+        "element": "none",
+        "effects": {
+            "attackMultiplier": 1.23,
+            "decr_atk": 0.15
+        },
+        "energyCost": 0,
+        "cooldown": 1
+    },
+    {
+        "id": "shockwave",
+        "title": "SHOCKWAVE",
+        "desc": "A blast of air does damage and|lowers the enemy's DEFENSE",
+        "element": "none",
+        "effects": {
+            "attackMultiplier": 1.23,
+            "decr_def": 0.15
+        },
+        "energyCost": 20,
+        "cooldown": 1
+    },
+    {
+        "id": "quick_attack",
+        "title": "QUICK ATTACK",
+        "desc": "An attack that deals 1-3 hits|and never misses",
+        "element": "none",
+        "effects": {
+            "attackMultiplier": 1.09
+        },
+        "noMiss": true,
+        "randomHits": "1-3",
+        "noBackfire": true,
+        "energyCost": 0,
+        "cooldown": 0
+    },
+    {
+        "id": "rain_fire",
+        "title": "FIRE STORM",
+        "desc": "Deals damage with a rain of fireballs",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.21
+        },
+        "energyCost": 20,
+        "cooldown": 0
+    },
+    {
+        "id": "heatwave",
+        "title": "FURNACE",
+        "desc": "Hot air deals damage and|improves your Dynamon's ATTACK",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.20,
+            "incr_atk": 0.15
+        },
+        "noMiss": true,
+        "energyCost": 15,
+        "cooldown": 0
+    },
+    {
+        "id": "smoke",
+        "title": "SMOKE SCREEN",
+        "desc": "Clouds of smoke deal damage to|the enemy and may cause SICK",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.21,
+            "state_sick": "1:4"
+        },
+        "energyCost": 20,
+        "cooldown": 0
+    },
+    {
+        "id": "enflame",
+        "title": "ENFLAME",
+        "desc": "Uses magical fire to improve|ATTACK and restore HEALTH",
+        "element": "fire",
+        "effects": {
+            "incr_atk": 0.20,
+            "heal_percent": "15-25"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "energyCost": 20,
+        "cooldown": 1
+    },
+    {
+        "id": "healing_rain",
+        "title": "HEALING RAIN",
+        "desc": "Improves ATTACK and AIMING |and restores HEALTH",
+        "element": "water",
+        "effects": {
+            "incr_atk": 0.20,
+            "incr_aim": 0.20,
+            "heal_percent": "15-25"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "energyCost": 10,
+        "cooldown": 0
+    },
+    {
+        "id": "magma",
+        "title": "MAGMA ROCKS",
+        "desc": "Attacks by throwing magma,|reduces the enemy's DEFENSE",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.25,
+            "decr_def": 0.18
+        },
+        "energyCost": 25,
+        "cooldown": 1
+    },
+    {
+        "id": "volcano",
+        "title": "VOLCANO",
+        "desc": "Blasts the enemy with an|eruption of lava",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.22
+        },
+        "energyCost": 20,
+        "cooldown": 0
+    },
+    {
+        "id": "fire_spin",
+        "title": "FLAME SWIRL",
+        "desc": "Attacks with spiraling fire,|may cause HYPNO",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.24,
+            "state_hypno": "1:3"
+        },
+        "energyCost": 20,
+        "cooldown": 1
+    },
+    {
+        "id": "hellfire",
+        "title": "HELLFIRE",
+        "desc": "Massive fire attack, does EXTRA damage|if your Dynamon's HEALTH is low",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.28
+        },
+        "noMiss": true,
+        "extraWhen": "self_hurt",
+        "energyCost": 25,
+        "cooldown": 1
+    },
+    {
+        "id": "fireworks",
+        "title": "FIREWORKS",
+        "desc": "Exploding rocks deal damage,|also improves your Dynamon's AIMING",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.22,
+            "incr_aim": 0.15
+        },
+        "energyCost": 20,
+        "cooldown": 1
+    },
+    {
+        "id": "inferno",
+        "title": "INFERNO",
+        "desc": "Does big DAMAGE and Improves your AIMING,| lower enemy ATTACK and DEFENSE",
+        "element": "fire",
+        "effects": {
+            "attackMultiplier": 1.37,
+            "incr_aim": 0.15,
+            "decr_atk": 0.14,
+            "decr_def": 0.14
+        },
+        "energyCost": 30,
+        "cooldown": 1
+    },
+    {
+        "id": "water_blast",
+        "title": "WATER BLAST",
+        "desc": "Massive water attack, EXTRA damage|if your Dynamon's HEALTH is low",
+        "element": "water",
+        "effects": {
+            "attackMultiplier": 1.27
+        },
+        "noMiss": true,
+        "extraWhen": "self_hurt",
+        "energyCost": 25,
+        "cooldown": 1
+    },
+    {
+        "id": "avalanche",
+        "title": "AVALANCHE",
+        "desc": "Frozen blocks fall to deal damage|and cut the enemy's DEFENSE",
+        "element": "water",
+        "effects": {
+            "attackMultiplier": 1.26,
+            "decr_def": 0.15
+        },
+        "energyCost": 20,
+        "cooldown": 1
+    },
+    {
+        "id": "golden_ultra_blast",
+        "title": "GOLDEN ULTRA BLAST",
+        "desc": "Gold energy deals damage",
+        "element": "gold",
+        "effects": {
+            "attackMultiplier": 1.35
+        },
+        "energyCost": 25,
+        "cooldown": 1
+    },
+    {
+        "id": "poison_gas",
+        "title": "POISON GAS",
+        "desc": "Assaults with toxic gas,|may cause SICK",
+        "element": "earth",
+        "effects": {
+            "attackMultiplier": 1.21,
+            "state_sick": "1:4"
+        },
+        "energyCost": 20,
+        "cooldown": 0
+    },
+    {
+        "id": "eating_plant",
+        "title": "EATING PLANT",
+        "desc": "Absorbs a portion of HEALTH|from the enemy and decreases DEFENSE",
+        "element": "earth",
+        "effects": {
+            "attackMultiplier": 1.25,
+            "heal_percent": "20-25",
+            "decr_def": 0.15
+        },
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "rainbow",
+        "title": "RAINBOW BEAM",
+        "desc": "Massive earth attack, EXTRA damage|if your Dynamon's HEALTH is low",
+        "element": "earth",
+        "effects": {
+            "attackMultiplier": 1.28
+        },
+        "noMiss": true,
+        "extraWhen": "self_hurt",
+        "energyCost": 25,
+        "cooldown": 1
+    },
+    {
+        "id": "dark_beam",
+        "title": "DARK BEAM",
+        "desc": "Dark energy deals damage, EXTRA|strong against enemies with HYPNO",
+        "element": "dark",
+        "effects": {
+            "attackMultiplier": 1.28
+        },
+        "extraWhen": "hypno",
+        "energyCost": 25,
+        "cooldown": 1
+    },
+    {
+        "id": "thunderstorm",
+        "title": "THUNDER BLAST",
+        "desc": "Attacks with 2-4 lightning strikes|and lowers the enemy's DEFENSE",
+        "element": "elec",
+        "effects": {
+            "attackMultiplier": 1.07,
+            "decr_def": 0.14
+        },
+        "randomHits": "2-4",
+        "energyCost": 20,
+        "cooldown": 0
+    },
+    {
+        "id": "earth_shield",
+        "title": "ROCK SHIELD",
+        "desc": "Builds a shield of solid rock,|improving DEFENSE",
+        "kind": "earth",
+        "effects": {
+            "incr_def": 0.22
+        },
+        "noMiss": true,
+        "cooldown": 0
+    },
+    {
+        "id": "boulders",
+        "title": "BOULDER PILE",
+        "desc": "Falling boulders deal damage,|lowers the enemy's AIMING",
+        "kind": "earth",
+        "effects": {
+            "attackMultiplier": 1.24,
+            "decr_aim": 0.16
+        },
+        "cooldown": 1
+    },
+    {
+        "id": "spores",
+        "title": "SPORE SHOT",
+        "desc": "Attacks by raining spores,|may cause HYPNO",
+        "kind": "earth",
+        "effects": {
+            "attackMultiplier": 1.20,
+            "state_hypno": "1:4"
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "earth_revenge_1",
+        "title": "SOLAR FIRE",
+        "desc": "Does devastating damage, but takes|a turn to charge and evoke RAGE",
+        "kind": "earth",
+        "effects": {
+            "attackMultiplier": 1.3,
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 1
+    },
+    {
+        "id": "rage_fire_ring",
+        "title": "RAGE FIRE RING",
+        "desc": "Increases DEFENSE and evokes RAGE",
+        "kind": "fire",
+        "effects": {
+            "incr_def": 0.15,
+            "state_rage": "1:1"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "earth_revenge_2",
+        "title": "SOLAR FIRE",
+        "desc": "Unleashes devastating damage",
+        "kind": "earth",
+        "effects": {
+            "attackMultiplier": 1.32
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "shadow_slash",
+        "title": "SHADOW SLASH",
+        "desc": "A dark force scrathes the enemy",
+        "kind": "dark",
+        "effects": {
+            "attackMultiplier": 1.23
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "haunt",
+        "title": "HAUNT",
+        "desc": "Does terrifying damage and|weakens DEFENSE, may cause HYPNO",
+        "kind": "dark",
+        "effects": {
+            "attackMultiplier": 1.26,
+            "decr_def": 0.15,
+            "state_hypno": "1:4"
+        },
+        "cooldown": 1
+    },
+    {
+        "id": "suck_life",
+        "title": "SUCK LIFE",
+        "desc": "Absorbs a portion of HEALTH|from the enemy",
+        "kind": "dark",
+        "effects": {
+            "attackMultiplier": 1.22,
+            "heal_percent": "15-20"
+        },
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "dark_blast",
+        "title": "DARK BLAST",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "dark",
+        "effects": {
+            "attackMultiplier": 1.32,
+            "incr_atk": 0.10,
+            "decr_def": 0.10
+        },
+        "locked": true,
+        "costRv": 5,
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "nightfall",
+        "title": "NIGHTFALL",
+        "desc": "Darkness that cuts the enemy's AIMING|and raises your Dynamon's ATTACK",
+        "kind": "dark",
+        "effects": {
+            "incr_atk": 0.18,
+            "decr_aim": 0.15
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "electric_punch",
+        "title": "ELECTRIC PUNCH",
+        "desc": "Punches the enemy with a charged fist",
+        "kind": "elec",
+        "effects": {
+            "attackMultiplier": 1.23
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "ion_beam",
+        "title": "ION BEAM",
+        "desc": "Deals great damage, EXTRA strong|if your Dynamon's HEALTH is low",
+        "kind": "elec",
+        "effects": {
+            "attackMultiplier": 1.28
+        },
+        "extraWhen": "self_hurt",
+        "cooldown": 1
+    },
+    {
+        "id": "ultra_voltage",
+        "title": "ULTRA VOLTAGE",
+        "desc": "Does big DAMAGE and improves your ATTACK,|lower enemy DEFENSE",
+        "kind": "elec",
+        "costRv": 5,
+        "effects": {
+            "attackMultiplier": 1.36,
+            "incr_atk": 0.15,
+            "decr_def": 0.15
+        }
+    },
+    {
+        "id": "sparks",
+        "title": "SPARKS",
+        "desc": "Burst of electric particles|damage the enemy",
+        "kind": "elec",
+        "effects": {
+            "attackMultiplier": 1.23
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "lightning_ball",
+        "title": "LIGHTNING BALL",
+        "desc": "Deals big damage and lowers |enemy defense and may cause hypno.",
+        "kind": "elec",
+        "effects": {
+            "attackMultiplier": 1.30,
+            "decr_def": 0.10,
+            "state_hypno": "1:3"
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "thunderstorm",
+        "title": "THUNDER BLAST",
+        "desc": "Attacks with 2-4 lightning strikes|and lowers the enemy's DEFENSE",
+        "kind": "elec",
+        "effects": {
+            "attackMultiplier": 1.27,
+            "decr_def": 0.14
+        },
+        "randomHits": "2-4",
+        "cooldown": 0
+    },
+    {
+        "id": "bee_blaster",
+        "title": "BEE BLASTER",
+        "desc": "Does big DAMAGE, lower enemy DEFENSE",
+        "kind": "elec",
+        "effects": {
+            "attackMultiplier": 1.35,
+            "decr_def": 0.14
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "static_shock",
+        "title": "STATIC SHOCK",
+        "desc": "Surrounds the enemy with|damaging charge, may cause SICK",
+        "kind": "elec",
+        "effects": {
+            "attackMultiplier": 1.21,
+            "state_sick": "1:3"
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "direct_hit_1",
+        "title": "DIRECT HIT",
+        "desc": "Unleashes a strong shocking|attack and increase AIMING",
+        "kind": "elec",
+        "effects": {
+            "incr_aim": 0.15,
+            "attackMultiplier": 1.30
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "electric_hurricane",
+        "title": "ELECTRIC HURRICANE",
+        "desc": "Deals great damage, may cause HYPNO",
+        "kind": "elec",
+        "effects": {
+            "attackMultiplier": 1.28,
+            "state_hypno": "1:3"
+        },
+        "cooldown": 1
+    },
+    {
+        "id": "electric_breath",
+        "title": "ELECTRIC BREATH",
+        "desc": "Deals big DAMAGE and improves|your ATTACK and AIMING",
+        "kind": "elec",
+        "locked": true,
+        "costRv": 5,
+        "effects": {
+            "attackMultiplier": 1.35,
+            "incr_atk": 0.15,
+            "incr_aim": 0.15
+        }
+    },
+    {
+        "id": "hellfire",
+        "title": "HELLFIRE",
+        "desc": "Massive fire attack, does EXTRA damage|if your Dynamon's HEALTH is low",
+        "kind": "fire",
+        "effects": {
+            "attackMultiplier": 1.28
+        },
+        "noMiss": true,
+        "extraWhen": "self_hurt",
+        "cooldown": 1
+    },
+    {
+        "id": "fireworks",
+        "title": "FIREWORKS",
+        "desc": "Exploding rocks deal damage,|also improves your Dynamon's AIMING",
+        "kind": "fire",
+        "effects": {
+            "attackMultiplier": 1.22,
+            "incr_aim": 0.15
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "bubbles",
+        "title": "BUBBLE BURST",
+        "desc": "Deals damage with powerful bubbles",
+        "kind": "water",
+        "effects": {
+            "attackMultiplier": 1.18
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "ice_splash",
+        "title": "ICEBERG",
+        "desc": "Attacks with an exploding iceberg",
+        "kind": "water",
+        "effects": {
+            "attackMultiplier": 1.21
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "subzero",
+        "title": "WINTER CHILLS",
+        "desc": "Improves AIMING, cuts the|enemy's ATTACK and may cause SICK",
+        "kind": "water",
+        "effects": {
+            "incr_aim": 0.12,
+            "decr_atk": 0.12,
+            "state_sick": "1:3"
+        },
+        "noMiss": true,
+        "cooldown": 0
+    },
+    {
+        "id": "tentacles",
+        "title": "TENTACLE GRIP",
+        "desc": "Charges with toxic tentacles,|may cause SICK",
+        "kind": "water",
+        "effects": {
+            "attackMultiplier": 1.19,
+            "state_sick": "1:3"
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "freeze",
+        "title": "FROZEN MIST",
+        "desc": "Arctic clouds deal damage and|weaken the enemy's ATTACK",
+        "kind": "water",
+        "effects": {
+            "attackMultiplier": 1.20,
+            "decr_atk": 0.18
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "ice_storm",
+        "title": "BLIZZARD",
+        "desc": "Hits with ice shards and cuts DEFENSE,|EXTRA powerful on SICK enemies",
+        "kind": "water",
+        "effects": {
+            "attackMultiplier": 1.24,
+            "decr_def": 0.15
+        },
+        "extraWhen": "sick",
+        "cooldown": 1
+    },
+    {
+        "id": "ice_shield",
+        "title": "ICE SHIELD",
+        "desc": "Improves your Dynamon's DEFENSE|using a cover of ice",
+        "kind": "water",
+        "effects": {
+            "incr_def": 0.25
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "dark_shield",
+        "title": "DARK SHIELD",
+        "desc": "Improves your Dynamon's DEFENSE|using a cover of dark energy",
+        "kind": "dark",
+        "effects": {
+            "incr_def": 0.30
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "water_blast",
+        "title": "WATER BLAST",
+        "desc": "Massive water attack, EXTRA damage|if your Dynamon's HEALTH is low",
+        "kind": "water",
+        "effects": {
+            "attackMultiplier": 1.27
+        },
+        "noMiss": true,
+        "extraWhen": "self_hurt",
+        "cooldown": 1
+    },
+    {
+        "id": "avalanche",
+        "title": "AVALANCHE",
+        "desc": "Frozen blocks fall to deal damage|and cut the enemy's DEFENSE",
+        "kind": "water",
+        "effects": {
+            "attackMultiplier": 1.26,
+            "decr_def": 0.15
+        },
+        "cooldown": 1
+    },
+    {
+        "id": "leaf_strike",
+        "title": "LEAF STRIKE",
+        "desc": "Attacks with a burst of sharp leaves",
+        "kind": "earth",
+        "effects": {
+            "attackMultiplier": 1.18
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "spike_storm",
+        "title": "SPIKE STORM",
+        "desc": "Deals big damage and lowers |enemy defense and may cause hypno.",
+        "kind": "earth",
+        "effects": {
+            "attackMultiplier": 1.34,
+            "decr_def": 0.10,
+            "state_hypno": "1:3"
+        },
+        "noBackfire": true,
+        "cooldown": 0
+    },
+    {
+        "id": "double_whip",
+        "title": "JUNGLE WHIP",
+        "desc": "Slaps with several vines,|weakens the enemy's DEFENSE",
+        "kind": "earth",
+        "effects": {
+            "attackMultiplier": 1.17,
+            "decr_def": 0.17
+        },
+        "cooldown": 0
+    },
+    {
+        "id": "strangle",
+        "title": "VINE SQUEEZE",
+        "desc": "Crushes the enemy with strangling|vines, EXTRA powerful on SICK enemies",
+        "kind": "earth",
+        "effects": {
+            "attackMultiplier": 1.21
+        },
+        "extraWhen": "sick",
+        "cooldown": 0
+    },
+    {
+        "id": "healing_rain",
+        "title": "HEALING RAIN",
+        "desc": "Improves ATTACK and AIMING |and restores HEALTH",
+        "kind": "water",
+        "effects": {
+            "incr_atk": 0.20,
+            "incr_aim": 0.20,
+            "heal_percent": "15-25"
+        },
+        "noMiss": true,
+        "noBackfire": true
+    },
+    {
+        "id": "revive",
+        "title": "REVIVE",
+        "desc": "Restores a portion of your Dynamon's|HEALTH",
+        "kind": "none",
+        "effects": {
+            "heal_percent": "14-28"
+        },
+        "noMiss": true,
+        "noBackfire": true,
+        "cooldown": 0
+    }
+]

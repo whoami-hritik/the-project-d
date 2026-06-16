@@ -1,7 +1,221 @@
-using System.Net.Http.Headers;
+
+using System.Diagnostics.Contracts;
+using System.Globalization;
+using System.Linq.Expressions;
 using System.Text.Json.Serialization;
+using Telegram.Bot.Types;
+
 namespace monster_world.Models
 {
+    // main gameplay config
+    public class GameConfig
+    {
+
+        [JsonPropertyName("eggEmission")]
+        public List<EmissionRate> EGGEmission { get; set; }
+
+        [JsonPropertyName("maps")]
+        public List<MapData> Maps { get; set; }
+
+        [JsonPropertyName("mapLocations")]
+        public Dictionary<string, List<Point>> MapLocations { get; set; }
+
+        [JsonPropertyName("bosses")]
+        public List<string> Bosses { get; set; }
+
+        [JsonPropertyName("mapMonsters")]
+        public List<MapMonster> MapMonsters { get; set; }
+        
+        [JsonPropertyName("strongAgainst")]
+        public Dictionary<string, List<string>> StrongAgainst { get; set; } = new();
+
+        [JsonPropertyName("bossLvl")]
+        public List<BossLvl> BossLvls { get; set; }
+
+        [JsonPropertyName("elementMultiplier")]
+        public Multiplier ElementMultiplier { get; set; }
+
+        [JsonPropertyName("exchange-pairs")]
+        public List<string> ExchangePairs { get; set; }
+
+        [JsonPropertyName("exchange-rate")]
+        public List<ExchangeRate> ExchangeRates { get; set; }
+
+        [JsonPropertyName("baseStat")]
+        public List<BaseStat> BaseStats { get; set; }
+
+        [JsonPropertyName("statsUp")]
+        public List<UpStat> StatsUps { get; set; }
+
+        [JsonPropertyName("rarity")]
+        public List<string> AvilableRarity { get; set; }
+
+        [JsonPropertyName("rarityMultiplier")]
+        public Dictionary<string, double> RarityMultiplier { get; set; }
+
+        [JsonPropertyName("rarityBudget")]
+        public RarityBudget Budget { get; set; }
+
+        [JsonPropertyName("battleData")]
+        public BattleData BattleData { get; set; }
+
+        [JsonPropertyName("signupBonus")]
+        public Bonus Bonus { get; set; }
+
+        [JsonPropertyName("referralRewards")]
+        public ReferralRewardsConfig ReferralRewards { get; set; }
+
+        [JsonPropertyName("catchOddRanges")]
+        public List<CatchOddRange> CatchOdds { get; set; } = new();
+
+        [JsonPropertyName("shopItems")]
+        public Dictionary<string, ListedItems> ShopItems { get; set; }
+
+        [JsonPropertyName("leaderboard")]
+        public LeaderboardConfig Leaderboard { get; set; }
+
+        [JsonPropertyName("missionToSeed")]
+        public List<Mission> MissionsToSeed { get; set; } = new();
+    }
+
+
+    public class BossLvl
+    {
+        [JsonPropertyName("playerLevel")]
+        public string PlayerLevel { get; set; }
+
+        [JsonPropertyName("bossLevel")]
+        public string BossLevel { get; set; }
+    }
+
+    public class EmissionRate
+    {
+        [JsonPropertyName("winType")]
+        public string WinType { get; set; }
+
+        [JsonPropertyName("prize")]
+        public string USDTEmission { get; set; }
+
+        [JsonPropertyName("chance")]
+        public double Chance { get; set; }
+    }
+
+    public class ReferralRewardsConfig
+    {
+        [JsonPropertyName("referrer")]
+        public Bonus Referrer { get; set; }
+
+        [JsonPropertyName("referee")]
+        public Bonus Referee { get; set; }
+    }
+
+    public class CatchOddRange
+    {
+        [JsonPropertyName("rarity")]
+        public string Rarity { get; set; }
+
+        [JsonPropertyName("odds")]
+        public List<OddRange> OddRanges { get; set; }
+    }
+
+    public class OddRange
+    {
+        [JsonPropertyName("hpWhen")]
+        public string HpWhen { get; set; }
+
+        [JsonPropertyName("chance")]
+        public double Chance { get; set; }
+    }
+
+    public class Bonus
+    {
+        [JsonPropertyName("monsters")]
+        public List<string> Monsters { get; set; }
+
+        [JsonPropertyName("currency")]
+        public Dictionary<string, double> Currency { get; set; }
+
+        [JsonPropertyName("items")]
+        public Dictionary<string, int> Items { get; set; }
+    }
+
+    public class BattleData
+    {
+        [JsonPropertyName("rageFactor")]
+        public double RageFactor { get; set; }
+
+        [JsonPropertyName("sickDamage")]
+        public int SickDamage { get; set; }
+
+        [JsonPropertyName("extraByHurtThreshold")]
+        public double ExtraByHurtThreshold { get; set; }
+
+        [JsonPropertyName("extraDamageFactor")]
+        public double ExtraDamageFactor { get; set; }
+
+        [JsonPropertyName("hynoChanceBonus")]
+        public HypnoBonus HynoBonus { get; set; }
+        
+        [JsonPropertyName("critChance")]
+        public List<CriticalChance> CritChance { get; set; }
+
+        [JsonPropertyName("missChance")]
+        public List<MissChance> MissChance { get; set; }
+
+        [JsonPropertyName("hypnoBackfireChance")]
+        public string HypnoBackfireChance { get; set; }
+
+        [JsonPropertyName("backfireDamageFactor")]
+        public double BackfireDamageFactor { get; set; }
+
+        [JsonPropertyName("criticalDamage")]
+        public double CriticalDamage { get; set; }
+
+        [JsonPropertyName("changeAtk")]
+        public double ChangeAtk { get; set; }
+
+        [JsonPropertyName("changeDef")]
+        public double ChangeDef { get; set; }
+
+    }
+
+    public class CriticalChance
+    {
+        [JsonPropertyName("hpWhen")]
+        public string HpWhen { get; set; }
+
+        [JsonPropertyName("crit")]
+        public double Crit { get; set; }
+    }
+
+    public class MissChance
+    {
+        [JsonPropertyName("aim")]
+        public string Aim { get; set; }
+
+        [JsonPropertyName("miss")]
+        public double Miss { get; set; }
+    }
+
+    public class HypnoBonus
+    {
+        [JsonPropertyName("isSick")]
+        public double IsSick { get; set; }
+
+        [JsonPropertyName("isWeak")]
+        public double IsWeak { get; set; }
+
+        [JsonPropertyName("isStrong")]
+        public double IsStrong { get; set; }
+
+        [JsonPropertyName("levelDiff")]
+        public string LevelDiff { get; set; }
+    }
+    public class SkillDefination
+    {
+        public List<SkillDef> Skills { get; set; }
+    }
+
     public class SkillDef
     {
         [JsonPropertyName("id")]
@@ -13,256 +227,236 @@ namespace monster_world.Models
         [JsonPropertyName("desc")]
         public string Desc { get; set; }
 
-        [JsonPropertyName("kind")]
-        public string Kind { get; set; }          // "fire", "water", "dark", "none"
+        [JsonPropertyName("element")]
+        public string Element { get; set; }
+
+        [JsonPropertyName("effects")]
+        public Effects Effects { get; set; }
+
+        [JsonPropertyName("noMiss")]
+        public bool NoMiss { get; set; } = false;
+
+        [JsonPropertyName("extraWhen")]
+        public string? ExtraWhen { get; set; } = null;
+
+        [JsonPropertyName("noBackire")]
+        public bool NoBackFire { get; set; } = false;
 
         [JsonPropertyName("cooldown")]
         public int Cooldown { get; set; }
 
-        [JsonPropertyName("noMiss")]
-        public bool NoMiss { get; set; }
-
-        [JsonPropertyName("noBackfire")]
-        public bool NoBackfire { get; set; }
-
-        [JsonPropertyName("randomHits")]
-        public string RandomHits { get; set; }    // "1-3" — null if not present
-
-        [JsonPropertyName("extraWhen")]
-        public string ExtraWhen { get; set; }     // "sick", "self_hurt" — null if absent
-
-        [JsonPropertyName("effects")]
-        public SkillEffects Effects { get; set; } // single object, not a list
+        [JsonPropertyName("energyCost")]
+        public int EnergyCost { get; set; }
     }
 
-    public class SkillEffects
+    public class Effects
     {
-        [JsonPropertyName("attack")]
-        public int? Attack { get; set; }          // int: 18
+        [JsonPropertyName("attackMultiplier")]
+        public double? AttackMultiplier { get; set; } = null;
 
         [JsonPropertyName("heal_percent")]
-        public string HealPercent { get; set; }   // string: "14-28" (range)
+        public string? HealPercent { get; set; } = null;
 
         [JsonPropertyName("incr_atk")]
-        public int? IncrAtk { get; set; }
-
-        [JsonPropertyName("decr_atk")]
-        public int? DecrAtk { get; set; }
+        public double? IncrAttack { get; set; } = null;
 
         [JsonPropertyName("incr_def")]
-        public int? IncrDef { get; set; }
-
-        [JsonPropertyName("decr_def")]
-        public int? DecrDef { get; set; }
+        public double? IncrDefense { get; set; } = null;
 
         [JsonPropertyName("incr_aim")]
-        public int? IncrAim { get; set; }
+        public double? IncrAim { get; set; } = null;
+
+        [JsonPropertyName("decr_atk")]
+        public double? DecrAttack { get; set; }= null;
+
+        [JsonPropertyName("decr_def")]
+        public double? DecrDefense { get; set; } = null;
 
         [JsonPropertyName("decr_aim")]
-        public int? DecrAim { get; set; }
-
-        [JsonPropertyName("state_sick")]
-        public string StateSick { get; set; }     // "1:1" = 1-in-1 chance
-
-        [JsonPropertyName("state_hypno")]
-        public string StateHypno { get; set; }    // "1:3" = 1-in-3 chance
+        public double? DecrAim { get; set; } = null;
 
         [JsonPropertyName("state_rage")]
-        public string StateRage { get; set; }
+        public string? StateRage { get; set; } = null;
 
-        [JsonPropertyName("give_ability")]
-        public string GiveAbility { get; set; }   // skill id to grant
+        [JsonPropertyName("state_hypno")]
+        public string? StateHypno { get; set; } = null;
+
+        [JsonPropertyName("state_sick")]
+        public string? StateSick { get; set; } = null;
     }
 
-
-    public class MonsterDef
+    public class MonsterDefination
     {
-        [JsonPropertyName("id")]
-        public string Id { get; set; }
+        [JsonPropertyName("common")]
+        public List<MonsDef> CommonMons { get; set; }
 
-        [JsonPropertyName("title")]
-        public string Title { get; set; }
+        [JsonPropertyName("rare")]
+        public List<MonsDef> RareMons { get; set; }
+
+        [JsonPropertyName("epic")]
+        public List<MonsDef> EpicMons { get; set; }
+
+        [JsonPropertyName("legendary")]
+        public List<MonsDef> LegendaryMons { get; set; }
+    }
+
+    public class MonsDef
+    {
+        [JsonPropertyName("monsterid")]
+        public string MonsterId { get; set; }
 
         [JsonPropertyName("desc")]
         public string Desc { get; set; }
 
-        [JsonPropertyName("kind")]
-        public string Kind { get; set; }           // "fire", "water", etc.
+        [JsonPropertyName("title")]
+        public string Title { get; set; }
 
-        [JsonPropertyName("isLegendary")]
-        public bool IsLegendary { get; set; }
+        [JsonPropertyName("element")]
+        public string Element { get; set; }
 
-        [JsonPropertyName("lvlTableId")]
-        public string LvlTableId { get; set; }     // "common-1", "legendary-5"
+        [JsonPropertyName("rarity")]
+        public string Rarity { get; set; }
 
-        [JsonPropertyName("healRoute")]
-        public string HealRoute { get; set; }
-
-        [JsonPropertyName("xpRoute")]
-        public string XpRoute { get; set; }
-
-        [JsonPropertyName("statsRoute")]
-        public string StatsRoute { get; set; }
-
-        [JsonPropertyName("minEvolutionLevel")]
-        public int? MinEvolutionLevel { get; set; }
-
-        [JsonPropertyName("evolvesTo")]
-        public string EvolvesTo { get; set; }
-
-        [JsonPropertyName("evolveRVAmount")]
-        public int? EvolveRVAmount { get; set; }
-
-        [JsonPropertyName("minGameVersion")]
-        public string MinGameVersion { get; set; }
+        [JsonPropertyName("role")]
+        public string Role{ get; set; }
 
         [JsonPropertyName("abilities")]
-        public List<MonsterAbility> Abilities { get; set; } = new();
+        public List<Ability> Abilities { get; set; }
     }
 
-    public class MonsterAbility
+    public class MapData
+    {
+        [JsonPropertyName("map")]
+        public string Map { get; set;}
+
+        [JsonPropertyName("unlockCost")]
+        public Dictionary<string, double> UnlockCost { get; set; }
+
+        [JsonPropertyName("UnlockAt")]
+        public int UnlockAt { get; set; }
+
+        [JsonPropertyName("bossBattle")]
+        public string BossBattle { get; set; }
+
+        [JsonPropertyName("goldMultiplier")]
+        public double GoldMultiplier { get; set; }
+
+        [JsonPropertyName("totalItemDrops")]
+        public string TotalItemDrops { get; set; }
+
+        [JsonPropertyName("maxDropItemQuantity")]
+        public string MaxDropItemQuantity { get; set; }
+
+        [JsonPropertyName("itemsDrop")]
+        public Dictionary<string, string> ItemsDrop { get; set; }
+    }
+
+
+
+    public class MapMonster
+    {
+        [JsonPropertyName("map")]
+        public string Map { get; set; }
+
+        [JsonPropertyName("monsters")]
+        public List<string> Monsters { get; set; }
+
+        [JsonPropertyName("rarityChance")]
+        public Dictionary<string, double> RarityChance { get; set; }
+    }
+
+    public class ExchangeRate
+    {
+        [JsonPropertyName("pair")]
+        public string Pair { get; set; }
+
+        [JsonPropertyName("rate")]
+        public string Rate { get; set; }
+
+        [JsonPropertyName("limit")]
+        public string Limit { get; set; }
+    }
+
+    public class Multiplier
+    {
+        [JsonPropertyName("weak")]
+        public float Weak { get; set; }
+
+        [JsonPropertyName("same")]
+        public float Same { get; set; }
+
+        [JsonPropertyName("strong")]
+        public float Strong { get; set; }
+    }
+
+    public class BaseStat
+    {
+        [JsonPropertyName("role")]
+        public string Role { get; set; }
+
+        [JsonPropertyName("atk")]
+        public string Atk { get; set; }
+
+        [JsonPropertyName("def")]
+        public string Def { get; set; }
+
+        [JsonPropertyName("spd")]
+        public string Spd { get; set; }
+    }
+
+    public class UpStat
+    {
+        [JsonPropertyName("role")]
+        public string Role { get; set; }
+
+        [JsonPropertyName("atk")]
+        public string Atk { get; set; }
+
+        [JsonPropertyName("def")]
+        public string Def { get; set; }
+
+        [JsonPropertyName("spd")]
+        public string Spd { get; set; }
+
+        [JsonPropertyName("hp")]
+        public string HP { get; set; }
+
+        [JsonPropertyName("xp")]
+        public string XP { get; set; }
+    }
+
+    public class Stat
+    {
+        public int Atk { get; set; }
+        public int Def { get; set; }
+        public int Spd { get; set; }
+        public int HP { get; set; }
+    }
+
+
+    public class RarityBudget
+    {
+        [JsonPropertyName("common")]
+        public string Common { get; set; }
+
+        [JsonPropertyName("rare")]
+        public string Rare { get; set; }
+
+        [JsonPropertyName("epic")]
+        public string Epic { get; set; }
+    }
+
+    public class Ability
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; }      // skill id
+        public string SkillId { get; set; }
 
         [JsonPropertyName("getsAt")]
-        public int GetsAt { get; set; }     // level when learned
+        public int GetsAt { get; set; }
+
     }
 
 
-    public class CatchOddsLvlData
-    {
-        [JsonPropertyName("at")]
-        public float At { get; set; }
-        
-        [JsonPropertyName("odds")]
-        public float Odds { get; set; }
-    }
-    public class CatchOddsRange
-    {
-        [JsonPropertyName("fromLvl")]
-        public int FromLvL { get; set; }
-        [JsonPropertyName("data")]
-        public List<CatchOddsLvlData> Data { get; set; }
-    }
-
-    public class GameplayConfig
-    {
-        [JsonPropertyName("levelTables")]
-        public List<LevelTable> LevelTables { get; set; }
-
-        [JsonPropertyName("healRoute_general")]
-        public List<HealRouteEntry> HealRoute_General { get; set; }
-
-        [JsonPropertyName("xpRoute_slow")]
-        public List<XpRouteEntry> XpRoute_Slow { get; set; }
-
-        [JsonPropertyName("xpRoute_fast")]
-        public List<XpRouteEntry> XpRoute_Fast { get; set; }
-
-        [JsonPropertyName("catchOddsRanges")]
-        public List<CatchOddsRange> CatchOddsRanges { get; set; }
-
-        [JsonPropertyName("battleData")]
-        public BattleData BattleData { get; set; }
-        
-        [JsonPropertyName("mapLocations")]
-        public MapLocations MapLocations { get; set; }
-        
-        [JsonPropertyName("healingTable")]
-        public List<HealingCost> HealingTable { get; set; }
-    }
-
-    public class HealingCost
-    {
-        [JsonPropertyName("level")]
-        public int Level { get; set; }
-        
-        [JsonPropertyName("healSpray")]
-        public int HealSpell { get; set; }
-    }
-
-    public class LevelTable
-    {
-        [JsonPropertyName("id")]
-        public string Id { get; set; }
-
-        [JsonPropertyName("lvlTable")]
-        public List<LevelStat> LvlTable { get; set; }
-    }
-
-    public class LevelStat
-    {
-        [JsonPropertyName("lvl")]  public int Lvl { get; set; }
-        [JsonPropertyName("xp")]   public int Xp { get; set; }
-        [JsonPropertyName("atk")]  public int Atk { get; set; }
-        [JsonPropertyName("def")]  public int Def { get; set; }
-        [JsonPropertyName("aim")]  public int Aim { get; set; }
-    }
-
-    public class HealRouteEntry
-    {
-        [JsonPropertyName("lvl")]       public int Lvl { get; set; }
-        [JsonPropertyName("healTime")]  public string HealTime { get; set; }   // "0:5:0"
-        [JsonPropertyName("costDust")]  public int CostDust { get; set; }
-    }
-
-    public class XpRouteEntry
-    {
-        [JsonPropertyName("lvl")]       public int Lvl { get; set; }
-        [JsonPropertyName("xp")]        public int Xp { get; set; }
-        [JsonPropertyName("costDust")]  public int CostDust { get; set; }
-    }
-
-    public class BattleData
-    {
-        [JsonPropertyName("maxHP")]                 public int MaxHP { get; set; }
-        [JsonPropertyName("missReduceAfterMiss")]   public int MissReduceAfterMiss { get; set; }
-        [JsonPropertyName("critFactor")]            public float CritFactor { get; set; }
-        [JsonPropertyName("rageFactor")]            public float RageFactor { get; set; }
-        [JsonPropertyName("sickDamage")]            public int SickDamage { get; set; }
-        [JsonPropertyName("backfireDamageFactor")]  public float BackfireDamageFactor { get; set; }
-        [JsonPropertyName("extraDamageFactor")]     public float ExtraDamageFactor { get; set; }
-        [JsonPropertyName("extraByHurtThreshold")]  public float ExtraByHurtThreshold { get; set; }
-        [JsonPropertyName("lvlFactorThreshold")]    public int LvlFactorThreshold { get; set; }
-        [JsonPropertyName("hypnoBackfireChance")]   public string HypnoBackfireChance { get; set; }
-        [JsonPropertyName("kindFactors")]           public KindFactors KindFactors { get; set; }
-        [JsonPropertyName("aiming")]                public List<AimBracket> Aiming { get; set; }
-        [JsonPropertyName("xpData")]                public List<XpDelta> XpData { get; set; }
-    }
-
-    public class KindFactors
-    {
-        [JsonPropertyName("strong")]  public float Strong { get; set; }
-        [JsonPropertyName("weak")]    public float Weak { get; set; }
-        [JsonPropertyName("normal")]  public float Normal { get; set; }
-    }
-
-    public class AimBracket
-    {
-        [JsonPropertyName("upTo")]  public int UpTo { get; set; }
-        [JsonPropertyName("miss")]  public string Miss { get; set; }   // "17:100"
-        [JsonPropertyName("crit")]  public string Crit { get; set; }
-    }
-
-    public class XpDelta
-    {
-        [JsonPropertyName("delta")]  public int Delta { get; set; }
-        [JsonPropertyName("xp")]     public int Xp { get; set; }
-    }
-
-
-    public static class SignUpBonus
-    {
-        public static List<string> Monsters = new()
-        {
-            "kikflick",
-            "snorky",
-            "torchip"
-        };
-        public static double CRYSTAL = 100;
-        public static double GOLD = 10;
-    }
     public class Point
     {
         [JsonPropertyName("name")]
@@ -277,15 +471,41 @@ namespace monster_world.Models
         [JsonPropertyName("monsters")]
         public List<string> Monsters { get; set; }
     }
-    public class MapLocations
-    {
-        [JsonPropertyName("bootcamp")]
-        public List<Point> Bootcamp { get; set; }
 
-        [JsonPropertyName("riverfall")]
-        public List<Point> Riverfall { get; set; }
+    public class ListedItems
+    {
+        [JsonPropertyName("payload")]
+        public string Payload { get; set; }
+
+        [JsonPropertyName("cost")]
+        public Dictionary<string, double> PurchaseCost { get; set; }
     }
 
+    public class LeaderboardConfig
+    {
+        [JsonPropertyName("startDate")]
+        public DateTime StartDate { get; set; }
 
+        [JsonPropertyName("endDate")]
+        public DateTime EndDate { get; set; }
+
+        [JsonPropertyName("rewardCurrency")]
+        public string RewardCurrency { get; set; }
+
+        [JsonPropertyName("totalPool")]
+        public double TotalPool { get; set; }
+
+        [JsonPropertyName("distribution")]
+        public List<LeaderboardDistribution> Distribution { get; set; } = new();
+    }
+
+    public class LeaderboardDistribution
+    {
+        [JsonPropertyName("rank")]
+        public int Rank { get; set; }
+
+        [JsonPropertyName("percentage")]
+        public double Percentage { get; set; }
+    }
 
 }

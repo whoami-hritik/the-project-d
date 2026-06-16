@@ -12,6 +12,7 @@ namespace monster_world.DBContext
         public DbSet<WorldSpawns> Spawns { get; set; }
         public DbSet<Referral> Referrals { get; set; }
         public DbSet<UserMission> UserMissions { get; set; }
+        public DbSet<Mission> AvailableMissions { get; set; }
         public DbSet<Deposit> Deposits { get; set; }
         public DbSet<Listed> ShopItems { get; set; }
         public DbSet<Invoice> Invoices { get; set; }
@@ -19,6 +20,8 @@ namespace monster_world.DBContext
         public DbSet<BattleState> Battles { get; set; }
         public DbSet<UserAnalytics> Analytics { get; set; }
         public DbSet<POOL> Pool { get; set; }
+        public DbSet<MapBase> MapLiquidity { get; set; }
+        public DbSet<BattleService.BossBattle> BossBattleData { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
@@ -30,10 +33,20 @@ namespace monster_world.DBContext
 
             modelBuilder.Entity<WorldSpawns>().HasKey(ws => ws.UserId);
             modelBuilder.Entity<WorldSpawns>().OwnsMany(ws => ws.Spawns, a => a.ToJson());
+            
             modelBuilder.Entity<BattleState>().HasKey(bs => bs.BattleId);
             modelBuilder.Entity<BattleState>().OwnsOne(b => b.PlayerState);
             modelBuilder.Entity<BattleState>().OwnsOne(b => b.EnemyState);
+            
+            // Configure MapBase collections as JSON
+            modelBuilder.Entity<MapBase>().HasKey(m => m.MapId);
+            modelBuilder.Entity<MapBase>().Property(m => m.Users).HasConversion(
+                v => v,
+                v => v ?? new List<long>());
 
+            // Configure BossBattle and MapBosses owned collection mapped to JSON
+            modelBuilder.Entity<BattleService.BossBattle>().HasKey(bb => bb.Id);
+            modelBuilder.Entity<BattleService.BossBattle>().OwnsMany(bb => bb.MapBosses, a => a.ToJson());
 
             modelBuilder.Entity<POOL>(entity =>
             {

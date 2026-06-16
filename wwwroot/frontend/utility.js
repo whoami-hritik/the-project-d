@@ -1,3 +1,15 @@
+import { state } from "./state.js";
+import { getLocalizedMessage } from "./game/notification.js";
+
+export function showNotification(scene, reason) {
+    const langCode = (state.user?.languageCode || state.user?.LanguageCode || "en").toLowerCase();
+    const localizedMessage = getLocalizedMessage(reason, langCode);
+
+    scene.scene.stop("NotificationScene");
+    scene.scene.launch("NotificationScene", { message: localizedMessage });
+    scene.scene.bringToTop("NotificationScene");
+}
+
 export function createloadingOverlay(scene){
     scene.loadOverlay = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 0.5)
         .setOrigin(0)
@@ -23,8 +35,32 @@ export function createloadingOverlay(scene){
     buffering.play();
 
 }
+
 export function destroyloadingOverlay(scene){
     scene.loadOverlay.destroy();
     scene.buffer.destroy();
         
+}
+
+
+export function createOverlay(scene){
+        scene.overlay = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 0.5)
+            .setOrigin(0)
+            .setDepth(100)
+            .setScrollFactor(0)
+            .setInteractive();
+
+        scene.overlay.on('pointerdown', () => {
+           
+        });
+    }
+
+export function destroyOverlay(scene){
+    scene.overlay.destroy();
+}
+
+export function WordToTokens(word){
+    const strWord = word.toString();
+    const tokens = Array.from(strWord, chr => chr.charCodeAt(0));
+    return tokens;
 }

@@ -2,26 +2,49 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monster-World</title>
+    <meta name="viewport" content="
+    width=device-width,
+    height=device-height,
+    initial-scale=1,
+    maximum-scale=1,
+    user-scalable=no
+  ">
+    <title>Monster-World Text testing</title>
+    <style>
+        html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #1d1d1d;
+        }
+
+        #game-container {
+        width: 100vw;
+        height: 100vh;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Importing Nunito, Coiny, Press Start 2P, Rubik Spray Paint, and Lilita One -->
+    <link href="https://fonts.googleapis.com/css2?family=Coiny&family=Press+Start+2P&family=Rubik+Spray+Paint&family=Lilita+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
-    <span id="content"></span>
-    <button id="send-req">Send Req</button>
-    <span id="content-2"></span>
+    <!-- Hidden DOM elements using the web fonts to force browser caching/preloading -->
+    <div style="font-family: 'Lilita One'; position: absolute; left: -9999px; visibility: hidden;">Lilita One Preload</div>
+    <div style="font-family: 'Coiny'; position: absolute; left: -9999px; visibility: hidden;">Coiny Preload</div>
+    <div style="font-family: 'Press Start 2P'; position: absolute; left: -9999px; visibility: hidden;">Press Start 2P Preload</div>
+    <div style="font-family: 'Rubik Spray Paint'; position: absolute; left: -9999px; visibility: hidden;">Rubik Spray Paint Preload</div>
+    <div style="font-family: 'Nunito'; position: absolute; left: -9999px; visibility: hidden;">Nunito Preload</div>
+
+    <div id="game-container"></div>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser3-rex-plugins/dist/rexvirtualjoystickplugin.min.js"></script>
 
-    <script>
-        const tg = window.Telegram.WebApp;
-
-        // tg.expand(); // full screen
-
-        const initData = tg.initData;              // 🔥 secure string
-        const user = tg.initDataUnsafe.user;       // ⚠️ not secure
-
-        console.log(initData);
-        console.log(user);
-    </script>
-    <script src="./js/index.js"></script>
+    <script src="js/tonconnect-ui.min.js"></script>
+    <script type="module" src="frontend/game/testingScene.js"></script>
 </body>
 </html>

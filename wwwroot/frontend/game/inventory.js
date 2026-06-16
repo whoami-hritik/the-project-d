@@ -7,12 +7,12 @@ const rows = 3;
 const column = 2;
 const slotWidth = 160;
 const slotHeight = 85;
-export class InventoryScene extends Phaser.Scene{
-    constructor(){
+export class InventoryScene extends Phaser.Scene {
+    constructor() {
         super({ key: "InventoryScene" });
     }
 
-    create(){
+    create() {
         this.width = this.scale.width;
         this.height = this.scale.height;
         this.initializeBG();
@@ -21,35 +21,35 @@ export class InventoryScene extends Phaser.Scene{
         this.inventoryContainer = this.add.container();
         this.updateInventory();
         this.displayMonsters();
-        
+
     }
 
-    initializeBG(){
+    initializeBG() {
         const bg = this.add.image(0, 0, "inventory-bg").setOrigin(0);
         bg.setDisplaySize(this.width, this.height);
-        
-        
 
-        const btnBack = this.add.image(20, 35, "btn-back-map").setDisplaySize(80, 35).setOrigin(0).setInteractive({useHandCursor:true});
 
-        
-        for (let i = 0; i < rows; i++){
-            for( let j = 0; j < column; j++){
-                let x = 45 + (j*slotWidth);
-                let y = 500 + (i*slotHeight)+(i*10);
-                this.add.image(x,y,"team-slot").setDisplaySize(slotWidth, slotHeight).setOrigin(0);
+
+        const btnBack = this.add.image(20, 35, "btn-back-map").setDisplaySize(80, 35).setOrigin(0).setInteractive({ useHandCursor: true });
+
+
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < column; j++) {
+                let x = 45 + (j * slotWidth);
+                let y = 500 + (i * slotHeight) + (i * 10);
+                this.add.image(x, y, "team-slot").setDisplaySize(slotWidth, slotHeight).setOrigin(0);
             }
         }
 
-        const nextSlots = this.add.image(0,0, "btn_arrow_right");
-        nextSlots.setDisplaySize(nextSlots.displayWidth/2, nextSlots.displayHeight/2).setOrigin(0).setInteractive({useHandCursor: true});
-        nextSlots.setPosition(this.scale.width - nextSlots.displayWidth - 5, this.scale.height/2 + 200,);
+        const nextSlots = this.add.image(0, 0, "btn_arrow_right");
+        nextSlots.setDisplaySize(nextSlots.displayWidth / 2, nextSlots.displayHeight / 2).setOrigin(0).setInteractive({ useHandCursor: true });
+        nextSlots.setPosition(this.scale.width - nextSlots.displayWidth - 5, this.scale.height / 2 + 200,);
 
 
-        const prevSlots = this.add.image(5, this.scale.height/2+200, "btn_arrow_right");
-        prevSlots.setDisplaySize(prevSlots.displayWidth/2, prevSlots.displayHeight/2).setOrigin(0).setInteractive({useHandCursor: true});
+        const prevSlots = this.add.image(5, this.scale.height / 2 + 200, "btn_arrow_right");
+        prevSlots.setDisplaySize(prevSlots.displayWidth / 2, prevSlots.displayHeight / 2).setOrigin(0).setInteractive({ useHandCursor: true });
         prevSlots.setFlipX(true);
-        
+
 
         nextSlots.on("pointerup", () => {
             this.nextIndex();
@@ -59,42 +59,42 @@ export class InventoryScene extends Phaser.Scene{
             this.previousIndex();
         })
 
-        
+
         btnBack.on("pointerup", (pointer) => {
-            if(!checkClick(pointer)) return;
+            if (!checkClick(pointer)) return;
             this.scene.stop("InventoryScene");
         })
 
     }
 
-    nextIndex(){
-        if (this.pageIndex >= this.maxIndex){
+    nextIndex() {
+        if (this.pageIndex >= this.maxIndex) {
             return;
         }
-        this.pageIndex ++;
+        this.pageIndex++;
         this.updateInventory();
     }
 
-    previousIndex(){
-        this.pageIndex --;
-        if (this.pageIndex < 0){
+    previousIndex() {
+        this.pageIndex--;
+        if (this.pageIndex < 0) {
             this.pageIndex = 0
             return;
         }
         this.updateInventory();
     }
-    async updateInventory(){
+    async updateInventory() {
         utility.createloadingOverlay(this);
         try {
-            
+
             // Clear previous page monsters
             this.inventoryContainer.removeAll(true);
 
             const result = await api.loadInventory(this.pageIndex);
-            this.maxIndex = Math.ceil(result.totalMonsters/6);
+            this.maxIndex = Math.ceil(result.totalMonsters / 6);
             this.inventory = result.monsters || [];
-            
-            if (state.selectedMonster == null){
+
+            if (state.selectedMonster == null) {
 
                 state.selectedMonster = this.inventory[0];
 
@@ -117,19 +117,19 @@ export class InventoryScene extends Phaser.Scene{
                 const paneThumb = this.add.image(
                     x,
                     y,
-                    `pane_thumb_${monster.kind}`
+                    `pane_thumb_${monster.element}`
                 )
-                .setOrigin(0)
-                .setDisplaySize(160, 85)
-                .setInteractive({ useHandCursor: true });
+                    .setOrigin(0)
+                    .setDisplaySize(160, 85)
+                    .setInteractive({ useHandCursor: true });
 
                 const icon = this.add.image(
                     10 + x,
                     8 + y,
                     "icon_" + monster.id
                 )
-                .setDisplaySize(70, 70)
-                .setOrigin(0);
+                    .setDisplaySize(70, 70)
+                    .setOrigin(0);
 
                 const nameTokens = Array.from(
                     monster.title,
@@ -164,6 +164,30 @@ export class InventoryScene extends Phaser.Scene{
                     "ch35"
                 ).setOrigin(0);
 
+                const levelStr = String(monster.level)
+                const charCode = Array.from(levelStr, chr => chr.charCodeAt(0));
+                let lastCharWidth = 0;
+                const levArray = [];
+                charCode.forEach((element) => {
+                    const lev = this.add.image(lv.x + lv.displayWidth + lastCharWidth, lv.y, `ch${element}`);
+                    lev.setOrigin(0);
+                    lastCharWidth += lev.displayWidth;
+                    levArray.push(lev);
+                });
+
+                const hpBg = this.add.image(x + 80, y + 55, "hpbar_small_bg").setOrigin(0);
+                hpBg.setDisplaySize(hpBg.displayWidth / 1.5, hpBg.displayHeight / 1.5);
+
+
+                const hpBar = this.add.image(x + 80, y + 55, "hpbar_small_fill").setOrigin(0);
+                hpBar.setDisplaySize(hpBar.displayWidth / 1.5, hpBar.displayHeight / 1.5);
+                const cropWidth = (monster.hp / (monster.maxHP || 100)) * hpBar.width;
+                hpBar.setCrop(0, 0, cropWidth, hpBar.height);
+
+
+
+
+
                 paneThumb.on("pointerup", (pointer) => {
 
                     if (!checkClick(pointer)) return;
@@ -177,8 +201,15 @@ export class InventoryScene extends Phaser.Scene{
                 this.inventoryContainer.add(paneThumb);
                 this.inventoryContainer.add(icon);
                 this.inventoryContainer.add(lv);
+                this.inventoryContainer.add(hpBg);
+                this.inventoryContainer.add(hpBar);
+
 
                 letters.forEach(letter => {
+                    this.inventoryContainer.add(letter);
+                });
+
+                levArray.forEach(letter => {
                     this.inventoryContainer.add(letter);
                 });
 
@@ -190,36 +221,36 @@ export class InventoryScene extends Phaser.Scene{
         } finally {
             utility.destroyloadingOverlay(this);
         }
-    }    
+    }
 
-    updateSelectedMonster(monster){
-        localStorage.setItem("selectedMonster",  JSON.stringify(monster));
+    updateSelectedMonster(monster) {
+        localStorage.setItem("selectedMonster", JSON.stringify(monster));
         state.selectedMonster = monster;
-        this.monsterTexture.setTexture("front_"+monster.id);
-        this.monsterPane.setTexture(`pane_tooltip_${monster.kind}`);
+        this.monsterTexture.setTexture("front_" + monster.id);
+        this.monsterPane.setTexture(`pane_tooltip_${monster.element}`);
         this.paneTooltip.setPosition(140, 500 - this.monsterTexture.displayHeight);
         this.updateMonsterPane(monster);
         console.log("new selected monster ", state.selectedMonster);
     }
 
-    displayMonsters(){
+    displayMonsters() {
         state.selectedMonster = JSON.parse(localStorage.getItem("selectedMonster"));
         const monsterShadow = this.add.image(80, 425, "mons_shadow").setOrigin(0);
-        this.monsterTexture = this.add.image(200, 470, "front_"+state.selectedMonster.id).setInteractive({useHandCursor: true});
-        this.monsterTexture.setDisplaySize(this.monsterTexture.displayWidth/1.5, this.monsterTexture.displayHeight/1.5).setOrigin(0.5,1);
-        
-        
-        this.monsterPane = this.add.image(0, 0, `pane_tooltip_${state.selectedMonster.kind}`);
-        this.monsterPane.setDisplaySize(this.monsterPane.displayWidth/1.5, this.monsterPane.displayHeight/1.5)
-                   .setInteractive({useHandCursor:true})
-                   .setOrigin(0, 1.5);
-        this.paneTooltip = this.add.container(140, 500 - this.monsterTexture.displayHeight );
-        
+        this.monsterTexture = this.add.image(200, 470, "front_" + state.selectedMonster.id).setInteractive({ useHandCursor: true });
+        this.monsterTexture.setDisplaySize(this.monsterTexture.displayWidth / 1.5, this.monsterTexture.displayHeight / 1.5).setOrigin(0.5, 1);
+
+
+        this.monsterPane = this.add.image(0, 0, `pane_tooltip_${state.selectedMonster.element}`);
+        this.monsterPane.setDisplaySize(this.monsterPane.displayWidth / 1.5, this.monsterPane.displayHeight / 1.5)
+            .setInteractive({ useHandCursor: true })
+            .setOrigin(0, 1.5);
+        this.paneTooltip = this.add.container(140, 500 - this.monsterTexture.displayHeight);
+
         const hpBarBG = this.add.image(3, -80, `hpbar_med_bg`);
-        hpBarBG.setDisplaySize(hpBarBG.displayWidth/1.5, hpBarBG.displayHeight/1.5).setOrigin(0);
+        hpBarBG.setDisplaySize(hpBarBG.displayWidth / 1.5, hpBarBG.displayHeight / 1.5).setOrigin(0);
 
         this.hpBar = this.add.image(3, -80, "hpbar_med_fill");
-        this.hpBar.setDisplaySize(this.hpBar.displayWidth/1.5, this.hpBar.displayHeight/1.5).setOrigin(0);
+        this.hpBar.setDisplaySize(this.hpBar.displayWidth / 1.5, this.hpBar.displayHeight / 1.5).setOrigin(0);
 
         this.titleContainer = this.add.container(0, 0);
         this.updateMonsterPane(state.selectedMonster);
@@ -227,39 +258,48 @@ export class InventoryScene extends Phaser.Scene{
         this.paneTooltip.add([this.monsterPane, this.titleContainer, hpBarBG, this.hpBar]);
 
 
-
-
         this.monsterTexture.on("pointerup", (pointer) => {
             if (!checkClick(pointer)) return;
 
-            this.scene.launch("LabScene", { monster: state.selectedMonster})
+            this.scene.launch("LabScene", { monster: state.selectedMonster })
         })
 
     }
 
-    updateMonsterPane(monster){
+    updateMonsterPane(monster) {
         this.titleContainer.removeAll(true);
         this.titleContainer.setPosition(10, -100);
 
         this.updateMonsterHp(this.hpBar, monster);
-        
+
         const nameTokens = Array.from(monster.title, chr => chr.charCodeAt(0));
         let lastTokenWidth = 0;
         nameTokens.forEach((token, i) => {
             const letter = this.add.image(lastTokenWidth, 0, `c${token}`).setOrigin(0);
-            letter.setDisplaySize(letter.displayWidth/2,letter.displayHeight/2);
-            lastTokenWidth +=letter.displayWidth;
+            letter.setDisplaySize(letter.displayWidth / 2, letter.displayHeight / 2);
+            lastTokenWidth += letter.displayWidth;
             this.titleContainer.add(letter);
         });
 
 
-        
+        const level = "LV " + monster.level;
+        let levelWidth = 0;
+        const levelTokens = Array.from(level, chr => chr.charCodeAt(0));
+        levelTokens.forEach((token, i) => {
+            const letter = this.add.image(0 + levelWidth, -30, `c${token}`).setOrigin(0);
+            letter.setDisplaySize(letter.displayWidth / 2, letter.displayHeight / 2);
+            levelWidth += letter.displayWidth;
+            this.titleContainer.add(letter);
+        });
+
+
+
 
     }
 
-    updateMonsterHp(hpBar, monster){
-        const fullWidth = hpBar.width; 
-        const cropWidth = (monster.currentHP / 100) * fullWidth;
+    updateMonsterHp(hpBar, monster) {
+        const fullWidth = hpBar.width;
+        const cropWidth = (monster.hp / (monster.maxHP || 100)) * fullWidth;
         hpBar.setCrop(0, 0, cropWidth, hpBar.height);
     }
 }

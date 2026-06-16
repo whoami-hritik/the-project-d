@@ -1,3 +1,4 @@
+using monster_world.Extentions;
 using monster_world.Models;
 using System.Runtime.InteropServices;
 using System.Text.Json;
@@ -5,77 +6,406 @@ namespace monster_world.Services
 {
     public class GameplayService
     {
-        private readonly List<MonsterDef>   _monsterDefs;
+        private readonly MonsterDefination  _monsterDefs;
         private readonly List<SkillDef>     _skillDefs;
-        private readonly GameplayConfig     _gameplay;
+        private readonly GameConfig     _gameplay;
 
         public GameplayService(
-            List<MonsterDef> monsterDefs, 
+            MonsterDefination monsterDefs, 
             List<SkillDef> skillDefs, 
-            GameplayConfig gameplay)
+            GameConfig gameplay)
         {
             _monsterDefs = monsterDefs;
             _skillDefs   = skillDefs;
             _gameplay    = gameplay;
         }
 
-        public MonsterDef GetMonsterDef(string id)
+        public GameConfig Gameplay => _gameplay;
+
+        public List<MonsDef> GetRarityMons(string rarity)
         {
-            return _monsterDefs.FirstOrDefault(m => m.Id == id);
+            
+            if (rarity == "common")
+            {
+                return _monsterDefs.CommonMons;
+            }
+            else if ( rarity == "rare")
+            {
+                return _monsterDefs.RareMons;
+            }
+            else if ( rarity == "epic" )
+            {
+                return _monsterDefs.EpicMons;
+            }
+            else if ( rarity == "legendary")
+            {
+                return _monsterDefs.LegendaryMons;
+            }
+
+            return null;
         }
+
+        public List<MonsDef> GetRandomNodeMonster(string mapid, string rarity, string node)
+        {
+            var mapLocation = _gameplay.MapLocations.FirstOrDefault(x => x.Key == mapid);
+            if (mapLocation.Value == null) return new List<MonsDef>();
+
+            var nodeObj = mapLocation.Value.FirstOrDefault(x => x.Node == node);
+            if (nodeObj == null || nodeObj.Monsters == null) return new List<MonsDef>();
+
+            var NodeMonsters = nodeObj.Monsters;
+            List<MonsDef> monsDefs = new();
+
+            // Try the rolled rarity first
+            var primaryRarityMons = GetRarityMons(rarity);
+            if (primaryRarityMons != null)
+            {
+                foreach (var m in primaryRarityMons)
+                {
+                    if (NodeMonsters.Contains(m.MonsterId))
+                    {
+                        monsDefs.Add(m);
+                    }
+                }
+            }
+
+            // Fallback to other rarities if no monsters match the rolled rarity on this node
+            if (!monsDefs.Any())
+            {
+                string[] rarities = { "common", "rare", "epic" };
+                foreach (var r in rarities)
+                {
+                    if (r == rarity) continue;
+                    var fallbackRarityMons = GetRarityMons(r);
+                    if (fallbackRarityMons != null)
+                    {
+                        foreach (var m in fallbackRarityMons)
+                        {
+                            if (NodeMonsters.Contains(m.MonsterId))
+                            {
+                                monsDefs.Add(m);
+                            }
+                        }
+                    }
+                    if (monsDefs.Any()) break;
+                }
+            }
+
+            // Absolute fallback to first available common monster if still empty
+            if (!monsDefs.Any() && _monsterDefs.CommonMons != null && _monsterDefs.CommonMons.Any())
+            {
+                monsDefs.Add(_monsterDefs.CommonMons.First());
+            }
+
+            return monsDefs;
+        }
+
+        public List<MapData> GetMapData()
+        {
+            return _gameplay.Maps;
+        }
+
+        public MonsDef GetMonsDef(string monsterid)
+        {
+            MonsDef monsDef = _monsterDefs.CommonMons.FirstOrDefault(x => x.MonsterId == monsterid)
+                ?? _monsterDefs.RareMons.FirstOrDefault(x => x.MonsterId == monsterid)
+                ?? _monsterDefs.EpicMons.FirstOrDefault(x => x.MonsterId == monsterid)
+                ?? _monsterDefs.LegendaryMons.FirstOrDefault(x => x.MonsterId == monsterid);
+
+            if (monsDef == null)
+            {
+                throw new InvalidOperationException($"Monster definition not found for ID: {monsterid}");
+            }
+            return monsDef;
+        }
+
+        public int GetTotalBudget(string rarity)
+        {
+            int TotalBuget = 0;
+            if (rarity == "common")
+            {
+                TotalBuget = Extentions.Extentions.RandomBetween(_gameplay.Budget.Common, ":");
+            }
+            else if ( rarity == "rare")
+            {
+                TotalBuget = Extentions.Extentions.RandomBetween(_gameplay.Budget.Rare, ":");
+            }
+            else if ( rarity == "epic" )
+            {
+                TotalBuget = Extentions.Extentions.RandomBetween(_gameplay.Budget.Epic, ":");
+            }
+
+            return TotalBuget;
+        }
+
+        public List<string> GetBosses()
+        {
+            return _gameplay.Bosses;
+        }
+
+        public List<string> GetRandomBosses(int count)
+        {
+            List<string> Bosses = new();
+            if (_gameplay.Bosses == null || !_gameplay.Bosses.Any())
+            {
+                return Bosses;
+            }
+
+            int targetCount = Math.Min(count, _gameplay.Bosses.Count);
+            Random rnd = new();
+
+            while (Bosses.Count < targetCount)
+            {
+                string boss = _gameplay.Bosses[rnd.Next(_gameplay.Bosses.Count)];
+                if (!Bosses.Contains(boss))
+                {
+                    Bosses.Add(boss);
+                }
+            }
+
+            return Bosses;
+        }
+
+        public List<BossLvl> GetBossLevels()
+        {
+            return _gameplay.BossLvls;
+        }
+
+        public DateTime GetRandomBusinessHalfHour(DateTime givenDate)
+        {
+            DateTime baseDate = givenDate.Date;
+
+            // 9:00 AM is the 18th half-hour block of the day (9 * 2)
+            int startBlock = 18; 
+            
+            // 5:00 PM (17:00) is the 34th half-hour block of the day (17 * 2)
+            // We use 35 as the exclusive upper bound so 17:00 is a possible result
+            int endBlock = 35; 
+
+            int randomBlock = Random.Shared.Next(startBlock, endBlock);
+
+            return baseDate.AddMinutes(randomBlock * 30);
+        }
+
+        public string RandomRarity(string mapid)
+        {
+            Random rnd = new();
+            var roll = rnd.NextDouble();
+
+            var rarityChances = _gameplay.MapMonsters.FirstOrDefault(x => x.Map == mapid).RarityChance;
+
+
+            foreach ( var r in rarityChances)
+            {
+                if (roll < r.Value)
+                {
+                    return r.Key;
+                }
+            }
+
+            Console.WriteLine("[ALERT] Forcefully rarity common");
+            return "common";
+            
+        }
+
+
 
         public SkillDef GetSkillDef(string id)
         {
             return _skillDefs.FirstOrDefault(s => s.Id == id);
         }
 
-        // FIX 7: return the highest applicable tier (not just the first match)
-        // e.g. level 12 should use fromLvl:11 tier, not fromLvl:1
-        public CatchOddsRange GetCatchOddsRange(int level)
+
+        public List<EmissionRate> GetEggsEmissionRates()
         {
-            return _gameplay.CatchOddsRanges
-                .Where(r => level >= r.FromLvL)
-                .OrderByDescending(r => r.FromLvL)
-                .FirstOrDefault();
+            return _gameplay.EGGEmission;
         }
 
-        public LevelTable GetLevelTable(string LvlTableId)
+        public MonsDef RandomMons(List<MonsDef> monsDefs)
         {
-            var table = _gameplay.LevelTables.FirstOrDefault(t => t.Id == LvlTableId);
-            return table ?? _gameplay.LevelTables.First(t => t.Id == "common-1");
+            Random rnd = new Random();
+            return monsDefs[rnd.Next(0, monsDefs.Count)];
         }
+
+        public int GetMonsterXp(string monsterRole)
+        {
+            return Extentions.Extentions.RandomBetween(_gameplay.StatsUps.FirstOrDefault(x => x.Role == monsterRole).XP, ":");
+        }
+
+        public Stat UpStats(string role, int level)
+        {
+            UpStat upStat = _gameplay.StatsUps.FirstOrDefault(x => x.Role == role);
+
+            Stat stat = new()
+            {
+                Atk = Extentions.Extentions.RandomBetween(upStat.Atk, ":") * (level - 1),
+                Def = Extentions.Extentions.RandomBetween(upStat.Def, ":") * (level - 1),
+                Spd = Extentions.Extentions.RandomBetween(upStat.Spd, ":") * (level - 1),
+                HP = Extentions.Extentions.RandomBetween(upStat.HP, ":") * (level - 1)
+            };
+            return stat;            
+        }
+
+        // public Monster GenerateMonster(int level = 1)
+        // {
+        //     Random rnd = new Random();
+        //     double chance = rnd.NextDouble();
+    
+        //     string rarity = RandomRarity();
+        //     MonsDef monsDef = RandomMons(GetRarityMons(rarity));
+
+        //     int TotalBuget = GetTotalBudget(rarity);
+
+        //     BaseStat baseStat = _gameplay.BaseStats.FirstOrDefault(x => x.Role == monsDef.Role);
+
+        //     Monster monster = new()
+        //     {
+        //         InstanceId =  Extentions.Extentions.RandomHex(),
+        //         Id = monsDef.MonsterId,
+        //         Title = monsDef.Title,
+        //         Desc = monsDef.Desc,
+        //         OwnerID = 0,
+        //         Rarity = monsDef.Rarity,
+        //         Role = monsDef.Role,
+        //         Element = monsDef.Element,
+        //         Level = level,
+        //         ATK = Extentions.Extentions.RandomBetween(baseStat.Atk, ":"),
+        //         DEF = Extentions.Extentions.RandomBetween(baseStat.Def, ":"),
+        //         SPD = Extentions.Extentions.RandomBetween(baseStat.Spd, ":"),
+        //         XP = 0,
+        //         IsFighting = false,
+        //         CaptureAt = DateTime.UtcNow
+
+        //     };
+        //     monster.MaxHP = TotalBuget - (monster.ATK + monster.DEF + monster.SPD);
+        //     monster.HP = monster.MaxHP;
+            
+        //     return monster;
+        // }
+
+
+
+
+        public Monster CreateMonsterInstance(string monsterid, long OwnerID, int level)
+        {
+            MonsDef monsDef = GetMonsDef(monsterid);
+
+            int TotalBuget = GetTotalBudget(monsDef.Rarity);
+
+            BaseStat statDef = _gameplay.BaseStats.FirstOrDefault(x => x.Role == monsDef.Role);
+            
+            int baseAtk = Extentions.Extentions.RandomBetween(statDef.Atk, ":");
+            int baseDef = Extentions.Extentions.RandomBetween(statDef.Def, ":");
+            int baseSpd = Extentions.Extentions.RandomBetween(statDef.Spd, ":");
+            int baseHP = Math.Max(1, TotalBuget - (baseAtk + baseDef + baseSpd));
+
+            Stat upStats = UpStats(monsDef.Role, level);
+            
+            baseAtk += upStats.Atk;
+            baseDef += upStats.Def;
+            baseSpd += upStats.Spd;
+            baseHP = Math.Max(1, baseHP + upStats.HP);
+
+            int maxXP = (int)(Math.Round((100 * Math.Pow(level, 1.5)) / 100.0) * 100);
+
+            Monster monster = new()
+            {
+                InstanceId =  Extentions.Extentions.RandomHex(),
+                Id = monsDef.MonsterId,
+                Title = monsDef.Title,
+                Desc = monsDef.Desc,
+                OwnerID = OwnerID,
+                Rarity = monsDef.Rarity,
+                Role = monsDef.Role,
+                Element = monsDef.Element,
+                Level = level,
+                ATK = baseAtk,
+                DEF = baseDef,
+                SPD = baseSpd,
+                MaxHP = baseHP,
+                HP = baseHP,
+                MaxXP = maxXP,
+                XP = 0,
+                IsFighting = false,
+                CaptureAt = DateTime.UtcNow
+
+            };
+
+            return monster;
+
+        }
+
+        public void LevelUpMonster(Monster monster)
+        {
+            MonsDef monsDef = GetMonsDef(monster.Id);
+            UpStat upStat = _gameplay.StatsUps.FirstOrDefault(x => x.Role == monsDef.Role);
+
+            int atkInc = 0;
+            int defInc = 0;
+            int spdInc = 0;
+            int hpInc = 0;
+
+            if (upStat != null)
+            {
+                atkInc = Extentions.Extentions.RandomBetween(upStat.Atk, ":");
+                defInc = Extentions.Extentions.RandomBetween(upStat.Def, ":");
+                spdInc = Extentions.Extentions.RandomBetween(upStat.Spd, ":");
+                hpInc = Extentions.Extentions.RandomBetween(upStat.HP, ":");
+            }
+
+            monster.Level++;
+            monster.ATK += atkInc;
+            monster.DEF += defInc;
+            monster.SPD += spdInc;
+            monster.MaxHP += hpInc;
+            monster.HP = monster.MaxHP;
+            monster.XP = 0;
+            monster.MaxXP = (int)(Math.Round((100 * Math.Pow(monster.Level, 1.5)) / 100.0) * 100);
+            monster.Log(monster.InstanceId, monster.Level, "levelup");
+        }
+
 
         public BattleData GetBattleData()
         {
             return _gameplay.BattleData;
         }
 
-        public List<XpRouteEntry> GetXpRouteEntries()
-        {
-            return _gameplay.XpRoute_Fast;
-        }
 
-        public MapLocations GetMapLocations()
+        public double ElementMultiplier(string AttackerElement, string DefenderElement)
         {
-            return _gameplay.MapLocations;
-        }
-        // public string MonsterLogger()
-        // {
-            
-        // }
+            double bonus = _gameplay.ElementMultiplier.Same;
 
-        public HealingCost GetHealSprayTable(int level)
-        {
-            return _gameplay.HealingTable.Where(x => level >= x.Level).OrderByDescending(r => r.Level).FirstOrDefault();
-        }
-
-     
-        public List<string> RandomLocations(string world)
-        {
-            List<Point> nodes = world switch
+            if (string.IsNullOrEmpty(AttackerElement) || string.IsNullOrEmpty(DefenderElement))
             {
-                "bootcamp" => _gameplay.MapLocations.Bootcamp,
-                "riverfall" => _gameplay.MapLocations.Riverfall,
+                Console.WriteLine("[ALERT] AttackerElemnet or DefenderElement is NULL");
+                return bonus;
+            }
+
+            if (_gameplay.StrongAgainst.TryGetValue(AttackerElement, out var attackerStrongAgainst) &&
+                attackerStrongAgainst.Contains(DefenderElement))
+            {
+                bonus = _gameplay.ElementMultiplier.Strong;
+            }
+            else if (_gameplay.StrongAgainst.TryGetValue(DefenderElement, out var defenderStrongAgainst) &&
+                     defenderStrongAgainst.Contains(AttackerElement))
+            {
+                bonus = _gameplay.ElementMultiplier.Weak;
+            }
+
+            return bonus;
+        }
+
+        public Bonus GetBonusData()
+        {
+            return _gameplay.Bonus;
+        }
+
+        public List<string> RandomLocations(string map)
+        {
+            List<Point> nodes = map switch
+            {
+                "bootcamp" => _gameplay.MapLocations[map],
+                "riverfall" => _gameplay.MapLocations[map],
                 _ => new List<Point>()
             };
 
@@ -92,46 +422,123 @@ namespace monster_world.Services
                     ActiveNodes.Add(nodes[rnd].Node);
                 }
             }
+           
+            ActiveNodes.Add("BOSS"); //ading of boss node;
 
             return ActiveNodes;
         }
 
-        public List<string> GetLocationMonsters(string world, string node)
+        public int CalculateHealing(Monster monster)
         {
-            List<string> LocationMonsters = world switch
+            int CurrentHP = monster.HP;
+            int MaxHP = monster.MaxHP;
+
+            int requiredHp = MaxHP - CurrentHP;
+
+            int requiredHealing = (int)Math.Ceiling(requiredHp / 100.0);
+
+            return requiredHealing;
+        }
+        public List<string> GetLocationMonsters(string map, string node)
+        {
+            List<string> LocationMonsters = map switch
             {
-                "bootcamp" => _gameplay.MapLocations.Bootcamp.FirstOrDefault(x => x.Node == node)?.Monsters,
-                "riverfall" => _gameplay.MapLocations.Riverfall.FirstOrDefault(x => x.Node == node)?.Monsters,
+                "bootcamp" => _gameplay.MapLocations[map].FirstOrDefault(x => x.Node == node)?.Monsters,
+                "riverfall" => _gameplay.MapLocations[map].FirstOrDefault(x => x.Node == node)?.Monsters,
                 _ => null
             };
 
             return LocationMonsters ?? new List<string>();
         }
 
-        public Monster CreateMonsterInstance(string id, long OwnerID, int level)
+
+        public bool CheckBetween(int value, string str)
         {
-            var _def = GetMonsterDef(id);
-            Monster monster = new()
-            {
-                InstanceId = Extentions.Extentions.RandomHex(),
-                Id = _def.Id,
-                Title = _def.Title,
-                OwnerID = OwnerID,
-                Kind = _def.Kind,
-                Level = level,
-                XP = GetXpRouteEntries().FirstOrDefault(x => level >= x.Lvl).Xp,
-                IsFighting = false,
-                CaptureAt = DateTime.UtcNow,
-                CurrentHP = 100,
-                HealTime = null
-            };
-            return monster;
+            int value1 = int.Parse(str.Split(":")[0]);
+            int value2 = int.Parse(str.Split(":")[1]);
+
+            return value >= value1 && value <= value2;
         }
 
-        
+        public double GetOddRange(Monster monster)
+        {
+            if (_gameplay.CatchOdds == null || !_gameplay.CatchOdds.Any())
+            {
+                throw new InvalidOperationException("CatchOdds configuration is empty or missing from gameplay config.");
+            }
 
+            var catchRange = _gameplay.CatchOdds.FirstOrDefault(x =>
+                string.Equals(x.Rarity?.Trim(), monster.Rarity?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+            if (catchRange == null)
+            {
+                throw new InvalidOperationException($"Catch odds not configured for rarity '{monster.Rarity ?? "<null>"}'.");
+            }
+
+            int hpPercent = 0;
+            if (monster.MaxHP > 0)
+            {
+                hpPercent = (int)Math.Round((double)monster.HP / monster.MaxHP * 100);
+                hpPercent = Math.Clamp(hpPercent, 0, 100);
+            }
+            else
+            {
+                hpPercent = Math.Clamp(monster.HP, 0, 100);
+            }
+
+            var oddRange = catchRange.OddRanges.FirstOrDefault(y => CheckBetween(hpPercent, y.HpWhen));
+            if (oddRange == null)
+            {
+                throw new InvalidOperationException($"No catch odds range found for HP% {hpPercent} (raw HP {monster.HP}, max HP {monster.MaxHP}) in rarity '{catchRange.Rarity}'.");
+            }
+
+            return oddRange.Chance;
+        }
+
+
+        public Dictionary<string, ListedItems> GetShopItems()
+        {
+            return _gameplay.ShopItems;
+        }
+
+        public List<string> GetExchangePairs()
+        {
+            return _gameplay.ExchangePairs;
+        }
+
+        public List<ExchangeRate> GetExchangeRates()
+        {
+            return _gameplay.ExchangeRates;
+        }
+
+        public LeaderboardConfig GetLeaderboardConfig()
+        {
+            return _gameplay.Leaderboard;
+        }
+
+
+
+
+        
     
 
+        // public BossMonster GenerateBossMonster(string rarity, int level)
+        // {
+        //     MonsDef monsDef = RandomMons(GetMonsterDef(rarity));  //change it to random boss
+
+        //     BossMonster boss = new()
+        //     {
+        //         InstanceId = Extentions.Extentions.RandomHex(),
+        //         Id = monsDef.MonsterId,
+        //         BossTitle = monsDef.Title,
+        //         BossDesc = monsDef.Desc,
+        //         Element = monsDef.Element,
+        //         Role = monsDef.Role,
+        //         BossRarity = rarity,
+        //         Level = level,
+
+        //     }
+        // }
 
     }
     

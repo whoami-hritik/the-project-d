@@ -142,6 +142,63 @@ namespace monster_world.Migrations
                     b.ToTable("ShopItems");
                 });
 
+            modelBuilder.Entity("monster_world.Models.MapBase", b =>
+                {
+                    b.Property<string>("MapId")
+                        .HasColumnType("text");
+
+                    b.Property<double>("DailyUSDTLiquidity")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("MapLiquidity")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("TotalUsers")
+                        .HasColumnType("integer");
+
+                    b.Property<List<long>>("Users")
+                        .HasColumnType("bigint[]");
+
+                    b.HasKey("MapId");
+
+                    b.ToTable("MapLiquidity");
+                });
+
+            modelBuilder.Entity("monster_world.Models.Mission", b =>
+                {
+                    b.Property<Guid>("MissionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Category")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<double>("RewardAmount")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("RewardCurrency")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VerificationType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("VerificationUrl")
+                        .HasColumnType("text");
+
+                    b.HasKey("MissionId");
+
+                    b.ToTable("AvailableMissions");
+                });
+
             modelBuilder.Entity("monster_world.Models.Monster", b =>
                 {
                     b.Property<int>("GlobalID")
@@ -150,14 +207,23 @@ namespace monster_world.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("GlobalID"));
 
+                    b.Property<int>("ATK")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CaptureAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("CurrentHP")
+                    b.Property<int>("DEF")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime?>("HealTime")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("Desc")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Element")
+                        .HasColumnType("text");
+
+                    b.Property<int>("HP")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Id")
                         .HasColumnType("text");
@@ -165,11 +231,14 @@ namespace monster_world.Migrations
                     b.Property<string>("InstanceId")
                         .HasColumnType("text");
 
-                    b.Property<bool>("IsFighting")
+                    b.Property<bool>("IsBoss")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Kind")
-                        .HasColumnType("text");
+                    b.Property<bool>("IsCaptured")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsFighting")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("Level")
                         .HasColumnType("integer");
@@ -177,8 +246,23 @@ namespace monster_world.Migrations
                     b.Property<List<string>>("Logs")
                         .HasColumnType("text[]");
 
+                    b.Property<int>("MaxHP")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxXP")
+                        .HasColumnType("integer");
+
                     b.Property<long>("OwnerID")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("Rarity")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("text");
+
+                    b.Property<int>("SPD")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Title")
                         .HasColumnType("text");
@@ -200,7 +284,7 @@ namespace monster_world.Migrations
                     b.Property<long>("ID")
                         .HasColumnType("bigint");
 
-                    b.Property<long[]>("Referrals")
+                    b.Property<List<long>>("Referrals")
                         .HasColumnType("bigint[]");
 
                     b.HasKey("RefID");
@@ -250,16 +334,37 @@ namespace monster_world.Migrations
                     b.Property<bool>("Bonus")
                         .HasColumnType("boolean");
 
+                    b.Property<int>("DailyBattles")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DailyChestsOpened")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DailyHealedHP")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DailyVictory")
+                        .HasColumnType("integer");
+
                     b.Property<string>("FirstName")
                         .HasColumnType("text");
 
+                    b.Property<bool>("HasAcceptedAgreement")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("LanguageCode")
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastLoginDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("LastName")
                         .HasColumnType("text");
 
                     b.Property<int>("Level")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("LoginStreak")
                         .HasColumnType("integer");
 
                     b.Property<List<string>>("Missions")
@@ -277,11 +382,17 @@ namespace monster_world.Migrations
                     b.Property<long>("ReferrerID")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("ReferrerRewarded")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime>("RegistrationDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int>("Role")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("StreakClaimed")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("TotalBattles")
                         .HasColumnType("integer");
@@ -373,11 +484,37 @@ namespace monster_world.Migrations
                     b.ToTable("Spawns");
                 });
 
+            modelBuilder.Entity("monster_world.Services.BattleService+BossBattle", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<List<Guid>>("BattleIds")
+                        .HasColumnType("uuid[]");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("TotalBossBattles")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("TotalUSDTCap")
+                        .HasColumnType("double precision");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BossBattleData");
+                });
+
             modelBuilder.Entity("monster_world.Services.BattleState", b =>
                 {
                     b.Property<Guid>("BattleId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<bool>("BossBattle")
+                        .HasColumnType("boolean");
 
                     b.Property<List<string>>("EnemyActiveSkills")
                         .HasColumnType("text[]");
@@ -390,6 +527,9 @@ namespace monster_world.Migrations
 
                     b.Property<int?>("EnemyMonsterGlobalID")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Map")
+                        .HasColumnType("text");
 
                     b.Property<List<string>>("PlayerActiveSkills")
                         .HasColumnType("text[]");
@@ -405,6 +545,9 @@ namespace monster_world.Migrations
 
                     b.Property<int?>("PlayerMonsterGlobalID")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("RewardProcessed")
+                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp with time zone");
@@ -624,6 +767,57 @@ namespace monster_world.Migrations
                     b.Navigation("Spawns");
                 });
 
+            modelBuilder.Entity("monster_world.Services.BattleService+BossBattle", b =>
+                {
+                    b.OwnsMany("monster_world.Services.BattleService+BOSS", "MapBosses", b1 =>
+                        {
+                            b1.Property<Guid>("BossBattleId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            b1.Property<bool>("Active")
+                                .HasColumnType("boolean");
+
+                            b1.Property<List<string>>("BOSSES")
+                                .HasColumnType("text[]");
+
+                            b1.Property<DateTime>("Day")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<DateTime>("EndingAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("Map")
+                                .HasColumnType("text");
+
+                            b1.Property<List<long>>("PlayerIds")
+                                .HasColumnType("bigint[]");
+
+                            b1.Property<DateTime>("StartingAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<int>("TotalPlayers")
+                                .HasColumnType("integer");
+
+                            b1.Property<double>("USDTCap")
+                                .HasColumnType("double precision");
+
+                            b1.HasKey("BossBattleId", "Id");
+
+                            b1.ToTable("BossBattleData");
+
+                            b1.ToJson("MapBosses");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BossBattleId");
+                        });
+
+                    b.Navigation("MapBosses");
+                });
+
             modelBuilder.Entity("monster_world.Services.BattleState", b =>
                 {
                     b.HasOne("monster_world.Models.Monster", "EnemyMonster")
@@ -639,13 +833,16 @@ namespace monster_world.Migrations
                             b1.Property<Guid>("BattleStateBattleId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<int>("AimBonus")
+                            b1.Property<int>("Aim")
                                 .HasColumnType("integer");
 
-                            b1.Property<int>("AtkBonus")
+                            b1.Property<int>("Atk")
                                 .HasColumnType("integer");
 
-                            b1.Property<int>("DefBonus")
+                            b1.Property<int>("Def")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("Energy")
                                 .HasColumnType("integer");
 
                             b1.Property<bool>("Hypno")
@@ -676,13 +873,16 @@ namespace monster_world.Migrations
                             b1.Property<Guid>("BattleStateBattleId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<int>("AimBonus")
+                            b1.Property<int>("Aim")
                                 .HasColumnType("integer");
 
-                            b1.Property<int>("AtkBonus")
+                            b1.Property<int>("Atk")
                                 .HasColumnType("integer");
 
-                            b1.Property<int>("DefBonus")
+                            b1.Property<int>("Def")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("Energy")
                                 .HasColumnType("integer");
 
                             b1.Property<bool>("Hypno")

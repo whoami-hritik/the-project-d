@@ -6,6 +6,7 @@ namespace monster_world.Controller
 {  
     public class EnhanceController : ControllerBase
     {
+        [NonAction]
         public async Task<string> GetBody()
         {
             Stream streamBody = Request.Body;
@@ -16,6 +17,8 @@ namespace monster_world.Controller
                 return reqBody;
             }
         }
+
+        [NonAction]
         public async Task<T> GetForm<T>(T form)
         {
             string body = await GetBody();

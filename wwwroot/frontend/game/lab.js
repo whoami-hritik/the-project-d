@@ -314,7 +314,7 @@ export class LabScene extends Phaser.Scene {
                     const token = this.add.image(i * 73.33 + 20 + j * 73.33 / 2 + ulocklv_width, 35 + 35 + 35, "ch" + charCode);
                     token.setDisplaySize(token.displayWidth / 1.5, token.displayHeight / 1.5).setOrigin(0);
                     ulocklv_width += token.displayWidth;
-                    scrollContainer.add(unlockAtChar);
+                    scrollContainer.add(token);
                 });
                 scrollContainer.add(lock_skill);
             }

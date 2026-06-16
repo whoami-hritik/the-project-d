@@ -2484,6 +2484,14 @@ namespace monster_world.Controller
             if (monster.XP < monster.MaxXP)
                 return Ok(new { success = false, reason = "not enough XP to level up" });
 
+            // Linear Scale Level Up Cost: 100 Gold per current level
+            double goldCost = 100.0 * monster.Level;
+            if (User.Balance.GOLD < goldCost)
+                return Ok(new { success = false, reason = $"not enough GOLD. Required: {goldCost} GOLD" });
+
+            User.Credit("GOLD", -goldCost, $"monster_level_up={monster.InstanceId}");
+            _context.Users.Update(User);
+
             _gameplayService.LevelUpMonster(monster);
             _context.Monsters.Update(monster);
 

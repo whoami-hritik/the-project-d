@@ -32,7 +32,7 @@ const locations = {
         { name: "R", x: 729, y: 425, active: false, bgs: "bgs_camp" },
         { name: "S", x: 621, y: 482, active: false, bgs: "bgs_camp" },
         { name: "T", x: 699, y: 515, active: false, bgs: "bgs_camp" },
-        { name: "BOSS", x: 680, y: 150, active: false, bgs: "bgs_camp" }
+        { name: "BOSS", x: 680, y: 150, active: false, bgs: "bgs_out_temple" }
     ],
     "riverfall": [
         { name: "A", x: 175, y: 317, active: false, bgs: "bgs_riverfall_tall_pine" },

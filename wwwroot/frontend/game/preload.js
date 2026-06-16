@@ -129,6 +129,8 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("bgs_costa", "images/map/area_costa/camp.png");
         this.load.image("bgs_volcano", "images/map/area_volcano/camp.png");
 
+        this.load.image("bgs_out_temple", "images/map/area_boss/boss_out_temple.jpg")
+
         this.load.image("btn_world", "images/buttons/btn_world.png");
         this.load.image("btn_shop", "images/buttons/btn_shop.png");
         this.load.image("btn_team", "images/buttons/btn_team.png");

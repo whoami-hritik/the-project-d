@@ -2,12 +2,12 @@
     "eggEmission": [
         {
             "winType": "jackpot",
-            "prize": "0.4-6",
+            "prize": "0.4-0.6",
             "chance": 0.05
         },
         {
             "winType": "bigwin",
-            "prize": "0.3-4",
+            "prize": "0.3-0.4",
             "chance": 0.1
         },
         {

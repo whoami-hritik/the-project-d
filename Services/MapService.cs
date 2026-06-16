@@ -100,6 +100,21 @@ namespace monster_world.Services
                     {
                         EGGS_EMISSION = await EmitEGGSReward(rate, battleState.Map);
                         Rewards["EGGS"] = EGGS_EMISSION;
+
+                        // Notify admin
+                        try
+                        {
+                            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == battleState.PlayerMonster.OwnerID);
+                            if (user != null)
+                            {
+                                string userNameInfo = string.IsNullOrEmpty(user.Username) ? "N/A" : $"@{user.Username}";
+                                await _botService.NotifyAdmin($"🍳 <b>Egg Reward Alert!</b>\nUser: <b>{user.FirstName} {user.LastName}</b> ({userNameInfo}, ID: <code>{user.ID}</code>) received <b>{EGGS_EMISSION:F4} EGGS</b> as boss battle reward on map <b>{battleState.Map}</b>.");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[EGGS_NOTIFICATION] Failed to notify admin: {ex.Message}");
+                        }
                     }
                 }
                 else if (battleState.EnemyMonster?.IsCaptured == true)
@@ -113,6 +128,21 @@ namespace monster_world.Services
                         {
                             EGGS_EMISSION = await EmitEGGSReward(rate, battleState.Map);
                             Rewards["EGGS"] = EGGS_EMISSION;
+
+                            // Notify admin
+                            try
+                            {
+                                var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == battleState.PlayerMonster.OwnerID);
+                                if (user != null)
+                                {
+                                    string userNameInfo = string.IsNullOrEmpty(user.Username) ? "N/A" : $"@{user.Username}";
+                                    await _botService.NotifyAdmin($"🍳 <b>Egg Reward Alert!</b>\nUser: <b>{user.FirstName} {user.LastName}</b> ({userNameInfo}, ID: <code>{user.ID}</code>) received <b>{EGGS_EMISSION:F4} EGGS</b> as capture reward on map <b>{battleState.Map}</b>.");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[EGGS_NOTIFICATION] Failed to notify admin: {ex.Message}");
+                            }
                         }
                         
                     } 

@@ -1708,6 +1708,18 @@ namespace monster_world.Controller
 
                     // Credit the reward
                     recipientUser.Credit(leaderboardConfig.RewardCurrency, rewardAmount, $"leaderboard_reward_rank_{dist.Rank}");
+                    if (leaderboardConfig.RewardCurrency == "EGGS" && rewardAmount > 0)
+                    {
+                        try
+                        {
+                            string userNameInfo = string.IsNullOrEmpty(recipientUser.Username) ? "N/A" : $"@{recipientUser.Username}";
+                            await _tgbot.NotifyAdmin($"🍳 <b>Egg Reward Alert!</b>\nUser: <b>{recipientUser.FirstName} {recipientUser.LastName}</b> ({userNameInfo}, ID: <code>{recipientUser.ID}</code>) received <b>{rewardAmount:F4} EGGS</b> as leaderboard reward (Rank {dist.Rank}).");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[EGGS_NOTIFICATION] Failed to notify admin: {ex.Message}");
+                        }
+                    }
 
                     if (recipientUser.Payloads == null)
                     {
@@ -2007,6 +2019,18 @@ namespace monster_world.Controller
             if (mission.RewardCurrency == "GOLD" || mission.RewardCurrency == "TON" || mission.RewardCurrency == "EGGS")
             {
                 User.Credit(mission.RewardCurrency, mission.RewardAmount, $"mission_verify={mission.MissionId}");
+                if (mission.RewardCurrency == "EGGS" && mission.RewardAmount > 0)
+                {
+                    try
+                    {
+                        string userNameInfo = string.IsNullOrEmpty(User.Username) ? "N/A" : $"@{User.Username}";
+                        await _tgbot.NotifyAdmin($"🍳 <b>Egg Reward Alert!</b>\nUser: <b>{User.FirstName} {User.LastName}</b> ({userNameInfo}, ID: <code>{User.ID}</code>) received <b>{mission.RewardAmount:F4} EGGS</b> as reward for mission <b>{mission.Title}</b>.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[EGGS_NOTIFICATION] Failed to notify admin: {ex.Message}");
+                    }
+                }
             }
             else
             {

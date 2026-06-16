@@ -149,6 +149,7 @@ namespace TGBOT
                                          "• `/topup <uid> <currency/item> <amount>` - Top up user currencies (TON, GOLD, EGGS) or items (MonstaBall, HealSpell, etc.)\n" +
                                          "• `/user <uid>` - Inspect user data, balances, items, and monsters\n" +
                                          "• `/totalplayers` - View total registered players\n" +
+                                         "• `/analytics` - View game financial and token analytics\n" +
                                          "• `/resetdb <password>` - Wipe all user data (requires password: `AdminDBReset2026!`)\n" +
                                          "• `/maintenance [message]` - Enable maintenance mode (blocks non-admin users)\n" +
                                          "• `/removemaintenance` - Disable maintenance mode\n" +
@@ -276,6 +277,104 @@ namespace TGBOT
 
                         int totalCount = await _dbContext.Users.CountAsync();
                         await _bot.SendMessage(commander.Chatid, $"📊 Total Registered Players: {totalCount}");
+                    });
+
+            commander.Bind("analytics", async () =>
+                    {
+                        if (!IsAdmin(commander.Chatid)) return;
+
+                        try
+                        {
+                            // 1. Total EGGS from pool
+                            double totalEggsPool = 0;
+                            var pool = await _dbContext.Pool.FirstOrDefaultAsync(x => x.PoolID == 1);
+                            if (pool != null)
+                            {
+                                totalEggsPool = pool.TotalEGGS;
+                            }
+
+                            // 2. Sum of all users' EGGS balance
+                            double totalEggsCirculation = await _dbContext.Users.SumAsync(u => u.Balance.EGGS);
+
+                            // 3. TON to GOLD conversions
+                            var users = await _dbContext.Users.ToListAsync();
+                            double totalGoldFromTon = 0;
+                            double totalTonConvertedToGold = 0;
+                            foreach (var u in users)
+                            {
+                                if (u.Transactions != null)
+                                {
+                                    foreach (var t in u.Transactions)
+                                    {
+                                        var parts = t.Split('|');
+                                        if (parts.Length >= 4)
+                                        {
+                                            string currency = parts[1];
+                                            string amtStr = parts[2];
+                                            string action = parts[3];
+                                            if (action == "exchange=TONtoGOLD" && double.TryParse(amtStr, out double amt))
+                                            {
+                                                if (currency == "GOLD")
+                                                {
+                                                    totalGoldFromTon += amt;
+                                                }
+                                                else if (currency == "TON")
+                                                {
+                                                    totalTonConvertedToGold += Math.Abs(amt);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // 4. Deposits
+                            double totalDepositsCount = await _dbContext.Deposits.Where(d => d.Successful || d.Completed).SumAsync(d => d.Amount);
+                            double totalDepositsAnalytics = await _dbContext.Analytics.SumAsync(a => a.TotalDeposit);
+
+                            // 5. Top 20 EGG holders
+                            var topHolders = await _dbContext.Users
+                                .Where(u => u.Balance.EGGS > 0)
+                                .OrderByDescending(u => u.Balance.EGGS)
+                                .Take(20)
+                                .Select(u => new { u.FirstName, u.LastName, u.Username, u.ID, u.Balance.EGGS })
+                                .ToListAsync();
+
+                            var message = $"📊 <b>Project D Analytics Report</b> 📊\n" +
+                                          $"----------------------------------\n\n" +
+                                          $"🍳 <b>EGGS Emission</b>:\n" +
+                                          $"• Total Pool Supply: <code>{totalEggsPool:F4} EGGS</code>\n" +
+                                          $"• In Circulation: <code>{totalEggsCirculation:F4} EGGS</code>\n\n" +
+                                          $"💰 <b>TON to GOLD Conversions</b>:\n" +
+                                          $"• TON Exchanged: <code>{totalTonConvertedToGold:F4} TON</code>\n" +
+                                          $"• GOLD Generated: <code>{totalGoldFromTon:F0} GOLD</code>\n\n" +
+                                          $"📥 <b>Deposits</b>:\n" +
+                                          $"• Completed Deposits: <code>{totalDepositsCount:F4} TON</code>\n" +
+                                          $"• Analytics Logged: <code>{totalDepositsAnalytics:F4} USDT</code>\n\n" +
+                                          $"🏆 <b>Top 20 EGGS Holders</b> (Balance > 0):\n";
+
+                            if (topHolders.Any())
+                            {
+                                int rank = 1;
+                                foreach (var h in topHolders)
+                                {
+                                    string userHandle = string.IsNullOrEmpty(h.Username) ? "N/A" : $"@{h.Username}";
+                                    string fullName = System.Net.WebUtility.HtmlEncode($"{h.FirstName} {h.LastName}".Trim());
+                                    message += $"{rank}. <b>{fullName}</b> ({userHandle}, ID: <code>{h.ID}</code>) - <b>{h.EGGS:F4} EGGS</b>\n";
+                                    rank++;
+                                }
+                            }
+                            else
+                            {
+                                message += "<i>No users currently hold any EGGS.</i>\n";
+                            }
+
+                            await _bot.SendMessage(commander.Chatid, message, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+                        }
+                        catch (Exception ex)
+                        {
+                            await _bot.SendMessage(commander.Chatid, $"❌ Failed to generate analytics: {ex.Message}");
+                        }
                     });
 
             commander.Bind("maintenance", async () =>

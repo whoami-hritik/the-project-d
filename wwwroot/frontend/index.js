@@ -15,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         try {
-            const res = await fetch("https://monsterworld.qzz.io/monsterworld/user", {
+            const res = await fetch(window.location.origin + "/monsterworld/user", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

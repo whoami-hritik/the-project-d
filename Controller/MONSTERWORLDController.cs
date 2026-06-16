@@ -572,14 +572,21 @@ namespace monster_world.Controller
             User.Monsters.Add(monster.InstanceId);
             User.Bonus = true;
 
-            
-            
+            if (SignUpBonus.Currency != null)
+            {
+                foreach (var cur in SignUpBonus.Currency)
+                {
+                    User.Credit(cur.Key, cur.Value, $"signupbonus={monster.InstanceId}");
+                }
+            }
 
-            User.AddItems("MonstaBall", SignUpBonus.Items["MonstaBall"], $"signupbonus={monster.InstanceId}");
-            User.AddItems("HealSpell", SignUpBonus.Items["HealSpell"], $"signupbonus={monster.InstanceId}");
-            User.AddItems("DarkSpell", SignUpBonus.Items["DarkSpell"], $"signupbonus={monster.InstanceId}");
-            User.AddItems("RagePotion", SignUpBonus.Items["RagePotion"], $"signupbonus={monster.InstanceId}");
-            
+            if (SignUpBonus.Items != null)
+            {
+                foreach (var item in SignUpBonus.Items)
+                {
+                    User.AddItems(item.Key, item.Value, $"signupbonus={monster.InstanceId}");
+                }
+            }            
 
             await _context.SaveChangesAsync();
 

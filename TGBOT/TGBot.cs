@@ -102,7 +102,7 @@ namespace TGBOT
                             await _userService.GetOrCreateUser(tgUser, referrerId);
                         }
 
-                        var webAppUrl = "https://monsterworld.qzz.io/index.html";
+                        var webAppUrl = System.Environment.GetEnvironmentVariable("WEBAPP_URL") ?? "https://monsterworld.qzz.io/index.html";
                         if (referrerId > 0)
                         {
                             webAppUrl += $"?tgWebAppStartParam={referrerId}";

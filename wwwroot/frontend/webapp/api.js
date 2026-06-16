@@ -1,7 +1,7 @@
 import { tg } from "./telegram.js";
 import { state } from "../state.js";
 const init = tg.initData;
-const BASE_URL = "https://monsterworld.qzz.io/monsterworld/"
+const BASE_URL = window.location.origin + "/monsterworld/"
 export function decodeResponse(base64Data) {
 
     const binaryString = atob(base64Data);

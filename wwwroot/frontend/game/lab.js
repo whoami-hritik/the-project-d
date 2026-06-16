@@ -161,6 +161,9 @@ export class LabScene extends Phaser.Scene {
                 api.HealMonsterWithGold(this.monsInfo.instanceId).then(result => {
                     if (result && result.success) {
                         showNotification(this, "Monster fully healed!");
+                        if (result.monster) {
+                            Object.assign(this.monster, result.monster);
+                        }
                         this.scene.restart({ monster: this.monster });
                     } else {
                         showNotification(this, result ? result.reason : "Healing failed");
@@ -177,6 +180,9 @@ export class LabScene extends Phaser.Scene {
                 api.LevelUpMonster(this.monsInfo.instanceId).then(result => {
                     if (result && result.success) {
                         showNotification(this, "Monster Leveled Up!");
+                        if (result.monster) {
+                            Object.assign(this.monster, result.monster);
+                        }
                         this.scene.restart({ monster: this.monster });
                     } else {
                         showNotification(this, result ? result.reason : "Level up failed");

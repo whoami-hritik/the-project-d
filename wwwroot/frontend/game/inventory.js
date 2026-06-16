@@ -261,7 +261,14 @@ export class InventoryScene extends Phaser.Scene {
         this.monsterTexture.on("pointerup", (pointer) => {
             if (!checkClick(pointer)) return;
 
-            this.scene.launch("LabScene", { monster: state.selectedMonster })
+            this.scene.launch("LabScene", { monster: state.selectedMonster });
+            this.scene.pause();
+            const lab = this.scene.get("LabScene");
+            lab.events.once("shutdown", () => {
+                this.scene.resume();
+                this.updateInventory();
+                this.updateSelectedMonster(state.selectedMonster);
+            });
         })
 
     }

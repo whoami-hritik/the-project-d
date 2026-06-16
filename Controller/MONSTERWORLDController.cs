@@ -1928,21 +1928,24 @@ namespace monster_world.Controller
                     }
                 }
 
-                if (!string.IsNullOrEmpty(channelUsername))
+                if (string.IsNullOrEmpty(channelUsername))
                 {
-                    try
+                    return Ok(new { success = false, reason = "Telegram channel URL is not configured correctly." });
+                }
+
+                try
+                {
+                    var member = await _botClient.GetChatMember(channelUsername, User.ID);
+                    var statusStr = member.Status.ToString().ToLower();
+                    if (statusStr == "left" || statusStr == "kicked")
                     {
-                        var member = await _botClient.GetChatMember(channelUsername, User.ID);
-                        var statusStr = member.Status.ToString().ToLower();
-                        if (statusStr == "left" || statusStr == "kicked")
-                        {
-                            return Ok(new { success = false, reason = "You haven't joined the Telegram channel yet!" });
-                        }
+                        return Ok(new { success = false, reason = "You haven't joined the Telegram channel yet!" });
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"[TELEGRAM_JOIN_VERIFICATION] Warning: failed to verify membership on {channelUsername} for user {User.ID}. Exception: {ex.Message}");
-                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[TELEGRAM_JOIN_VERIFICATION] Failed to verify membership on {channelUsername} for user {User.ID}. Exception: {ex.Message}");
+                    return Ok(new { success = false, reason = $"Verification failed. Make sure you joined the channel {channelUsername} and try again." });
                 }
             }
 

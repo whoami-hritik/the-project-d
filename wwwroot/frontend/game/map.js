@@ -181,6 +181,15 @@ export class MapScene extends Phaser.Scene {
                     this.scene.start(scenes[i]);
                 } else {
                     this.scene.launch(scenes[i]);
+                    this.scene.pause();
+                    const sub = this.scene.get(scenes[i]);
+                    sub.events.once("shutdown", () => {
+                        this.scene.resume();
+                        api.loadUser().then(result => {
+                            this.USER = state.user;
+                            this.createProfile();
+                        });
+                    });
                 }
                 console.log(scenes[i] + " started");
             });
@@ -203,6 +212,15 @@ export class MapScene extends Phaser.Scene {
         profileHud.on("pointerup", (pointer) => {
             if (!checkClick(pointer)) return;
             this.scene.launch("ProfileScene");
+            this.scene.pause();
+            const sub = this.scene.get("ProfileScene");
+            sub.events.once("shutdown", () => {
+                this.scene.resume();
+                api.loadUser().then(result => {
+                    this.USER = state.user;
+                    this.createProfile();
+                });
+            });
         });
         this.profileContainer.add(profileHud);
 

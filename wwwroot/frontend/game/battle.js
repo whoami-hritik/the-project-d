@@ -59,6 +59,9 @@ export class BattleScene extends Phaser.Scene {
         this.deckSuffle();
 
         this.events.on("useItem", this.useItem, this);
+        this.events.once("shutdown", () => {
+            this.events.off("useItem", this.useItem, this);
+        });
 
         this.stateFlags = {
             playerSick: false,
@@ -168,7 +171,7 @@ export class BattleScene extends Phaser.Scene {
             .setOrigin(0);
         this.attackerContainer.add(attackerPane);
 
-        const playerLv = this.add.image(attackerPane.displayWidth - 20, 10, "ch35");
+        const playerLv = this.add.image(attackerPane.displayWidth - 40, 10, "ch35");
         playerLv.setDisplaySize(playerLv.displayWidth / 1.5, playerLv.displayHeight / 1.5).setOrigin(0);
         this.attackerContainer.add(playerLv);
 
@@ -217,7 +220,7 @@ export class BattleScene extends Phaser.Scene {
 
         let defenderTokenWidth = 0
         let levelTokenWidth = 0;
-        const enemyLv = this.add.image(defenderPane.displayWidth - 20, 10, "ch35")
+        const enemyLv = this.add.image(defenderPane.displayWidth - 40, 10, "ch35")
         enemyLv.setDisplaySize(enemyLv.displayWidth / 1.5, enemyLv.displayHeight / 1.5).setOrigin(0)
 
         const enemyLevel = Array.from(this.battleState.enemyMonster.level.toString(), chr => chr.charCodeAt(0));
@@ -799,8 +802,10 @@ export class BattleScene extends Phaser.Scene {
         // Dim skills and buttons during enemy turn
         if (this.skillCards) {
             this.skillCards.forEach(card => {
-                card.setAlpha(0.5);
-                card.disableInteractive();
+                if (card && card.scene) {
+                    card.setAlpha(0.5);
+                    card.disableInteractive();
+                }
             });
         }
         if (this.moreButton) {
@@ -827,15 +832,17 @@ export class BattleScene extends Phaser.Scene {
         // Restore skills and buttons alpha on player turn
         if (this.skillCards) {
             this.skillCards.forEach((card, index) => {
-                const skill = this.battleState.playerActiveSkills[index];
-                if (this.battleState.playerCooldownSkill === skill) {
-                    card.setAlpha(0.4);
-                    card.setTint(0x555555);
-                    card.disableInteractive();
-                } else {
-                    card.setAlpha(1.0);
-                    card.clearTint();
-                    card.setInteractive();
+                if (card && card.scene) {
+                    const skill = this.battleState.playerActiveSkills[index];
+                    if (this.battleState.playerCooldownSkill === skill) {
+                        card.setAlpha(0.4);
+                        card.setTint(0x555555);
+                        card.disableInteractive();
+                    } else {
+                        card.setAlpha(1.0);
+                        card.clearTint();
+                        card.setInteractive();
+                    }
                 }
             });
         }

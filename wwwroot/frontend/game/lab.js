@@ -307,6 +307,15 @@ export class LabScene extends Phaser.Scene {
                 skill_icon.setAlpha(0.5);
                 lock_skill = this.add.image(i * 73.33 + 15, 35, "skill_lock");
                 lock_skill.setDisplaySize(lock_skill.displayWidth / 1.5, lock_skill.displayHeight / 1.5).setOrigin(0);
+
+                const unlockAtStr = Array.from(ability.getsAt.toString(), chr => chr.charCodeAt(0));
+                let ulocklv_width = 0;
+                unlockAtStr.forEach((charCode, j) => {
+                    const token = this.add.image(i * 73.33 + 20 + j * 73.33 / 2 + ulocklv_width, 35 + 35 + 35, "ch" + charCode);
+                    token.setDisplaySize(token.displayWidth / 1.5, token.displayHeight / 1.5).setOrigin(0);
+                    ulocklv_width += token.displayWidth;
+                    scrollContainer.add(unlockAtChar);
+                });
                 scrollContainer.add(lock_skill);
             }
 

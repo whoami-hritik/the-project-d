@@ -79,15 +79,39 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // Seed Daily, Weekly, and Achievement Missions if they don't exist
+    // Seed and Synchronize Daily, Weekly, and Achievement Missions
     var missionsToSeed = gameplay.MissionsToSeed;
+    var seedIds = missionsToSeed.Select(m => m.MissionId).ToList();
 
+    // 1. Update existing missions or insert new ones
     foreach (var mission in missionsToSeed)
     {
-        if (!await db.AvailableMissions.AnyAsync(x => x.MissionId == mission.MissionId))
+        var existingMission = await db.AvailableMissions.FirstOrDefaultAsync(x => x.MissionId == mission.MissionId);
+        if (existingMission == null)
         {
             db.AvailableMissions.Add(mission);
         }
+        else
+        {
+            existingMission.Title = mission.Title;
+            existingMission.Description = mission.Description;
+            existingMission.RewardAmount = mission.RewardAmount;
+            existingMission.RewardCurrency = mission.RewardCurrency;
+            existingMission.VerificationType = mission.VerificationType;
+            existingMission.VerificationUrl = mission.VerificationUrl;
+            existingMission.Category = mission.Category;
+            existingMission.IsActive = true; // Ensure it's active if present in JSON
+        }
+    }
+
+    // 2. Deactivate missions that are no longer present in gameplay.json
+    var missionsToDeactivate = await db.AvailableMissions
+        .Where(x => x.IsActive && !seedIds.Contains(x.MissionId))
+        .ToListAsync();
+
+    foreach (var oldMission in missionsToDeactivate)
+    {
+        oldMission.IsActive = false;
     }
 
     await db.SaveChangesAsync();

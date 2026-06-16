@@ -579,12 +579,12 @@
         },
         {
             "pair": "HEALSPELL-GOLD",
-            "rate": "1:10",
+            "rate": "1:18",
             "limit": "nolimit"
         },
         {
             "pair": "MONSTABALL-GOLD",
-            "rate": "1:25",
+            "rate": "1:8",
             "limit": "nolimit"
         }
     ],
@@ -753,7 +753,7 @@
         "HealSpell": {
             "payload": "buy=HealSpell",
             "cost": {
-                "GOLD": 5
+                "GOLD": 10
             }
         },
         "MonstaBall": {

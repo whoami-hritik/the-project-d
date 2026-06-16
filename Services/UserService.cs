@@ -271,7 +271,7 @@ namespace monster_world.Services
             }
             else if (string.Equals(consumable, "HealSpell", StringComparison.OrdinalIgnoreCase) && User.Items.HealSpell > 0)
             {
-                consumable_id = "revive";
+                consumable_id = "HealSpell";
             }
             else if (string.Equals(consumable, "RagePotion", StringComparison.OrdinalIgnoreCase) && User.Items.RagePotion > 0)
             {

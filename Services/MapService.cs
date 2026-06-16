@@ -76,7 +76,7 @@ namespace monster_world.Services
 
             double level = Math.Max(1, battleState.EnemyMonster?.Level ?? 1);
             double captureMultiplier = battleState.EnemyMonster?.IsCaptured == true ? 1.2 : 1.0;
-            double bossMultiplier = battleState.BossBattle ? 2 : 1.0;
+            double bossMultiplier = battleState.BossBattle ? 4.0 : 1.0;
             double victoryMultiplier = battleState.Victory ? 1.0 : new Random().Next(3, 5) / 10.0;
 
             double baseGoldReward = 10; // stable base reward

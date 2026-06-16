@@ -134,6 +134,11 @@ namespace monster_world.Services
             {
                 TotalBuget = Extentions.Extentions.RandomBetween(_gameplay.Budget.Epic, ":");
             }
+            else if ( rarity == "legendary" )
+            {
+                string sep = _gameplay.Budget.Legendary?.Contains("-") == true ? "-" : ":";
+                TotalBuget = Extentions.Extentions.RandomBetween(_gameplay.Budget.Legendary, sep);
+            }
 
             return TotalBuget;
         }

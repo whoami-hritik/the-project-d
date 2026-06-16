@@ -853,6 +853,12 @@ namespace monster_world.Controller
                 Enemymonster = _gameplayService.CreateMonsterInstance(bossId, 0, bossLevel);
                 Enemymonster.IsBoss = true;
 
+                // Scale boss stats to provide a legendary challenge
+                Enemymonster.MaxHP *= 2;
+                Enemymonster.HP = Enemymonster.MaxHP;
+                Enemymonster.ATK = (int)(Enemymonster.ATK * 1.3);
+                Enemymonster.DEF = (int)(Enemymonster.DEF * 1.5);
+
 
             }
             else

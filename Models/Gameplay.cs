@@ -444,6 +444,9 @@ namespace monster_world.Models
 
         [JsonPropertyName("epic")]
         public string Epic { get; set; }
+
+        [JsonPropertyName("legendary")]
+        public string Legendary { get; set; }
     }
 
     public class Ability

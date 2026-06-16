@@ -200,13 +200,7 @@ export class LabScene extends Phaser.Scene {
             levelupContainer.setSize(115, 38);
             levelupContainer.setInteractive({ useHandCursor: true });
             
-            // Hover micro-animations
-            levelupContainer.on("pointerover", () => { levelupContainer.setScale(1.05); });
-            levelupContainer.on("pointerout", () => { levelupContainer.setScale(1.0); });
-            levelupContainer.on("pointerdown", () => { levelupContainer.setScale(0.95); });
-            
             levelupContainer.on("pointerup", () => {
-                levelupContainer.setScale(1.05);
                 api.LevelUpMonster(this.monsInfo.instanceId).then(result => {
                     if (result && result.success) {
                         showNotification(this, "Monster Leveled Up!");
@@ -433,18 +427,12 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                         levelUpBtnContainer.setSize(140, 44);
                         levelUpBtnContainer.setInteractive({ useHandCursor: true });
                         
-                        // Hover micro-animations
-                        levelUpBtnContainer.on("pointerover", () => { levelUpBtnContainer.setScale(1.05); });
-                        levelUpBtnContainer.on("pointerout", () => { levelUpBtnContainer.setScale(1.0); });
-                        levelUpBtnContainer.on("pointerdown", () => { levelUpBtnContainer.setScale(0.95); });
-                        
                         const btn_later = scene.add.image(150, 510, "btn_later").setOrigin(0).setDisplaySize(50, 25);
                         btn_later.setInteractive({ useHandCursor: true });
                         
                         container.add([levelUpBtnContainer, btn_later]);
                         
                         levelUpBtnContainer.on("pointerup", () => {
-                            levelUpBtnContainer.setScale(1.05);
                             api.LevelUpMonster(monsInfo.instanceId).then((result) => {
                                 if (result.success) {
                                     const fx = scene.add.sprite(monster.x, monster.y, "anim_levelup_blast");

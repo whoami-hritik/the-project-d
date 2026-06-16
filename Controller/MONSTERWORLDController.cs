@@ -77,7 +77,9 @@ namespace monster_world.Controller
         {
 
             Console.WriteLine("Blockchain Update!");
-            if (update.AccountId != "0:039792779f72c766aa194341e4bc72d55e26584b6b7497a190f77f2acbcb7769")
+            string expectedAccountId = System.Environment.GetEnvironmentVariable("BLOCKCHAIN_ACCOUNT_ID")
+                ?? "0:039792779f72c766aa194341e4bc72d55e26584b6b7497a190f77f2acbcb7769";
+            if (update.AccountId != expectedAccountId)
             {
                 await _tgbot.NotifyAdmin($"Update! Invalid Account ID! {update.AccountId}");
                 Console.WriteLine($"Invalid Account ID! {update.AccountId}");
@@ -85,7 +87,8 @@ namespace monster_world.Controller
             }
             Console.WriteLine("Valid Account ID!");
 
-            var url = $"https://tonapi.io/v2/blockchain/transactions/{update.TxHash}";
+            string tonApiBaseUrl = System.Environment.GetEnvironmentVariable("TONAPI_URL") ?? "https://tonapi.io/v2";
+            var url = $"{tonApiBaseUrl}/blockchain/transactions/{update.TxHash}";
 
             var response = await _httpClient.GetAsync(url);
 
@@ -524,7 +527,8 @@ namespace monster_world.Controller
         [HttpGet("deposit")]
         public async Task<IActionResult> Deposit()
         {
-            string DepositAddress = "UQADl5J3n3LHZqoZQ0HkvHLVXiZYS2t0l6GQ938qy8t3aQKf"; //main wallet address
+            string DepositAddress = System.Environment.GetEnvironmentVariable("DEPOSIT_ADDRESS")
+                ?? "UQADl5J3n3LHZqoZQ0HkvHLVXiZYS2t0l6GQ938qy8t3aQKf"; //main wallet address
             return Ok(new{ success = true, DepositAddress});
         }
 
@@ -1470,7 +1474,8 @@ namespace monster_world.Controller
                 }
 
                 // Primary API: Gate.io (fast, free, very high rate limit)
-                string url = "https://api.gateio.ws/api/v4/spot/tickers?currency_pair=TON_USDT";
+                string url = System.Environment.GetEnvironmentVariable("TON_PRICE_API_URL")
+                    ?? "https://api.gateio.ws/api/v4/spot/tickers?currency_pair=TON_USDT";
                 var response = await _httpClient.GetAsync(url);
                 if (response.IsSuccessStatusCode)
                 {
@@ -1490,7 +1495,8 @@ namespace monster_world.Controller
                 }
 
                 // Fallback API: CoinGecko (slower, low rate limit)
-                string fallbackUrl = "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currency=usd";
+                string fallbackUrl = System.Environment.GetEnvironmentVariable("TON_PRICE_FALLBACK_API_URL")
+                    ?? "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currency=usd";
                 var fallbackResponse = await _httpClient.GetAsync(fallbackUrl);
                 if (fallbackResponse.IsSuccessStatusCode)
                 {

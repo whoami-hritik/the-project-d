@@ -202,7 +202,7 @@ export class LabScene extends Phaser.Scene {
         // Mask for the scrolling skills viewport (inside the bg bounds)
         const maskShape = this.make.graphics();
         maskShape.fillStyle(0xffffff);
-        maskShape.fillRect(10, 605, 250, 90);
+        maskShape.fillRect(10, 605, 400, 90);
         const mask = maskShape.createGeometryMask();
 
         const scrollContainer = this.add.container(0, 0);
@@ -250,7 +250,7 @@ export class LabScene extends Phaser.Scene {
 
         // Description panel themed with monster element
         let elementKey = this.monsInfo.element;
-        if (elementKey === "elec") elementKey = "electric";
+        if (elementKey === "elec" || elementKey === "electric") elementKey = "electric";
         const bgTexture = this.textures.exists(`pane_tooltip_${elementKey}`) ? `pane_tooltip_${elementKey}` : `pane_tooltip_earth`;
 
         const descBg = this.add.image(this.scale.width / 2, 755, bgTexture).setOrigin(0.5);

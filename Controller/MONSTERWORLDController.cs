@@ -1292,7 +1292,7 @@ namespace monster_world.Controller
 
                 await _context.SaveChangesAsync();
 
-                return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards });
+                return Ok( new { success = true, capture = true, battleState, playerAttack, enemyAttack, rewards });
                 
             }
 
@@ -1330,7 +1330,7 @@ namespace monster_world.Controller
 
                 await _context.SaveChangesAsync();
 
-                return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards });
+                return Ok( new { success = true, capture = false, battleState, playerAttack, enemyAttack, rewards });
 
                 
 
@@ -1354,7 +1354,7 @@ namespace monster_world.Controller
 
             await _context.SaveChangesAsync();
 
-            return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards });            
+            return Ok( new { success = true, capture = false, battleState, playerAttack, enemyAttack, rewards });            
         }
 
         [HttpPost("battle/escape")]

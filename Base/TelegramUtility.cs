@@ -7,7 +7,8 @@ namespace monster_world.Base
 {
     public static class TelegramUtility
     {
-        private static string botToken = "8758601978:AAEL44gqPqNQey3CLpyaElRvR3PnVcWbEMI";
+        private static string botToken = System.Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") 
+            ?? "8639079710:AAGUB60SVyqMzIYxOR6LrwNkRYSYMYSgmuA";
         public static bool VerifyTelegramInitData(string initData, out long userId, out TelegramUser user, out string startParam)
         {
             userId = 0;

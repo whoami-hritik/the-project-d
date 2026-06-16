@@ -7,8 +7,12 @@ namespace monster_world.DBContext
     {
         public AppDbContext CreateDbContext(string[] args)
         {
+            DotNetEnv.Env.Load();
+            string connectionString = System.Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
+                ?? "Host=localhost;Port=5432;Database=projectd;Username=postgres;Password=postgres";
+
             var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
-            optionsBuilder.UseNpgsql("Host=localhost;Port=5432;Database=monsterworlddb;Username=hritik;Password=weewee");
+            optionsBuilder.UseNpgsql(connectionString);
 
             return new AppDbContext(optionsBuilder.Options);
         }

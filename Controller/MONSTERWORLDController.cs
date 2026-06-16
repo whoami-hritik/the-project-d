@@ -77,9 +77,10 @@ namespace monster_world.Controller
         {
 
             Console.WriteLine("Blockchain Update!");
-            if (update.AccountId != "0:a743e47bece2f279cf84ffa90c8204ac06116a2cbb45a613b9adc3c35111fc26")
+            if (update.AccountId != "0:039792779f72c766aa194341e4bc72d55e26584b6b7497a190f77f2acbcb7769")
             {
-                Console.WriteLine("Invalid Account ID!");
+                await _tgbot.NotifyAdmin($"Update! Invalid Account ID! {update.AccountId}");
+                Console.WriteLine($"Invalid Account ID! {update.AccountId}");
                 return Ok();
             }
             Console.WriteLine("Valid Account ID!");
@@ -98,9 +99,11 @@ namespace monster_world.Controller
             
             if (await _context.Deposits.FirstOrDefaultAsync(x => x.Hash == update.TxHash) != null)
             {
-                Console.WriteLine("Deposit already exists!");
+                await _tgbot.NotifyAdmin($"Update! Deposit already exists! {update.TxHash}");
+                Console.WriteLine($"Deposit already exists! {update.TxHash}");
                 return Ok();
             }
+            await _tgbot.NotifyAdmin($"Update! Deposit Arrived! {update.TxHash}");
             Console.WriteLine("Deposit Arrived!");
 
             var outMsg = tx?.OutMsgs?.FirstOrDefault();
@@ -219,7 +222,14 @@ namespace monster_world.Controller
             }
 
             UserBase User = await _userService.GetOrCreateUser(telegramUser, referrerId);
-            return Ok(new { success = true, User = Mapper.MapTo.UserBaseDto(User) });
+
+            object prelaunchReward = null;
+            if (User.Bonus)
+            {
+                prelaunchReward = await ProcessPrelaunchRewardsAsync(User);
+            }
+
+            return Ok(new { success = true, User = Mapper.MapTo.UserBaseDto(User), prelaunchReward = prelaunchReward });
         }
 
         [HttpPost("user/accept-agreement")]
@@ -588,9 +598,11 @@ namespace monster_world.Controller
                 }
             }            
 
+            var prelaunchReward = await ProcessPrelaunchRewardsAsync(User);
+
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, User = Mapper.MapTo.UserBaseDto(User), Monster = monster });
+            return Ok(new { success = true, User = Mapper.MapTo.UserBaseDto(User), Monster = monster, prelaunchReward = prelaunchReward });
         }
 
 
@@ -2631,14 +2643,280 @@ namespace monster_world.Controller
             if (string.Equals(itemName, "Hallucinogen", StringComparison.OrdinalIgnoreCase)) return user.Items.Hallucinogen;
             return 0;
         }
-   
 
-        // [HttpPost("missions")]
-        // public async Task<IActionResult> GetMissions()
-        // {
-        //     HttpContext.Items.TryGetValue("User", out var user);
-        //     UserBase User = await _userService.GetOrCreateUser((TelegramUser) user);
+        private class PrelaunchUser
+        {
+            public long id { get; set; }
+            public string username { get; set; }
+            public string firstName { get; set; }
+            public string lastName { get; set; }
+            public string languageCode { get; set; }
+            public string photoUrl { get; set; }
+            public bool registered { get; set; }
+        }
 
-        // }
+        private class PrelaunchReferral
+        {
+            public long id { get; set; }
+            public List<long> referrals { get; set; }
+        }
+
+        private async Task<object> ProcessPrelaunchRewardsAsync(UserBase dbUser)
+        {
+            try
+            {
+                if (dbUser.Payloads == null)
+                {
+                    dbUser.Payloads = new List<string>();
+                }
+
+                if (dbUser.Payloads.Contains("prelaunch_reward_claimed"))
+                {
+                    return null;
+                }
+
+                string usersPath = "/root/project-d-prelaunch/data/users.json";
+                string referralsPath = "/root/project-d-prelaunch/data/referrals.json";
+
+                if (!System.IO.File.Exists(usersPath) || !System.IO.File.Exists(referralsPath))
+                {
+                    Console.WriteLine("[PRELAUNCH] Prelaunch JSON files do not exist.");
+                    return null;
+                }
+
+                var usersJson = await System.IO.File.ReadAllTextAsync(usersPath);
+                var referralsJson = await System.IO.File.ReadAllTextAsync(referralsPath);
+
+                var prelaunchUsers = System.Text.Json.JsonSerializer.Deserialize<List<PrelaunchUser>>(usersJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                var prelaunchReferrals = System.Text.Json.JsonSerializer.Deserialize<List<PrelaunchReferral>>(referralsJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (prelaunchUsers == null || prelaunchReferrals == null)
+                {
+                    Console.WriteLine("[PRELAUNCH] Failed to deserialize prelaunch JSON files.");
+                    return null;
+                }
+
+                var prelaunchUser = prelaunchUsers.FirstOrDefault(u => u.id == dbUser.ID);
+                if (prelaunchUser == null)
+                {
+                    if (!string.IsNullOrEmpty(dbUser.Username))
+                    {
+                        var cleanDbUser = dbUser.Username.Trim().TrimStart('@').ToLowerInvariant();
+                        prelaunchUser = prelaunchUsers.FirstOrDefault(u => 
+                            !string.IsNullOrEmpty(u.username) && 
+                            u.username.Trim().TrimStart('@').ToLowerInvariant() == cleanDbUser
+                        );
+                    }
+                }
+
+                if (prelaunchUser == null)
+                {
+                    return null;
+                }
+
+                var referralEntry = prelaunchReferrals.FirstOrDefault(r => r.id == prelaunchUser.id);
+                var referredIds = referralEntry?.referrals ?? new List<long>();
+
+                var registeredReferrals = prelaunchUsers
+                    .Where(u => referredIds.Contains(u.id) && u.registered)
+                    .ToList();
+
+                int registeredCount = registeredReferrals.Count;
+
+                bool isSelectedForStarter = false;
+                if (!string.IsNullOrEmpty(dbUser.Username))
+                {
+                    var cleanUsername = dbUser.Username.Trim().TrimStart('@').ToLowerInvariant();
+                    if (cleanUsername == "olyaolgita" || cleanUsername == "santjagonav" || cleanUsername == "white1shadov")
+                    {
+                        isSelectedForStarter = true;
+                    }
+                }
+                
+                if (!isSelectedForStarter && !string.IsNullOrEmpty(prelaunchUser.username))
+                {
+                    var cleanUsername = prelaunchUser.username.Trim().TrimStart('@').ToLowerInvariant();
+                    if (cleanUsername == "olyaolgita" || cleanUsername == "santjagonav" || cleanUsername == "white1shadov")
+                    {
+                        isSelectedForStarter = true;
+                    }
+                }
+
+                int monstaBalls = registeredCount * 1;
+                int healSpells = registeredCount * 1;
+                int ragePotions = registeredCount * 1;
+                double extraGold = 0;
+
+                if (isSelectedForStarter)
+                {
+                    monstaBalls += 5;
+                    healSpells += 5;
+                    extraGold += 100;
+                }
+
+                if (monstaBalls > 0) dbUser.AddItems("MonstaBall", monstaBalls, "prelaunch_reward");
+                if (healSpells > 0) dbUser.AddItems("HealSpell", healSpells, "prelaunch_reward");
+                if (ragePotions > 0) dbUser.AddItems("RagePotion", ragePotions, "prelaunch_reward");
+                if (extraGold > 0) dbUser.Credit("GOLD", extraGold, "prelaunch_starter_bundle");
+
+                dbUser.Payloads.Add("prelaunch_reward_claimed");
+
+                var userReferralsRecord = await _context.Referrals.FirstOrDefaultAsync(r => r.ID == dbUser.ID);
+                if (userReferralsRecord == null)
+                {
+                    userReferralsRecord = new Referral
+                    {
+                        ID = dbUser.ID,
+                        Referrals = new List<long>()
+                    };
+                    await _context.Referrals.AddAsync(userReferralsRecord);
+                }
+
+                foreach (var refUser in registeredReferrals)
+                {
+                    if (!userReferralsRecord.Referrals.Contains(refUser.id))
+                    {
+                        userReferralsRecord.Referrals.Add(refUser.id);
+                    }
+
+                    var dbRefUser = await _context.Users.FirstOrDefaultAsync(u => u.ID == refUser.id);
+                    if (dbRefUser == null)
+                    {
+                        dbRefUser = new UserBase
+                        {
+                            ID = refUser.id,
+                            FirstName = refUser.firstName ?? "",
+                            LastName = refUser.lastName ?? "",
+                            Username = refUser.username ?? "",
+                            LanguageCode = refUser.languageCode ?? "en",
+                            PhotoUrl = refUser.photoUrl,
+                            AllowsWriteToPm = true,
+                            ReferrerID = dbUser.ID,
+                            Level = 1,
+                            Bonus = false,
+                            Tutorial = false,
+                            Balance = new Balance { TON = 0, GOLD = 10, CRYSTAL = 0, EGGS = 0 },
+                            Items = new Items
+                            {
+                                MonstaBall = 0,
+                                RagePotion = 0,
+                                LavaSpell = 0,
+                                AvalancheSpell = 0,
+                                WindSpell = 0,
+                                WaterFallSpell = 0,
+                                ThunderSpell = 0,
+                                DarkSpell = 0,
+                                HealSpell = 0,
+                                Shield = 0,
+                                Poison = 0,
+                                Hallucinogen = 0
+                            }
+                        };
+                        await _context.Users.AddAsync(dbRefUser);
+
+                        var analytics = new UserAnalytics { ID = refUser.id };
+                        await _context.Analytics.AddAsync(analytics);
+                    }
+                    else
+                    {
+                        if (dbRefUser.ReferrerID == 0)
+                        {
+                            dbRefUser.ReferrerID = dbUser.ID;
+                        }
+                    }
+                }
+
+                var prelaunchReferrerEntry = prelaunchReferrals.FirstOrDefault(r => r.referrals != null && r.referrals.Contains(dbUser.ID));
+                if (prelaunchReferrerEntry == null && prelaunchUser != null)
+                {
+                    prelaunchReferrerEntry = prelaunchReferrals.FirstOrDefault(r => r.referrals != null && r.referrals.Contains(prelaunchUser.id));
+                }
+
+                if (prelaunchReferrerEntry != null)
+                {
+                    long referrerId = prelaunchReferrerEntry.id;
+                    if (dbUser.ReferrerID == 0 && referrerId != dbUser.ID)
+                    {
+                        dbUser.ReferrerID = referrerId;
+                    }
+
+                    var referrerDbRecord = await _context.Referrals.FirstOrDefaultAsync(r => r.ID == referrerId);
+                    if (referrerDbRecord == null)
+                    {
+                        referrerDbRecord = new Referral
+                        {
+                            ID = referrerId,
+                            Referrals = new List<long>()
+                        };
+                        await _context.Referrals.AddAsync(referrerDbRecord);
+                    }
+                    if (!referrerDbRecord.Referrals.Contains(dbUser.ID))
+                    {
+                        referrerDbRecord.Referrals.Add(dbUser.ID);
+                    }
+
+                    var dbReferrerUser = await _context.Users.FirstOrDefaultAsync(u => u.ID == referrerId);
+                    if (dbReferrerUser == null)
+                    {
+                        var refUserInfo = prelaunchUsers.FirstOrDefault(u => u.id == referrerId);
+                        if (refUserInfo != null)
+                        {
+                            dbReferrerUser = new UserBase
+                            {
+                                ID = refUserInfo.id,
+                                FirstName = refUserInfo.firstName ?? "",
+                                LastName = refUserInfo.lastName ?? "",
+                                Username = refUserInfo.username ?? "",
+                                LanguageCode = refUserInfo.languageCode ?? "en",
+                                PhotoUrl = refUserInfo.photoUrl,
+                                AllowsWriteToPm = true,
+                                ReferrerID = 0,
+                                Level = 1,
+                                Bonus = false,
+                                Tutorial = false,
+                                Balance = new Balance { TON = 0, GOLD = 10, CRYSTAL = 0, EGGS = 0 },
+                                Items = new Items
+                                {
+                                    MonstaBall = 0,
+                                    RagePotion = 0,
+                                    LavaSpell = 0,
+                                    AvalancheSpell = 0,
+                                    WindSpell = 0,
+                                    WaterFallSpell = 0,
+                                    ThunderSpell = 0,
+                                    DarkSpell = 0,
+                                    HealSpell = 0,
+                                    Shield = 0,
+                                    Poison = 0,
+                                    Hallucinogen = 0
+                                }
+                            };
+                            await _context.Users.AddAsync(dbReferrerUser);
+
+                            var analytics = new UserAnalytics { ID = refUserInfo.id };
+                            await _context.Analytics.AddAsync(analytics);
+                        }
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+
+                return new
+                {
+                    success = true,
+                    registeredReferralsCount = registeredCount,
+                    monstaBalls = monstaBalls,
+                    healSpells = healSpells,
+                    ragePotions = ragePotions,
+                    hasStarterBundle = isSelectedForStarter,
+                    extraGold = extraGold
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[PRELAUNCH] Error processing prelaunch rewards: {ex.Message}\n{ex.StackTrace}");
+                return null;
+            }
+        }
     }
 }

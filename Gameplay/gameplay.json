@@ -579,7 +579,7 @@
         },
         {
             "pair": "HEALSPELL-GOLD",
-            "rate": "1:18",
+            "rate": "1:8",
             "limit": "nolimit"
         },
         {

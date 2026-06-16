@@ -61,6 +61,10 @@ export class WorldScene extends Phaser.Scene {
             if (!this.USER.bonus) {
                 this.createOverlay();
                 this.initiateBonus();
+            } else {
+                if (result && result.prelaunchReward && result.prelaunchReward.success) {
+                    this.showPrelaunchCongratulations(result.prelaunchReward);
+                }
             }
         })
 
@@ -266,7 +270,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     initiateBonus() {
-        const bonusMonsters = ["groffy", "peblo", "blazik"]
+        const bonusMonsters = ["grunko", "blubbo", "brasko"]
 
         const container = this.add.container(0, -1000).setDepth(100).setScrollFactor(0);
 
@@ -286,7 +290,7 @@ export class WorldScene extends Phaser.Scene {
 
 
                 api.GetBonus(index).then(data => {
-                    if (data.success) {
+                    if (data && data.success) {
                         console.log("bonus received");
                         container.destroy();
                         const selectedMons = this.add.image(80, this.height / 3, "front_" + m).setDisplaySize(120, 125).setOrigin(0).setDepth(100).setScrollFactor(0);
@@ -303,6 +307,9 @@ export class WorldScene extends Phaser.Scene {
                                     if (!checkClick(pointer)) return;
                                     selectedMons.destroy();
                                     this.destroyOverlay();
+                                    if (data.prelaunchReward && data.prelaunchReward.success) {
+                                        this.showPrelaunchCongratulations(data.prelaunchReward);
+                                    }
                                 });
                             }
                         })
@@ -819,6 +826,129 @@ export class WorldScene extends Phaser.Scene {
                     });
                 }
             });
+        });
+    }
+
+    showPrelaunchCongratulations(prelaunchReward) {
+        if (!prelaunchReward || !prelaunchReward.success) return;
+
+        this.createOverlay();
+
+        const modalW = 320;
+        const modalH = 340;
+        const modalX = this.scale.width / 2;
+        const modalY = this.scale.height / 2;
+
+        const modalContainer = this.add.container(0, 0).setDepth(200).setScrollFactor(0);
+
+        const cardBg = this.add.graphics();
+        cardBg.fillStyle(0x020617, 0.4);
+        cardBg.fillRoundedRect(modalX - modalW / 2 + 5, modalY - modalH / 2 + 5, modalW, modalH, 20);
+
+        cardBg.fillStyle(0xf8fafc, 0.98);
+        cardBg.lineStyle(3.5, 0x0f172a, 1);
+        cardBg.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 20);
+        cardBg.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 20);
+        modalContainer.add(cardBg);
+
+        const ribbonW = 260;
+        const ribbonH = 40;
+        cardBg.fillStyle(0xd97706, 0.95);
+        cardBg.lineStyle(2, 0xf59e0b, 1);
+        cardBg.fillRoundedRect(modalX - ribbonW / 2, modalY - modalH / 2 - 12, ribbonW, ribbonH, 10);
+        cardBg.strokeRoundedRect(modalX - ribbonW / 2, modalY - modalH / 2 - 12, ribbonW, ribbonH, 10);
+
+        const titleText = this.add.text(modalX, modalY - modalH / 2 + 8, "CONGRATULATIONS!", {
+            fontFamily: "Lilita One, Outfit, sans-serif",
+            fontSize: "20px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        titleText.setStroke("#78350f", 3.5);
+        modalContainer.add(titleText);
+
+        let contentY = modalY - modalH / 2 + 50;
+
+        const welcomeText = this.add.text(modalX, contentY, "Welcome to Project D!", {
+            fontFamily: "Lilita One, Outfit, sans-serif",
+            fontSize: "18px",
+            color: "#0f172a"
+        }).setOrigin(0.5);
+        modalContainer.add(welcomeText);
+
+        contentY += 35;
+
+        const refCount = prelaunchReward.registeredReferralsCount;
+        const refTitle = this.add.text(modalX, contentY, `Pre-launch Referrals: ${refCount}`, {
+            fontFamily: "Nunito, Arial, sans-serif",
+            fontSize: "15px",
+            fontWeight: "bold",
+            color: "#475569"
+        }).setOrigin(0.5);
+        modalContainer.add(refTitle);
+
+        contentY += 25;
+
+        if (refCount > 0) {
+            const itemsText = this.add.text(modalX, contentY, 
+                `🎁 +${prelaunchReward.monstaBalls} MonstaBall(s)\n` +
+                `🎁 +${prelaunchReward.healSpells} HealSpell(s)\n` +
+                `🎁 +${prelaunchReward.ragePotions} RagePotion(s)`, {
+                fontFamily: "Nunito, Arial, sans-serif",
+                fontSize: "14px",
+                color: "#1e293b",
+                align: "center",
+                lineSpacing: 4
+            }).setOrigin(0.5);
+            modalContainer.add(itemsText);
+            contentY += 60;
+        } else {
+            const noRefText = this.add.text(modalX, contentY, "No pre-launch referrals found.", {
+                fontFamily: "Nunito, Arial, sans-serif",
+                fontSize: "13px",
+                color: "#94a3b8",
+                fontStyle: "italic"
+            }).setOrigin(0.5);
+            modalContainer.add(noRefText);
+            contentY += 30;
+        }
+
+        contentY += 15;
+
+        if (prelaunchReward.hasStarterBundle) {
+            const bundleTitle = this.add.text(modalX, contentY, "🎁 Starter Bundle Unlocked!", {
+                fontFamily: "Lilita One, Outfit, sans-serif",
+                fontSize: "16px",
+                color: "#10b981"
+            }).setOrigin(0.5);
+            modalContainer.add(bundleTitle);
+
+            contentY += 20;
+
+            const bundleItems = this.add.text(modalX, contentY, "+100 GOLD, +5 MonstaBalls, +5 HealSpells", {
+                fontFamily: "Nunito, Arial, sans-serif",
+                fontSize: "13px",
+                color: "#059669",
+                fontWeight: "bold"
+            }).setOrigin(0.5);
+            modalContainer.add(bundleItems);
+            contentY += 30;
+        }
+
+        const btnClose = this.add.image(modalX, modalY + modalH / 2 - 35, "btn_blank").setDisplaySize(120, 40).setInteractive({ useHandCursor: true });
+        btnClose.setTint(0x16a34a);
+        const closeTxt = this.add.text(modalX, modalY + modalH / 2 - 35, "CLAIM", {
+            fontFamily: "Lilita One, Arial, sans-serif",
+            fontSize: "16px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        closeTxt.setStroke("#14532d", 3);
+
+        modalContainer.add([btnClose, closeTxt]);
+
+        btnClose.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            modalContainer.destroy();
+            this.destroyOverlay();
         });
     }
 }

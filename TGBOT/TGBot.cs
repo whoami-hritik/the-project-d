@@ -102,7 +102,7 @@ namespace TGBOT
                             await _userService.GetOrCreateUser(tgUser, referrerId);
                         }
 
-                        var webAppUrl = System.Environment.GetEnvironmentVariable("WEBAPP_URL") ?? "https://monsterworld.qzz.io/index.html";
+                        var webAppUrl = System.Environment.GetEnvironmentVariable("WEBAPP_URL") ?? "https://projectd.qzz.io/index.html";
                         if (referrerId > 0)
                         {
                             webAppUrl += $"?tgWebAppStartParam={referrerId}";
@@ -111,15 +111,34 @@ namespace TGBOT
                         var keyboard = new InlineKeyboardMarkup(new[]
                         {
                             InlineKeyboardButton.WithWebApp(
-                                text: "Open App 🚀",
+                                text: "Play Project D 🎮",
                                 webApp: new WebAppInfo
                                 {
                                     Url = webAppUrl
                                 }
                             )
                         });
-                        await _bot.SendMessage(7243182477, $"{commander.Chatid} started the bot, Referrer: {referrerId}");
-                        await _bot.SendMessage(commander.Chatid, "Welcome to Monster World! Open the app to start playing:", replyMarkup: keyboard);
+                        
+                        try
+                        {
+                            await _bot.SendMessage(7243182477, $"{commander.Chatid} started the bot, Referrer: {referrerId}");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[TELEGRAM_BOT] Failed to notify admin: {ex.Message}");
+                        }
+                        
+                        var name = commander.FromUser != null ? System.Net.WebUtility.HtmlEncode(commander.FromUser.FirstName) : "Trainer";
+                        string welcomeMsg = $"👾 <b>Welcome to Project D, {name}!</b> 👾\n\n" +
+                                            "Step into a mystical world where you can hunt, capture, and battle legendary monsters directly inside Telegram! 🦖⚡\n\n" +
+                                            "🔥 <b>Key Features</b>:\n" +
+                                            "• <b>Explore & Capture</b>: Hunt for rare and epic monsters across diverse maps 🗺️\n" +
+                                            "• <b>Epic Battles</b>: Challenge wild beasts and powerful bosses to level up your team ⚔️\n" +
+                                            "• <b>PvE & Economy</b>: Earn rewards, breed/enhance monsters, and climb the leaderboard 🏆\n\n" +
+                                            "🚀 <b>How to Start</b>:\n" +
+                                            "Click the button below to open the WebApp, claim your sign-up bonus, and start your adventure!";
+
+                        await _bot.SendMessage(commander.Chatid, welcomeMsg, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html, replyMarkup: keyboard);
                     });
             commander.Bind("help", async () =>
                     {

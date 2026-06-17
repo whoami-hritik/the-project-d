@@ -247,6 +247,40 @@
     ],
     "rare": [
         {
+            "monsterid": "wavvy",
+            "title": "WAVVY",
+            "desc": "Wavvys can stand|on a single spot for|days to absorb sunlight.",
+            "element": "earth",
+            "rarity": "rare",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "eating_plant",
+                    "getsAt": 3
+                },
+                {
+                    "id": "tornado",
+                    "getsAt": 5
+                },
+                {
+                    "id": "bite",
+                    "getsAt": 7
+                },
+                {
+                    "id": "earth_revenge_1",
+                    "getsAt": 10
+                },
+                {
+                    "id": "poison_gas",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
             "monsterid": "wingo",
             "desc": "",
             "title": "WINGO",
@@ -319,40 +353,6 @@
                 {
                     "id": "ice_splash",
                     "getsAt": 18
-                }
-            ]
-        },
-        {
-            "monsterid": "wavvy",
-            "desc": "",
-            "title": "WAVVY",
-            "element": "earth",
-            "rarity": "rare",
-            "role": "control",
-            "abilities": [
-                {
-                    "id": "scratch",
-                    "getsAt": 1
-                },
-                {
-                    "id": "eating_plant",
-                    "getsAt": 3
-                },
-                {
-                    "id": "tornado",
-                    "getsAt": 5
-                },
-                {
-                    "id": "bite",
-                    "getsAt": 7
-                },
-                {
-                    "id": "earth_revenge_1",
-                    "getsAt": 10
-                },
-                {
-                    "id": "poison_gas",
-                    "getsAt": 10
                 }
             ]
         },

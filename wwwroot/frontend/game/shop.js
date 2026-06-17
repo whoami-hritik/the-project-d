@@ -1,6 +1,7 @@
 import * as api from "../webapp/api.js";
 import { state } from "../state.js";
 import { showNotification } from "../utility.js";
+import { t } from "../translations.js";
 
 export class ShopScene extends Phaser.Scene {
     constructor() {
@@ -113,8 +114,8 @@ export class ShopScene extends Phaser.Scene {
         this.container.add(ribbon);
 
         // Title Text using native Phaser text with gaming style stroke
-        const titleText = this.add.text(ribbonX, ribbonY + 4, "🛒 SHOP", {
-            fontFamily: "Lilita One, Coiny, sans-serif",
+        const titleText = this.add.text(ribbonX, ribbonY + 4, t("shop_title"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "20px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -216,7 +217,7 @@ export class ShopScene extends Phaser.Scene {
             const formatted = this.formatNumber(val);
 
             textObj.textElement = this.add.text(textObj.x, textObj.y, formatted, {
-                fontFamily: "Lilita One, Arial, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#0f172a"
             }).setOrigin(0, 0.5);
@@ -258,8 +259,8 @@ export class ShopScene extends Phaser.Scene {
                 this.tabGraphics.fillRoundedRect(tab.x - tab.w / 2, tabsY, tab.w, 28, 6);
                 this.tabGraphics.strokeRoundedRect(tab.x - tab.w / 2, tabsY, tab.w, 28, 6);
 
-                const txt = this.add.text(tab.x, tabsY + 14, tab.name.toUpperCase(), {
-                    fontFamily: "Lilita One, Coiny, sans-serif",
+                const txt = this.add.text(tab.x, tabsY + 14, t("shop_" + tab.name.toLowerCase()).toUpperCase(), {
+                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                     fontSize: "13px",
                     color: "#ffffff"
                 }).setOrigin(0.5);
@@ -273,8 +274,8 @@ export class ShopScene extends Phaser.Scene {
                 this.tabGraphics.fillRoundedRect(tab.x - tab.w / 2, tabsY, tab.w, 28, 6);
                 this.tabGraphics.strokeRoundedRect(tab.x - tab.w / 2, tabsY, tab.w, 28, 6);
 
-                const txt = this.add.text(tab.x, tabsY + 14, tab.name.toUpperCase(), {
-                    fontFamily: "Lilita One, Coiny, sans-serif",
+                const txt = this.add.text(tab.x, tabsY + 14, t("shop_" + tab.name.toLowerCase()).toUpperCase(), {
+                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                     fontSize: "12px",
                     color: "#475569"
                 }).setOrigin(0.5);
@@ -356,8 +357,8 @@ export class ShopScene extends Phaser.Scene {
         this.listContainer.add(packImg);
 
         // Title
-        const titleTxt = this.add.text(0, cardY + 135, "STARTER PACK", {
-            fontFamily: "Lilita One, Coiny, sans-serif",
+        const titleTxt = this.add.text(0, cardY + 135, t("starter_pack"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "18px",
             color: "#1e3a8a" // Sleek Navy blue
         }).setOrigin(0.5);
@@ -365,7 +366,7 @@ export class ShopScene extends Phaser.Scene {
         this.listContainer.add(titleTxt);
 
         // Content description
-        const desc1 = this.add.text(0, cardY + 160, "100 GOLD • 5 MonstaBall • 5 HealSpell", {
+        const desc1 = this.add.text(0, cardY + 160, t("starter_pack_desc"), {
             fontFamily: "Nunito, Arial, sans-serif",
             fontSize: "12px",
             fontWeight: "800",
@@ -374,8 +375,8 @@ export class ShopScene extends Phaser.Scene {
         this.listContainer.add(desc1);
 
         // Price text
-        const priceTxt = this.add.text(0, cardY + 185, "Price: 1.5 TON", {
-            fontFamily: "Lilita One, Arial, sans-serif",
+        const priceTxt = this.add.text(0, cardY + 185, t("price_ton", { amount: 1.5 }), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "15px",
             color: "#d97706"
         }).setOrigin(0.5);
@@ -392,8 +393,8 @@ export class ShopScene extends Phaser.Scene {
         btn.setTint(0x16a34a); // Green tint
         this.listContainer.add(btn);
 
-        const btnTxt = this.add.text(btnX, btnY, "BUY NOW", {
-            fontFamily: "Lilita One, sans-serif",
+        const btnTxt = this.add.text(btnX, btnY, t("buy_now"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "13px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -429,13 +430,13 @@ export class ShopScene extends Phaser.Scene {
                         this.items = res.Items || res.items || {};
 
                         this.updateResourceBar();
-                        showNotification(this, "Starter Pack purchased successfully!");
+                        showNotification(this, t("starter_pack_success"));
                     } else {
-                        showNotification(this, res.reason || "Purchase failed");
+                        showNotification(this, res.reason || t("purchase_failed"));
                     }
                 } catch (err) {
                     console.error("Pack purchase failed", err);
-                    showNotification(this, "Network error buying pack");
+                    showNotification(this, t("network_error_buy"));
                 } finally {
                     this.destroyloadingOverlay();
                 }
@@ -467,8 +468,8 @@ export class ShopScene extends Phaser.Scene {
         modalContainer.add(card);
 
         // Title
-        const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 25, "BUY STARTER PACK", {
-            fontFamily: "Lilita One, Coiny, sans-serif",
+        const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 25, t("buy_starter_pack"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "16px",
             color: "#0f172a"
         }).setOrigin(0.5);
@@ -480,8 +481,8 @@ export class ShopScene extends Phaser.Scene {
         modalContainer.add(icon);
 
         // Price Tag
-        const priceTxt = this.add.text(modalX, modalY + 32, "Cost: 1.5 TON", {
-            fontFamily: "Lilita One, sans-serif",
+        const priceTxt = this.add.text(modalX, modalY + 32, t("cost_ton", { amount: 1.5 }), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "14px",
             color: "#d97706"
         }).setOrigin(0.5);
@@ -493,8 +494,8 @@ export class ShopScene extends Phaser.Scene {
         btnCancel.setTint(0x475569);
         modalContainer.add(btnCancel);
 
-        const cancelTxt = this.add.text(modalX - 55, modalY + 75, "CANCEL", {
-            fontFamily: "Lilita One, sans-serif",
+        const cancelTxt = this.add.text(modalX - 55, modalY + 75, t("cancel"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -510,8 +511,8 @@ export class ShopScene extends Phaser.Scene {
         btnConfirm.setTint(0x16a34a);
         modalContainer.add(btnConfirm);
 
-        const confirmTxt = this.add.text(modalX + 55, modalY + 75, "CONFIRM", {
-            fontFamily: "Lilita One, sans-serif",
+        const confirmTxt = this.add.text(modalX + 55, modalY + 75, t("confirm"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -533,8 +534,8 @@ export class ShopScene extends Phaser.Scene {
         const itemsKeys = Object.keys(this.shopItems);
 
         if (itemsKeys.length === 0) {
-            const noItemsTxt = this.add.text(0, 80, "NO ITEMS AVAILABLE", {
-                fontFamily: "Lilita One, Coiny, sans-serif",
+            const noItemsTxt = this.add.text(0, 80, t("no_items_available"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "18px",
                 color: "#64748b"
             }).setOrigin(0.5);
@@ -545,18 +546,18 @@ export class ShopScene extends Phaser.Scene {
         }
 
         const itemInfo = {
-            HealSpell: { name: "HEAL SPELL", desc: "RESTORES MONSTER HP IN BATTLE", icon: "item_healSpell" },
-            MonstaBall: { name: "MONSTA BALL", desc: "USED TO CATCH WILD MONSTERS", icon: "item_monstaBall" },
-            RagePotion: { name: "RAGE POTION", desc: "TEMPORARILY BOOSTS ATTACK POWER", icon: "item_ragePotion" },
-            DarkSpell: { name: "DARK SPELL", desc: "CASTS DARK TYPE ENERGY BLAST", icon: "item_darkSpell" },
-            AvalancheSpell: { name: "AVALANCHE", desc: "SUMMONS A RAGING ICE STORM", icon: "item_avalancheSpell" },
-            WindSpell: { name: "WIND SPELL", desc: "HURLS A DESTRUCTIVE TORNADO", icon: "item_windSpell" },
-            WaterFallSpell: { name: "WATER FALL", desc: "DRENCHES FOE IN PRESSURED WATER", icon: "item_waterFallSpell" },
-            LavaSpell: { name: "LAVA SPELL", desc: "INCINERATES WITH FIERY LAVA", icon: "item_lavaSpell" },
-            ThunderSpell: { name: "THUNDER", desc: "STRIKES ENEMY WITH LIGHTNING", icon: "item_thunderSpell" },
-            Shield: { name: "SHIELD", desc: "BLOCKS ENEMY DAMAGE FOR 1 TURN", icon: "item_shield" },
-            Poison: { name: "POISON", desc: "INFLICTS DAMAGE OVER TIME", icon: "item_hallucinogen" },
-            Hallucinogen: { name: "HALLUCINOGEN", desc: "CONFUSES THE FOE", icon: "item_hallucinogen" }
+            HealSpell: { name: t("heal_spell_name"), desc: t("heal_spell_desc"), icon: "item_healSpell" },
+            MonstaBall: { name: t("monsta_ball_name"), desc: t("monsta_ball_desc"), icon: "item_monstaBall" },
+            RagePotion: { name: t("rage_potion_name"), desc: t("rage_potion_desc"), icon: "item_ragePotion" },
+            DarkSpell: { name: t("dark_spell_name"), desc: t("dark_spell_desc"), icon: "item_darkSpell" },
+            AvalancheSpell: { name: t("avalanche_name"), desc: t("avalanche_desc"), icon: "item_avalancheSpell" },
+            WindSpell: { name: t("wind_spell_name"), desc: t("wind_spell_desc"), icon: "item_windSpell" },
+            WaterFallSpell: { name: t("water_fall_name"), desc: t("water_fall_desc"), icon: "item_waterFallSpell" },
+            LavaSpell: { name: t("lava_spell_name"), desc: t("lava_spell_desc"), icon: "item_lavaSpell" },
+            ThunderSpell: { name: t("thunder_name"), desc: t("thunder_desc"), icon: "item_thunderSpell" },
+            Shield: { name: t("shield_name"), desc: t("shield_desc"), icon: "item_shield" },
+            Poison: { name: t("poison_name"), desc: t("poison_desc"), icon: "item_hallucinogen" },
+            Hallucinogen: { name: t("hallucinogen_name"), desc: t("hallucinogen_desc"), icon: "item_hallucinogen" }
         };
 
         const getItemDetails = (key) => {
@@ -581,7 +582,7 @@ export class ShopScene extends Phaser.Scene {
 
             // Name
             const nameTxt = this.add.text(cardX + 54, currentY + 12, details.name, {
-                fontFamily: "Lilita One, Arial, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "14px",
                 color: "#0f172a"
             });
@@ -609,7 +610,7 @@ export class ShopScene extends Phaser.Scene {
 
             // Cost text
             const costTxt = this.add.text(cardX + 72, currentY + 48, `${costVal} ${costCurrency}`, {
-                fontFamily: "Lilita One, Arial, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#d97706"
             });
@@ -627,8 +628,8 @@ export class ShopScene extends Phaser.Scene {
             btn.setTint(0x16a34a); // Green tint
             this.listContainer.add(btn);
 
-            const btnTxt = this.add.text(btnX, btnY, "BUY", {
-                fontFamily: "Lilita One, sans-serif",
+            const btnTxt = this.add.text(btnX, btnY, t("buy"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#ffffff"
             }).setOrigin(0.5);
@@ -652,7 +653,7 @@ export class ShopScene extends Phaser.Scene {
 
             btn.on("pointerup", () => {
                 this.showQuantityModal(
-                    `BUY ${details.name}`,
+                    t("buy_title", { name: details.name }),
                     details.icon,
                     costVal,
                     costCurrency,
@@ -670,9 +671,9 @@ export class ShopScene extends Phaser.Scene {
                                 this.items = res.Items || res.items || {};
 
                                 this.updateResourceBar();
-                                showNotification(this, `Purchased ${qty}x ${details.name}!`);
+                                showNotification(this, t("purchase_success", { qty: qty, name: details.name }));
                             } else {
-                                showNotification(this, res.reason || "Purchase failed");
+                                showNotification(this, res.reason || t("purchase_failed"));
                             }
                         } catch (err) {
                             console.error("Purchase failed", err);
@@ -696,8 +697,8 @@ export class ShopScene extends Phaser.Scene {
         const cardX = -cardW / 2;
 
         if (this.exchangeRates.length === 0) {
-            const noPairsTxt = this.add.text(0, 80, "NO PAIRS AVAILABLE", {
-                fontFamily: "Lilita One, Coiny, sans-serif",
+            const noPairsTxt = this.add.text(0, 80, t("no_pairs_available"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "18px",
                 color: "#64748b"
             }).setOrigin(0.5);
@@ -736,8 +737,8 @@ export class ShopScene extends Phaser.Scene {
             const fromIcon = this.add.image(cardX + 22, currentY + 26, fromAsset.icon).setDisplaySize(24, 24);
             this.listContainer.add(fromIcon);
 
-            const fromTxt = this.add.text(cardX + 22, currentY + 44, fromAsset.name, {
-                fontFamily: "Lilita One, sans-serif",
+            const fromTxt = this.add.text(cardX + 22, currentY + 44, t(fromAsset.name.toLowerCase() + "_name") || fromAsset.name, {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "10px",
                 color: "#334155"
             }).setOrigin(0.5);
@@ -756,8 +757,8 @@ export class ShopScene extends Phaser.Scene {
             const toIcon = this.add.image(cardX + 100, currentY + 26, toAsset.icon).setDisplaySize(24, 24);
             this.listContainer.add(toIcon);
 
-            const toTxt = this.add.text(cardX + 100, currentY + 44, toAsset.name, {
-                fontFamily: "Lilita One, sans-serif",
+            const toTxt = this.add.text(cardX + 100, currentY + 44, t(toAsset.name.toLowerCase() + "_name") || toAsset.name, {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "10px",
                 color: "#334155"
             }).setOrigin(0.5);
@@ -781,7 +782,7 @@ export class ShopScene extends Phaser.Scene {
                 rateText = `${fromRateVal} ${fromSymbol} = ${toRateVal} ${toSymbol}`;
             }
 
-            const rateLabel = this.add.text(cardX + 144, currentY + 12, "RATE:", {
+            const rateLabel = this.add.text(cardX + 144, currentY + 12, t("rate"), {
                 fontFamily: "Nunito, sans-serif",
                 fontSize: "9px",
                 fontWeight: "900",
@@ -790,7 +791,7 @@ export class ShopScene extends Phaser.Scene {
             this.listContainer.add(rateLabel);
 
             const rateTxtElement = this.add.text(cardX + 144, currentY + 24, rateText, {
-                fontFamily: "Lilita One, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "12px",
                 color: "#ea580c"
             });
@@ -798,7 +799,7 @@ export class ShopScene extends Phaser.Scene {
             this.listContainer.add(rateTxtElement);
 
             if (rateData.limit && rateData.limit !== "nolimit") {
-                const limitTxt = this.add.text(cardX + 144, currentY + 42, `LIMIT: ${rateData.limit.toUpperCase()}`, {
+                const limitTxt = this.add.text(cardX + 144, currentY + 42, t("limit", { limit: rateData.limit.toUpperCase() }), {
                     fontFamily: "Nunito, sans-serif",
                     fontSize: "9px",
                     fontWeight: "800",
@@ -817,8 +818,8 @@ export class ShopScene extends Phaser.Scene {
             btn.setTint(0xea580c); // Orange tint
             this.listContainer.add(btn);
 
-            const btnTxt = this.add.text(btnX, btnY, "TRADE", {
-                fontFamily: "Lilita One, sans-serif",
+            const btnTxt = this.add.text(btnX, btnY, t("trade"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#ffffff"
             }).setOrigin(0.5);
@@ -855,12 +856,12 @@ export class ShopScene extends Phaser.Scene {
                 }
 
                 if (maxTrade <= 0) {
-                    showNotification(this, "Insufficient balance to trade!");
+                    showNotification(this, t("insufficient_balance"));
                     return;
                 }
 
                 this.showExchangeModal(
-                    `EXCHANGE ${fromSymbol}`,
+                    t("exchange_title", { name: fromSymbol }),
                     fromAsset.icon,
                     toAsset.icon,
                     fromRateVal,
@@ -881,10 +882,10 @@ export class ShopScene extends Phaser.Scene {
                                 this.items = res.Items || res.items || {};
 
                                 this.updateResourceBar();
-                                showNotification(this, "Exchange successful!");
+                                showNotification(this, t("exchange_success"));
                                 this.renderActiveTab();
                             } else {
-                                showNotification(this, res.reason || "Exchange failed");
+                                showNotification(this, res.reason || t("exchange_failed"));
                             }
                         } catch (err) {
                             console.error("Exchange failed", err);
@@ -924,7 +925,7 @@ export class ShopScene extends Phaser.Scene {
 
         // Title
         const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 20, title, {
-            fontFamily: "Lilita One, Coiny, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "16px",
             color: "#0f172a"
         }).setOrigin(0.5);
@@ -949,14 +950,14 @@ export class ShopScene extends Phaser.Scene {
 
         // Normal text signs for minus, plus, and counter
         const minusText = this.add.text(modalX - 50, modalY + 20, "-", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "22px",
             color: "#ffffff"
         }).setOrigin(0.5);
         modalContainer.add(minusText);
 
         const plusText = this.add.text(modalX + 50, modalY + 20, "+", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "22px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -970,14 +971,14 @@ export class ShopScene extends Phaser.Scene {
         modalContainer.add(qtyBg);
 
         const qtyText = this.add.text(modalX, modalY + 20, qty, {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "18px",
             color: "#0f172a"
         }).setOrigin(0.5);
         modalContainer.add(qtyText);
 
         const totalTxt = this.add.text(modalX, modalY + 52, "", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "13px",
             color: "#d97706"
         }).setOrigin(0.5);
@@ -986,7 +987,7 @@ export class ShopScene extends Phaser.Scene {
 
         const updateTotalText = () => {
             const total = qty * unitCost;
-            totalTxt.setText(`TOTAL: ${total} ${currency}`);
+            totalTxt.setText(t("total", { total: total, currency: currency }));
         };
 
         updateTotalText();
@@ -1012,8 +1013,8 @@ export class ShopScene extends Phaser.Scene {
         btnCancel.setTint(0x475569);
         modalContainer.add(btnCancel);
 
-        const cancelTxt = this.add.text(modalX - 55, modalY + 88, "CANCEL", {
-            fontFamily: "Lilita One, sans-serif",
+        const cancelTxt = this.add.text(modalX - 55, modalY + 88, t("cancel"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -1029,8 +1030,8 @@ export class ShopScene extends Phaser.Scene {
         btnConfirm.setTint(0x16a34a);
         modalContainer.add(btnConfirm);
 
-        const confirmTxt = this.add.text(modalX + 55, modalY + 88, "CONFIRM", {
-            fontFamily: "Lilita One, sans-serif",
+        const confirmTxt = this.add.text(modalX + 55, modalY + 88, t("confirm"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -1065,7 +1066,7 @@ export class ShopScene extends Phaser.Scene {
 
         // Title
         const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 20, title, {
-            fontFamily: "Lilita One, Coiny, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "16px",
             color: "#0f172a"
         }).setOrigin(0.5);
@@ -1102,14 +1103,14 @@ export class ShopScene extends Phaser.Scene {
 
         // Normal text signs for minus, plus, and counter
         const minusText = this.add.text(modalX - 50, modalY + 20, "-", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "22px",
             color: "#ffffff"
         }).setOrigin(0.5);
         modalContainer.add(minusText);
 
         const plusText = this.add.text(modalX + 50, modalY + 20, "+", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "22px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -1123,7 +1124,7 @@ export class ShopScene extends Phaser.Scene {
         modalContainer.add(qtyBg);
 
         const qtyText = this.add.text(modalX, modalY + 20, qty, {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "18px",
             color: "#0f172a"
         }).setOrigin(0.5);
@@ -1138,7 +1139,7 @@ export class ShopScene extends Phaser.Scene {
         modalContainer.add(tradeQtyTxt);
 
         const receiveTxt = this.add.text(modalX, modalY + 68, "", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "13px",
             color: "#d97706"
         }).setOrigin(0.5);
@@ -1150,8 +1151,8 @@ export class ShopScene extends Phaser.Scene {
             const toAmt = qty * toRate;
             const formattedToAmt = toAmt % 1 !== 0 ? toAmt.toFixed(4) : toAmt.toString();
 
-            tradeQtyTxt.setText(`SEND: ${fromAmt} ${fromSymbol}`);
-            receiveTxt.setText(`GET: ${formattedToAmt} ${toSymbol}`);
+            tradeQtyTxt.setText(t("send", { amount: fromAmt, currency: fromSymbol }));
+            receiveTxt.setText(t("get", { amount: formattedToAmt, currency: toSymbol }));
         };
 
         updateExchangeTexts();
@@ -1177,8 +1178,8 @@ export class ShopScene extends Phaser.Scene {
         btnCancel.setTint(0x475569);
         modalContainer.add(btnCancel);
 
-        const cancelTxt = this.add.text(modalX - 55, modalY + 88, "CANCEL", {
-            fontFamily: "Lilita One, sans-serif",
+        const cancelTxt = this.add.text(modalX - 55, modalY + 88, t("cancel"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -1194,8 +1195,8 @@ export class ShopScene extends Phaser.Scene {
         btnConfirm.setTint(0xea580c);
         modalContainer.add(btnConfirm);
 
-        const confirmTxt = this.add.text(modalX + 55, modalY + 88, "TRADE", {
-            fontFamily: "Lilita One, sans-serif",
+        const confirmTxt = this.add.text(modalX + 55, modalY + 88, t("trade"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ffffff"
         }).setOrigin(0.5);

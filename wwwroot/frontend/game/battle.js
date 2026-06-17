@@ -85,8 +85,11 @@ export class BattleScene extends Phaser.Scene {
                     const oldSkillsCount = this.battleState.playerActiveSkills.length;
                     this.battleState = result.battleState;
 
-                    // Update player HP in case the consumable was a HealSpell
+                    // Update player and enemy HP/state in case the consumable changed them
                     this.updatePlayerHp();
+                    this.updateEnemyHp();
+                    updatePlayerState(this);
+                    updateEnemyState(this);
 
                     if (this.battleState.playerActiveSkills.length > oldSkillsCount) {
                         // A new skill slot was added, re-render and animate the new card
@@ -930,12 +933,22 @@ export class BattleScene extends Phaser.Scene {
         this.playerState = this.battleState.playerState;
         this.enemyState = this.battleState.enemyState;
 
-        let animTarget = this.defender;
-        let updateHpCallback = () => this.updateEnemyHp();
-        if (this.playerAttack.backfired) {
-            animTarget = this.attacker;
-            updateHpCallback = () => this.updatePlayerHp();
+        if (skillId !== "rage" && skillId !== "rage_fire_ring") {
+            if (this.stateFlags.playerRage) {
+                this.stateFlags.playerRage = false;
+                if (this.playerRage) {
+                    if (this.playerRage.fx_front) this.playerRage.fx_front.destroy();
+                    if (this.playerRage.fx_back) this.playerRage.fx_back.destroy();
+                    this.playerRage = null;
+                }
+            }
         }
+
+        let isOwn = toOwnEffectSkill.includes(skillId);
+        let targetSelf = isOwn ? !this.playerAttack.backfired : this.playerAttack.backfired;
+
+        let animTarget = targetSelf ? this.attacker : this.defender;
+        let updateHpCallback = targetSelf ? () => this.updatePlayerHp() : () => this.updateEnemyHp();
 
         if (skillId && !specialSkills.includes(skillId) && !cloudEffects.includes(skillId) && !strikeEffects.includes(skillId) && skillId !== "suck_life" && !this.anims.exists(`anim_${skillId}`)) {
             console.warn(`Animation for skill ${skillId} not found. Skipping.`);
@@ -985,6 +998,19 @@ export class BattleScene extends Phaser.Scene {
             }
             else if (skillId === "rage") {
                 const targetMonster = (this.playerAttack.backfired) ? this.defender : this.attacker;
+                if (this.playerAttack.backfired) {
+                    if (this.enemyRage) {
+                        if (this.enemyRage.fx_front) this.enemyRage.fx_front.destroy();
+                        if (this.enemyRage.fx_back) this.enemyRage.fx_back.destroy();
+                        this.enemyRage = null;
+                    }
+                } else {
+                    if (this.playerRage) {
+                        if (this.playerRage.fx_front) this.playerRage.fx_front.destroy();
+                        if (this.playerRage.fx_back) this.playerRage.fx_back.destroy();
+                        this.playerRage = null;
+                    }
+                }
                 const fx = rageAnim(this, targetMonster);
                 if (this.playerAttack.backfired) {
                     this.stateFlags.enemyRage = true;
@@ -996,6 +1022,9 @@ export class BattleScene extends Phaser.Scene {
                 fx.fx_front.on("animationcomplete", () => {
                     onAnimComplete();
                 });
+            }
+            else if (skillId === "confuse") {
+                confuseAttack(this, this.attacker, onAnimComplete);
             }
             else if (skillId === "tentacles" || skillId === "strangle") {
                 tentaclesAnim(this, animTarget, skillId, onAnimComplete);
@@ -1022,7 +1051,13 @@ export class BattleScene extends Phaser.Scene {
                 });
             });
         } else if (skillId === "suck_life") {
-            suckLifeAnim(this, animTarget, onAnimComplete);
+            suckLifeAnim(this, animTarget, () => {
+                this.updateEnemyHp();
+                this.updatePlayerHp();
+                this.time.delayedCall(1500, () => {
+                    this.enemySkillEffect();
+                });
+            });
         }
 
         else {
@@ -1092,12 +1127,22 @@ export class BattleScene extends Phaser.Scene {
     executeEnemySkill() {
         const skillId = this.battleState.enemyLastEffect;
 
-        let animTarget = this.attacker;
-        let updateHpCallback = () => this.updatePlayerHp();
-        if (this.enemyAttack.backfired) {
-            animTarget = this.defender;
-            updateHpCallback = () => this.updateEnemyHp();
+        if (skillId !== "rage" && skillId !== "rage_fire_ring") {
+            if (this.stateFlags.enemyRage) {
+                this.stateFlags.enemyRage = false;
+                if (this.enemyRage) {
+                    if (this.enemyRage.fx_front) this.enemyRage.fx_front.destroy();
+                    if (this.enemyRage.fx_back) this.enemyRage.fx_back.destroy();
+                    this.enemyRage = null;
+                }
+            }
         }
+
+        let isOwn = toOwnEffectSkill.includes(skillId);
+        let targetSelf = isOwn ? !this.enemyAttack.backfired : this.enemyAttack.backfired;
+
+        let animTarget = targetSelf ? this.defender : this.attacker;
+        let updateHpCallback = targetSelf ? () => this.updateEnemyHp() : () => this.updatePlayerHp();
 
         const onEnemyAnimComplete = () => {
             updateHpCallback();
@@ -1163,6 +1208,19 @@ export class BattleScene extends Phaser.Scene {
             }
             else if (skillId === "rage") {
                 const targetMonster = (this.enemyAttack.backfired) ? this.attacker : this.defender;
+                if (this.enemyAttack.backfired) {
+                    if (this.playerRage) {
+                        if (this.playerRage.fx_front) this.playerRage.fx_front.destroy();
+                        if (this.playerRage.fx_back) this.playerRage.fx_back.destroy();
+                        this.playerRage = null;
+                    }
+                } else {
+                    if (this.enemyRage) {
+                        if (this.enemyRage.fx_front) this.enemyRage.fx_front.destroy();
+                        if (this.enemyRage.fx_back) this.enemyRage.fx_back.destroy();
+                        this.enemyRage = null;
+                    }
+                }
                 const fx = rageAnim(this, targetMonster);
                 if (this.enemyAttack.backfired) {
                     this.stateFlags.playerRage = true;
@@ -1175,6 +1233,9 @@ export class BattleScene extends Phaser.Scene {
                     onEnemyAnimComplete();
                 });
             }
+            else if (skillId === "confuse") {
+                confuseAttack(this, this.defender, onEnemyAnimComplete);
+            }
             else if (skillId === "tentacles" || skillId === "strangle") {
                 tentaclesAnim(this, animTarget, skillId, onEnemyAnimComplete);
             } else if (skillId === "bubble" || skillId === "bubbles") {
@@ -1184,14 +1245,16 @@ export class BattleScene extends Phaser.Scene {
             } else if (skillId === "shockwave" || skillId === "shock_waves" || skillId === "sonic_waves") {
                 shockWaveAnim(this, this.defender.x, this.defender.y, animTarget.x, animTarget.y, onEnemyAnimComplete);
             }
-
-
         } else if (cloudEffects.includes(skillId)) {
             cloudEffectAnim(this, animTarget.x, animTarget.y - animTarget.displayHeight, skillId, onEnemyAnimComplete);
         } else if (strikeEffects.includes(skillId)) {
             strikeAnim(this, animTarget.x + 50, animTarget.y - animTarget.displayHeight, skillId, onEnemyAnimComplete);
         } else if (skillId === "suck_life") {
-            suckLifeAnim(this, animTarget, onAnimComplete);
+            suckLifeAnim(this, animTarget, () => {
+                this.updateEnemyHp();
+                this.updatePlayerHp();
+                onEnemyAnimComplete();
+            });
         }
 
         else {
@@ -1667,12 +1730,8 @@ function playAnimScratch(scene, x, y, callback) {
 
 
 function updatePlayerState(scene) {
-    if (!scene.playerState) {
-        scene.playerState = scene.battleState.playerState;
-    }
-    if (!scene.enemyState) {
-        scene.enemyState = scene.battleState.enemyState;
-    }
+    scene.playerState = scene.battleState.playerState;
+    scene.enemyState = scene.battleState.enemyState;
 
     // Manage Rage status
     if (scene.playerState.rage && !scene.stateFlags.playerRage) {
@@ -1713,7 +1772,15 @@ function updatePlayerState(scene) {
             });
         }
     }
-    else if (scene.enemyState.hypno && !scene.stateFlags.enemyHypno) {
+    else if (!scene.playerState.hypno && scene.stateFlags.playerHypno) {
+        scene.stateFlags.playerHypno = false;
+        if (scene.playerHypno) {
+            scene.playerHypno.destroy();
+            scene.playerHypno = null;
+        }
+    }
+
+    if (scene.enemyState.hypno && !scene.stateFlags.enemyHypno) {
         if (scene.playerAttack && !scene.playerAttack.backfired) {
             scene.stateFlags.enemyHypno = true;
             scene.enemyHypno = scene.add.sprite(scene.defender.x - 10, scene.defender.y - scene.defender.displayHeight, "hypno_fx").setDepth(105);
@@ -1725,6 +1792,13 @@ function updatePlayerState(scene) {
                 repeat: -1,
                 ease: 'Linear'
             });
+        }
+    }
+    else if (!scene.enemyState.hypno && scene.stateFlags.enemyHypno) {
+        scene.stateFlags.enemyHypno = false;
+        if (scene.enemyHypno) {
+            scene.enemyHypno.destroy();
+            scene.enemyHypno = null;
         }
     }
 
@@ -1736,12 +1810,27 @@ function updatePlayerState(scene) {
             scene.playerSick.anims.play("anim_sick_fx");
         }
     }
-    else if (scene.enemyState.sick && !scene.stateFlags.enemySick) {
+    else if (!scene.playerState.sick && scene.stateFlags.playerSick) {
+        scene.stateFlags.playerSick = false;
+        if (scene.playerSick) {
+            scene.playerSick.destroy();
+            scene.playerSick = null;
+        }
+    }
+
+    if (scene.enemyState.sick && !scene.stateFlags.enemySick) {
         if (scene.playerAttack && !scene.playerAttack.backfired) {
             scene.stateFlags.enemySick = true;
             scene.enemySick = scene.add.sprite(scene.defender.x + 20, scene.defender.y - scene.defender.displayHeight, "anim_sick_fx").setDepth(105);
             scene.enemySick.setDisplaySize(scene.enemySick.displayWidth / 1.5, scene.enemySick.displayHeight / 1.5);
             scene.enemySick.anims.play("anim_sick_fx");
+        }
+    }
+    else if (!scene.enemyState.sick && scene.stateFlags.enemySick) {
+        scene.stateFlags.enemySick = false;
+        if (scene.enemySick) {
+            scene.enemySick.destroy();
+            scene.enemySick = null;
         }
     }
 }
@@ -1750,8 +1839,8 @@ function rageAnim(scene, monster) {
     const fx_front = scene.add.sprite(monster.x, monster.y, "rage_fx_front").setDepth(1); // beneath monster depth (1)
     fx_front.setDisplaySize(fx_front.displayWidth / 1.5, fx_front.displayHeight / 1.5).setOrigin(0.5, 1);
 
-    const fx_back = scene.add.sprite(monster.x, monster.y, "rage_fx_back").setDepth(105); //after monster depth
-    fx_back.setDisplaySize(fx_back.displayWidth / 1.5, fx_back.displayHeight / 1.5).setDepth(0.5, 1);
+    const fx_back = scene.add.sprite(monster.x, monster.y - 50, "rage_fx_back").setDepth(105); //after monster depth
+    fx_back.setDisplaySize(fx_back.displayWidth / 1.5, fx_back.displayHeight / 1.5).setOrigin(0.5, 1);
 
     fx_front.anims.play("anim_rage_fx_front");
 
@@ -1762,13 +1851,22 @@ function rageAnim(scene, monster) {
     return { fx_front, fx_back };
 }
 
+function confuseAttack(scene, monster, callback) {
+    scene.tweens.add({
+        targets: monster,
+        x: monster.x + 30,
+        duration: 200,
+        yoyo: true,
+        repeat: 2,
+        onComplete: () => {
+            if (callback) callback();
+        }
+    });
+}
+
 function updateEnemyState(scene) {
-    if (!scene.playerState) {
-        scene.playerState = scene.battleState.playerState;
-    }
-    if (!scene.enemyState) {
-        scene.enemyState = scene.battleState.enemyState;
-    }
+    scene.playerState = scene.battleState.playerState;
+    scene.enemyState = scene.battleState.enemyState;
 
     // Manage Rage status
     if (scene.playerState.rage && !scene.stateFlags.playerRage) {
@@ -1809,7 +1907,15 @@ function updateEnemyState(scene) {
             });
         }
     }
-    else if (scene.enemyState.hypno && !scene.stateFlags.enemyHypno) {
+    else if (!scene.playerState.hypno && scene.stateFlags.playerHypno) {
+        scene.stateFlags.playerHypno = false;
+        if (scene.playerHypno) {
+            scene.playerHypno.destroy();
+            scene.playerHypno = null;
+        }
+    }
+
+    if (scene.enemyState.hypno && !scene.stateFlags.enemyHypno) {
         if (scene.enemyAttack && scene.enemyAttack.backfired) {
             scene.stateFlags.enemyHypno = true;
             scene.enemyHypno = scene.add.sprite(scene.defender.x - 10, scene.defender.y - scene.defender.displayHeight, "hypno_fx").setDepth(105);
@@ -1823,6 +1929,13 @@ function updateEnemyState(scene) {
             });
         }
     }
+    else if (!scene.enemyState.hypno && scene.stateFlags.enemyHypno) {
+        scene.stateFlags.enemyHypno = false;
+        if (scene.enemyHypno) {
+            scene.enemyHypno.destroy();
+            scene.enemyHypno = null;
+        }
+    }
 
     if (scene.playerState.sick && !scene.stateFlags.playerSick) {
         if (scene.enemyAttack && !scene.enemyAttack.backfired) {
@@ -1832,12 +1945,27 @@ function updateEnemyState(scene) {
             scene.playerSick.anims.play("anim_sick_fx", true);
         }
     }
-    else if (scene.enemyState.sick && !scene.stateFlags.enemySick) {
+    else if (!scene.playerState.sick && scene.stateFlags.playerSick) {
+        scene.stateFlags.playerSick = false;
+        if (scene.playerSick) {
+            scene.playerSick.destroy();
+            scene.playerSick = null;
+        }
+    }
+
+    if (scene.enemyState.sick && !scene.stateFlags.enemySick) {
         if (scene.enemyAttack && scene.enemyAttack.backfired) {
             scene.stateFlags.enemySick = true;
             scene.enemySick = scene.add.sprite(scene.defender.x + 20, scene.defender.y - scene.defender.displayHeight, "anim_sick_fx").setDepth(105);
             scene.enemySick.setDisplaySize(scene.enemySick.displayWidth / 1.5, scene.enemySick.displayHeight / 1.5);
             scene.enemySick.anims.play("anim_sick_fx", true);
+        }
+    }
+    else if (!scene.enemyState.sick && scene.stateFlags.enemySick) {
+        scene.enemyState.sick = false;
+        if (scene.enemySick) {
+            scene.enemySick.destroy();
+            scene.enemySick = null;
         }
     }
 }

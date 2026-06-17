@@ -52,13 +52,13 @@
         },
         {
             "map": "riverfall",
-            "active": false,
+            "active": true,
             "unlockCost": {
                 "TON": 1
             },
-            "unlockAt": 3,
+            "unlockAt": 1,
             "bossBattle": "daily",
-            "goldMultiplier": 1.2,
+            "goldMultiplier": 1.5,
             "totalItemDrops": "1-2",
             "maxDropItemQuantity": "1:2",
             "itemsDrop": {
@@ -79,7 +79,7 @@
             },
             "unlockAt": 5,
             "bossBattle": "daily",
-            "goldMultiplier": 1.5,
+            "goldMultiplier": 1.8,
             "totalItemDrops": "1-3",
             "maxDropItemQuantity": "1:2",
             "itemsDrop": {
@@ -100,7 +100,7 @@
             },
             "unlockAt": 8,
             "bossBattle": "daily",
-            "goldMultiplier": 2,
+            "goldMultiplier": 2.2,
             "totalItemDrops": "2-3",
             "maxDropItemQuantity": "1:2",
             "itemsDrop": {
@@ -364,7 +364,233 @@
                 "monsters": []
             }
         ],
-        "riverfall": []
+        "riverfall": [
+            {
+                "name": "A",
+                "x": 168,
+                "y": 346,
+                "monsters": [
+                    "brasko",
+                    "peblo",
+                    "blubbo",
+                    "fynox",
+                    "wingo",
+                    "gourdo",
+                    "wavvy"
+                ]
+            },
+            {
+                "name": "B",
+                "x": 80,
+                "y": 384,
+                "monsters": [
+                    "wingo",
+                    "gourdo",
+                    "quabble",
+                    "fynox",
+                    "blubbo",
+                    "aquos",
+                    "wavvy"
+                ]
+            },
+            {
+                "name": "C",
+                "x": 64,
+                "y": 456,
+                "monsters": [
+                    "wingo",
+                    "gourdo",
+                    "quabble",
+                    "fynox",
+                    "blubbo",
+                    "aquos",
+                    "wavvy",
+                    "brasko",
+                    "peblo"
+                ]
+            },
+            {
+                "name": "D",
+                "x": 160,
+                "y": 496,
+                "monsters": [
+                    "wingo",
+                    "gourdo",
+                    "quabble",
+                    "fynox",
+                    "blubbo",
+                    "aquos",
+                    "wavvy",
+                    "peblo"
+                ]
+            },
+            {
+                "name": "E",
+                "x": 247,
+                "y": 512,
+                "monsters": [
+                    "wingo",
+                    "gourdo",
+                    "quabble",
+                    "fynox",
+                    "blubbo",
+                    "aquos",
+                    "wavvy",
+                    "brasko",
+                    "peblo"
+                ]
+            },
+            {
+                "name": "F",
+                "x": 392,
+                "y": 520,
+                "monsters": [
+                    "wingo",
+                    "gourdo",
+                    "quabble",
+                    "fynox",
+                    "blubbo",
+                    "aquos",
+                    "wavvy"
+                ]
+            },
+            {
+                "name": "G",
+                "x": 295,
+                "y": 431,
+                "monsters": [
+                    "peblo",
+                    "wavvy",
+                    "brasko",
+                    "wingo",
+                    "blubbo",
+                    "aquos"
+                ]
+            },
+            {
+                "name": "H",
+                "x": 401,
+                "y": 395,
+                "monsters": [
+                    "wingo",
+                    "blubbo",
+                    "aquos",
+                    "gourdo",
+                    "quabble",
+                    "fynox"
+                ]
+            },
+            {
+                "name": "I",
+                "x": 568,
+                "y": 390,
+                "monsters": [
+                    "wingo",
+                    "blubbo",
+                    "aquos",
+                    "gourdo",
+                    "quabble",
+                    "fynox",
+                    "peblo"
+                ]
+            },
+            {
+                "name": "J",
+                "x": 642,
+                "y": 440,
+                "monsters": [
+                    "wingo",
+                    "gourdo",
+                    "groffy",
+                    "aquos",
+                    "blubbo",
+                    "quabble",
+                    "fynox"
+                ]
+            },
+            {
+                "name": "K",
+                "x": 611,
+                "y": 536,
+                "monsters": [
+                    "wingo",
+                    "gourdo",
+                    "groffy",
+                    "aquos",
+                    "blubbo",
+                    "quabble",
+                    "fynox"
+                ]
+            },
+            {
+                "name": "L",
+                "x": 693,
+                "y": 354,
+                "monsters": [
+                    "brasko",
+                    "fynox",
+                    "quabble",
+                    "groffy",
+                    "scarfy",
+                    "nocty",
+                    "umbrik",
+                    "torky",
+                    "cobrix"
+                ]
+            },
+            {
+                "name": "M",
+                "x": 804,
+                "y": 376,
+                "monsters": [
+                    "brasko",
+                    "fynox",
+                    "quabble",
+                    "groffy",
+                    "scarfy",
+                    "nocty",
+                    "umbrik",
+                    "torky"
+                ]
+            },
+            {
+                "name": "N",
+                "x": 709,
+                "y": 255,
+                "monsters": [
+                    "brasko",
+                    "fynox",
+                    "quabble",
+                    "groffy",
+                    "scarfy",
+                    "nocty",
+                    "umbrik",
+                    "torky",
+                    "cobrix"
+                ]
+            },
+            {
+                "name": "O",
+                "x": 804,
+                "y": 239,
+                "monsters": [
+                    "brasko",
+                    "fynox",
+                    "quabble",
+                    "groffy",
+                    "scarfy",
+                    "nocty",
+                    "umbrik",
+                    "torky"
+                ]
+            },
+            {
+                "name": "BOSS",
+                "x": 828,
+                "y": 528,
+                "monsters": []
+            }
+        ]
     },
     "bosses": [
         "torky",
@@ -378,27 +604,27 @@
     "bossLvl": [
         {
             "playerLevel": "1:3",
-            "bossLevel": "5:7"
+            "bossLevel": "4:5"
         },
         {
             "playerLevel": "4:5",
-            "bossLevel": "7:12"
+            "bossLevel": "7:10"
         },
         {
             "playerLevel": "6:8",
-            "bossLevel": "13:15"
+            "bossLevel": "10:12"
         },
         {
             "playerLevel": "9:12",
-            "bossLevel": "16:20"
+            "bossLevel": "13:16"
         },
         {
             "playerLevel": "13:15",
-            "bossLevel": "21:25"
+            "bossLevel": "16:18"
         },
         {
             "playerLevel": "16:50",
-            "bossLevel": "26:30"
+            "bossLevel": "19:25"
         }
     ],
     "mapMonsters": [
@@ -425,19 +651,21 @@
         {
             "map": "riverfall",
             "monsters": [
-                "flamboar",
-                "podapod",
-                "flowingo",
-                "tacofox",
+                "cobrix",
+                "torky",
+                "brasko",
+                "peblo",
+                "fynox",
                 "quabble",
-                "grubble",
-                "hydron",
-                "pumpking",
-                "aviatos",
-                "foxcarf",
-                "vampix",
-                "shadowl",
-                "snorky"
+                "wavvy",
+                "groffy",
+                "aquos",
+                "gourdo",
+                "wingo",
+                "scarfy",
+                "nocty",
+                "umbrik",
+                "blubbo"
             ],
             "rarityChance": {
                 "common": 0.64,

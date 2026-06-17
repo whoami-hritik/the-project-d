@@ -2,6 +2,7 @@ import * as api from "../webapp/api.js";
 import { state } from "../state.js";
 import { checkClick } from "./game.js";
 import { showNotification } from "../utility.js";
+import { t } from "../translations.js";
 
 export class MissionScene extends Phaser.Scene {
     constructor() {
@@ -76,8 +77,8 @@ export class MissionScene extends Phaser.Scene {
         this.container.add(ribbon);
 
         // Title text + Checklist Emoji
-        const titleText = this.add.text(ribbonX, ribbonY + 4, "📋 MISSIONS", {
-            fontFamily: "Lilita One, sans-serif",
+        const titleText = this.add.text(ribbonX, ribbonY + 4, t("missions_title"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "22px"
         }).setOrigin(0.5);
         const titleGrad = titleText.context.createLinearGradient(0, 0, 0, titleText.height);
@@ -106,7 +107,7 @@ export class MissionScene extends Phaser.Scene {
 
         // 6. Reset Timer Text
         this.timerText = this.add.text(modalX, modalY - modalH / 2 + 82, "", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ef4444"
         }).setOrigin(0.5);
@@ -133,8 +134,8 @@ export class MissionScene extends Phaser.Scene {
         bottomBarBg.fillRoundedRect(modalX - modalW / 2 + 4, modalY + modalH / 2 - 38, modalW - 8, 34, 8);
         this.container.add(bottomBarBg);
 
-        const bottomTipText = this.add.text(modalX, modalY + modalH / 2 - 22, "⚠ COMPLETE DAILY MISSIONS FOR EXTRA REWARDS!", {
-            fontFamily: "Lilita One, sans-serif",
+        const bottomTipText = this.add.text(modalX, modalY + modalH / 2 - 22, t("missions_bottom_tip"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "11px",
             color: "#f59e0b"
         }).setOrigin(0.5);
@@ -152,14 +153,14 @@ export class MissionScene extends Phaser.Scene {
 
         // Tabs Config: [Label, tabKey, posX, width]
         const tabsConfig = [
-            { label: "DAILY", key: "Daily", x: modalX - 125, w: 58 },
-            { label: "WEEKLY", key: "Weekly", x: modalX - 55, w: 68 },
-            { label: "TASKS", key: "Task", x: modalX + 18, w: 64 },
-            { label: "ACHIEVEMENTS", key: "Achievement", x: modalX + 110, w: 104 }
+            { label: t("tab_daily"), key: "Daily", x: modalX - 125, w: 58 },
+            { label: t("tab_weekly"), key: "Weekly", x: modalX - 55, w: 68 },
+            { label: t("tab_tasks"), key: "Task", x: modalX + 18, w: 64 },
+            { label: t("tab_achievements"), key: "Achievement", x: modalX + 110, w: 104 }
         ];
 
-        tabsConfig.forEach((t) => {
-            const isActive = this.activeTab === t.key;
+        tabsConfig.forEach((tc) => {
+            const isActive = this.activeTab === tc.key;
             const tabG = this.add.graphics();
 
             if (isActive) {
@@ -172,13 +173,13 @@ export class MissionScene extends Phaser.Scene {
                 tabG.lineStyle(1.5, 0x94a3b8, 0.5);
             }
 
-            tabG.fillRoundedRect(t.x - t.w / 2, tabY - 13, t.w, 26, 6);
-            tabG.strokeRoundedRect(t.x - t.w / 2, tabY - 13, t.w, 26, 6);
+            tabG.fillRoundedRect(tc.x - tc.w / 2, tabY - 13, tc.w, 26, 6);
+            tabG.strokeRoundedRect(tc.x - tc.w / 2, tabY - 13, tc.w, 26, 6);
             this.tabsContainer.add(tabG);
 
             // Tab Text (Black text for active yellow tab, white for inactive blue tab)
-            const tabText = this.add.text(t.x, tabY, t.label, {
-                fontFamily: "Lilita One, sans-serif",
+            const tabText = this.add.text(tc.x, tabY, tc.label, {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "11px",
                 color: isActive ? "#ffffff" : "#475569"
             }).setOrigin(0.5);
@@ -187,13 +188,13 @@ export class MissionScene extends Phaser.Scene {
             this.tabsContainer.add(tabText);
 
             // Click zone
-            const zone = this.add.zone(t.x, tabY, t.w, 26).setInteractive({ useHandCursor: true });
+            const zone = this.add.zone(tc.x, tabY, tc.w, 26).setInteractive({ useHandCursor: true });
             this.tabsContainer.add(zone);
 
             zone.on("pointerup", (pointer) => {
                 if (!checkClick(pointer)) return;
-                if (this.activeTab !== t.key) {
-                    this.activeTab = t.key;
+                if (this.activeTab !== tc.key) {
+                    this.activeTab = tc.key;
                     this.drawTabs();
                     this.updateResetTimer();
                     this.populateMissionsList();
@@ -212,7 +213,7 @@ export class MissionScene extends Phaser.Scene {
             const hours = Math.floor(diffMs / 3600000);
             const minutes = Math.floor((diffMs % 3600000) / 60000);
             const seconds = Math.floor((diffMs % 60000) / 1000);
-            this.timerText.setText(`⏰ RESETS IN: ${hours}h ${minutes}m ${seconds}s`);
+            this.timerText.setText(t("resets_in", { time: `${hours}h ${minutes}m ${seconds}s` }));
             this.timerText.setColor("#ef4444");
         } else if (this.activeTab === "Weekly") {
             const now = new Date();
@@ -225,13 +226,13 @@ export class MissionScene extends Phaser.Scene {
             const days = Math.floor(diffMs / 86400000);
             const hours = Math.floor((diffMs % 86400000) / 3600000);
             const minutes = Math.floor((diffMs % 3600000) / 60000);
-            this.timerText.setText(`⏰ RESETS IN: ${days}d ${hours}h ${minutes}m`);
+            this.timerText.setText(t("resets_in", { time: `${days}d ${hours}h ${minutes}m` }));
             this.timerText.setColor("#2563eb");
         } else if (this.activeTab === "Task") {
-            this.timerText.setText("📢 SOCIAL & PARTNER TASKS");
+            this.timerText.setText(t("social_partner_tasks"));
             this.timerText.setColor("#16a34a");
         } else {
-            this.timerText.setText("🏆 PERMANENT MILESTONES");
+            this.timerText.setText(t("permanent_milestones"));
             this.timerText.setColor("#d97706");
         }
     }
@@ -319,8 +320,8 @@ export class MissionScene extends Phaser.Scene {
         const filtered = this.rawMissions.filter(m => m.category.toLowerCase() === this.activeTab.toLowerCase());
 
         if (!filtered || filtered.length === 0) {
-            const noMissionsText = this.add.text(this.width / 2, this.height / 2, "No missions available.", {
-                fontFamily: "Lilita One, sans-serif",
+            const noMissionsText = this.add.text(this.width / 2, this.height / 2, t("no_missions_available"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "15px",
                 color: "#6b7280",
                 align: "center"
@@ -378,7 +379,7 @@ export class MissionScene extends Phaser.Scene {
             if (displayTitle.length > 25) displayTitle = displayTitle.substring(0, 22) + "...";
 
             const titleTxt = this.add.text(modalX - 100, yPos + 10, displayTitle.toUpperCase(), {
-                fontFamily: "Lilita One, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#0f172a" // slate 900
             });
@@ -414,7 +415,7 @@ export class MissionScene extends Phaser.Scene {
 
             // Progress text inside bar
             const progText = this.add.text(barX + barWidth / 2, barY + barHeight / 2, `${progress} / ${target}`, {
-                fontFamily: "Lilita One, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "9px",
                 color: "#ffffff"
             }).setOrigin(0.5);
@@ -484,7 +485,7 @@ export class MissionScene extends Phaser.Scene {
             // Reward amount (Yellow text)
             const rewardAmtStr = (mission.verificationType === "daily_login_streak") ? "STREAK" : `+${mission.rewardAmount}`;
             const rewardText = this.add.text(rewardX, rewardY + 11, rewardAmtStr, {
-                fontFamily: "Lilita One, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "11px",
                 color: "#b45309" // Amber 700
             }).setOrigin(0.5);
@@ -516,29 +517,29 @@ export class MissionScene extends Phaser.Scene {
         const target = mission.target || 1;
         const canClaim = progress >= target;
 
-        let btnLabel = "GO";
+        let btnLabel = t("go");
         let fillColor = 0x2563eb; // Blue
         let strokeColor = "#1e3a8a";
         let isDone = false;
 
         if (mission.verificationType === "daily_login_streak") {
             if (mission.completed) {
-                btnLabel = "DONE";
+                btnLabel = t("done");
                 fillColor = 0x94a3b8; // Slate grey
                 strokeColor = "#475569";
                 isDone = true;
             } else {
-                btnLabel = "CLAIM";
+                btnLabel = t("claim");
                 fillColor = 0xeab308; // Yellow
                 strokeColor = "#78350f";
             }
         } else if (mission.completed) {
-            btnLabel = "DONE";
+            btnLabel = t("done");
             fillColor = 0x94a3b8; // Slate grey
             strokeColor = "#475569";
             isDone = true;
         } else if (canClaim) {
-            btnLabel = "CLAIM";
+            btnLabel = t("claim");
             fillColor = 0x10b981; // Emerald Green
             strokeColor = "#064e3b";
         }
@@ -549,8 +550,8 @@ export class MissionScene extends Phaser.Scene {
         btnBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
 
         const btnText = this.add.text(0, 0, btnLabel, {
-            fontFamily: "Lilita One, sans-serif",
-            fontSize: btnLabel === "CLAIM" ? "10px" : "12px",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: btnLabel.length > 4 ? "10px" : "12px",
             color: "#ffffff"
         }).setOrigin(0.5);
         btnText.setStroke(strokeColor, 2.5);
@@ -608,7 +609,7 @@ export class MissionScene extends Phaser.Scene {
             } else {
                 window.open(mission.verificationUrl, "_blank");
             }
-            showNotification(this, "Redirecting to channel. Join and click claim.");
+            showNotification(this, t("redirecting_channel"));
             return;
         }
 
@@ -619,7 +620,7 @@ export class MissionScene extends Phaser.Scene {
         }
 
         if (mission.verificationType === "heal_hp") {
-            showNotification(this, "Open the Items menu to heal your monsters.");
+            showNotification(this, t("open_items_to_heal"));
             this.closeScene();
             // Trigger Items scene
             this.time.delayedCall(500, () => {
@@ -632,7 +633,7 @@ export class MissionScene extends Phaser.Scene {
         }
 
         // Default: battles or defeats, close scene and return to map so they can fight
-        showNotification(this, "Start combat encounters on the map to complete!");
+        showNotification(this, t("start_encounters_on_map"));
         this.closeScene();
     }
 
@@ -657,15 +658,15 @@ export class MissionScene extends Phaser.Scene {
         pBg.strokeRoundedRect(modalX - pw / 2, modalY - ph / 2, pw, ph, 12);
         promptCont.add(pBg);
 
-        const titleText = this.add.text(modalX, modalY - ph / 2 + 18, "OPEN CHEST", {
-            fontFamily: "Lilita One, sans-serif",
+        const titleText = this.add.text(modalX, modalY - ph / 2 + 18, t("open_chest_title"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "16px",
             color: "#0f172a"
         }).setOrigin(0.5);
         titleText.setStroke("#ffffff", 3);
         promptCont.add(titleText);
         
-        const descText = this.add.text(modalX, modalY - 12, "Open a red chest for 50 Gold?", {
+        const descText = this.add.text(modalX, modalY - 12, t("open_chest_desc"), {
             fontFamily: "Nunito, sans-serif",
             fontSize: "13px",
             color: "#334155",
@@ -688,8 +689,8 @@ export class MissionScene extends Phaser.Scene {
         yesBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
         yesBtnContainer.add(yesBg);
 
-        const yesText = this.add.text(0, 0, "YES", {
-            fontFamily: "Lilita One, sans-serif",
+        const yesText = this.add.text(0, 0, t("yes"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -714,8 +715,8 @@ export class MissionScene extends Phaser.Scene {
         noBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
         noBtnContainer.add(noBg);
 
-        const noText = this.add.text(0, 0, "NO", {
-            fontFamily: "Lilita One, sans-serif",
+        const noText = this.add.text(0, 0, t("no"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -751,9 +752,9 @@ export class MissionScene extends Phaser.Scene {
                     // Format rewards list
                     let rewardsList = [];
                     for (const [item, qty] of Object.entries(result.rewards)) {
-                        rewardsList.push(`${item} x${qty}`);
+                        rewardsList.push(`${t(item.toLowerCase() + "_name") || item} x${qty}`);
                     }
-                    showNotification(this, `Chest opened! Gained: ${rewardsList.join(', ')}`);
+                    showNotification(this, t("chest_opened_success", { rewards: rewardsList.join(', ') }));
 
                     // Refresh profile HUD
                     const worldScene = this.scene.get("WorldScene");
@@ -765,11 +766,11 @@ export class MissionScene extends Phaser.Scene {
                     // Reload missions
                     await this.loadMissions();
                 } else {
-                    showNotification(this, result ? result.reason : "Failed to open chest.");
+                    showNotification(this, result ? result.reason : t("failed_to_open_chest"));
                 }
             } catch (err) {
                 console.error(err);
-                showNotification(this, "Error opening chest.");
+                showNotification(this, t("error_opening_chest"));
             } finally {
                 this.destroyloadingOverlay();
             }
@@ -781,7 +782,7 @@ export class MissionScene extends Phaser.Scene {
         try {
             const result = await api.VerifyMission(mission.missionId);
             if (result && result.success) {
-                showNotification(this, `Claimed +${mission.rewardAmount} ${mission.rewardCurrency}!`);
+                showNotification(this, t("claimed_reward", { amount: mission.rewardAmount, currency: mission.rewardCurrency }));
                 // Update local state / balances
                 await api.loadUser();
                 
@@ -793,11 +794,11 @@ export class MissionScene extends Phaser.Scene {
 
                 await this.loadMissions();
             } else {
-                showNotification(this, result ? result.reason : "Failed to claim reward.");
+                showNotification(this, result ? result.reason : t("failed_to_claim"));
             }
         } catch (error) {
             console.error("Failed to claim reward:", error);
-            showNotification(this, "Error claiming reward.");
+            showNotification(this, t("error_claiming"));
         } finally {
             this.destroyloadingOverlay();
         }

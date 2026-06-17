@@ -449,6 +449,9 @@ namespace monster_world.Services
             var bd      = _gameplayService.GetBattleData();
             var defDef  = _gameplayService.GetMonsDef(defender.Id);
         
+            bool wasRaged = attackerState.Rage;
+            attackerState.Rage = false;
+
             // --- STEP 1: Miss check ---
             if (!skill.NoMiss)
             {
@@ -507,10 +510,9 @@ namespace monster_world.Services
                 damage *= elementMultiplier;
 
                 // --- STEP 5: Rage ---
-                if (attackerState.Rage)
+                if (wasRaged)
                 {
                     damage *= bd.RageFactor;
-                    attackerState.Rage = false;
                 }
                     
 
@@ -555,6 +557,7 @@ namespace monster_world.Services
                 if (RollChance(numerator,denomrator))
                 {
                     defenderState.Sick  = true;
+                    defenderState.Rage  = false;
                 } 
             }
             if (fx.StateHypno != null)
@@ -563,6 +566,7 @@ namespace monster_world.Services
                 if (RollChance(numerator,denomrator)) 
                 {
                     defenderState.Hypno = true; 
+                    defenderState.Rage  = false;
                 }
             }
             if (fx.StateRage  != null) {

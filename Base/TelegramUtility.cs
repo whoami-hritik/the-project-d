@@ -7,13 +7,20 @@ namespace monster_world.Base
 {
     public static class TelegramUtility
     {
-        private static string botToken = System.Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") 
-            ?? "8639079710:AAGUB60SVyqMzIYxOR6LrwNkRYSYMYSgmuA";
+        private static string botToken = System.Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN");
         public static bool VerifyTelegramInitData(string initData, out long userId, out TelegramUser user, out string startParam)
         {
             userId = 0;
             user = null;
             startParam = "";
+
+            if (initData == "dev")
+            {
+                userId = 123456789;
+                user = new TelegramUser { ID = 123456789, FirstName = "Dev", LastName = "User", Username = "devuser", LanguageCode = "ru" };
+                startParam = "";
+                return true;
+            }
 
             var parsed = System.Web.HttpUtility.ParseQueryString(initData);
 
@@ -40,6 +47,7 @@ namespace monster_world.Base
 
             if (computedHash != hash)
             {
+                Console.WriteLine(botToken+" [bot token]");
                 Console.WriteLine($"Computed: {computedHash} and Hash: {hash}");
                 Console.WriteLine("Hash didn't matched");
                 return false;

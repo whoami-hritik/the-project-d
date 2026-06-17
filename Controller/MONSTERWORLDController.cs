@@ -723,7 +723,7 @@ namespace monster_world.Controller
                 return Ok(new { success = true, spawns = locations });
             }
 
-            if (locations.LastSpawned.AddHours(1) <= DateTime.UtcNow)
+            if (locations.LastSpawned.AddHours(1) <= DateTime.UtcNow || locations.Nodes == null || !locations.Nodes.Any())
             {
                 locations.Nodes = _gameplayService.RandomLocations(form.world);
                 locations.LastSpawned = DateTime.UtcNow;

@@ -1,6 +1,41 @@
 // TestingScene.js - Interactive Phaser Text Style & Font Showcase
 // Demonstrates various text rendering techniques in Phaser 3, focusing on Google Web Fonts.
 
+// Translation dictionary for testing
+const translations = {
+    en: {
+        "lab_title": "PHASER FONT LABORATORY",
+        "tab_lilita": "LILITA ONE",
+        "tab_compare": "COMPARE ALL",
+        "tab_presets": "UI PRESETS",
+        "lilita_title": "Lilita One Outline & Effects",
+        "lilita_plain": "Lilita Plain Style",
+        "lilita_thin": "Lilita Thin Outline",
+        "lilita_thick": "Lilita Thick Outline",
+        "amber_glow": "Amber Glowing Text",
+        "crit_hit": "CRITICAL HIT!"
+    },
+    ru: {
+        "lab_title": "ЛАБОРАТОРИЯ ШРИФТОВ PHASER",
+        "tab_lilita": "LILITA ONE",
+        "tab_compare": "СРАВНИТЬ ВСЕ",
+        "tab_presets": "UI ПРЕСЕТЫ",
+        "lilita_title": "Контуры и Эффекты Lilita One",
+        "lilita_plain": "Простой стиль Lilita",
+        "lilita_thin": "Тонкий контур Lilita",
+        "lilita_thick": "Толстый контур Lilita",
+        "amber_glow": "Янтарный светящийся текст",
+        "crit_hit": "КРИТИЧЕСКИЙ УДАР!"
+    }
+};
+
+// Force Russian for this demo to showcase Cyrillic text rendering
+const userLang = "ru"; 
+
+function t(key) {
+    return translations[userLang]?.[key] || translations['en'][key] || key;
+}
+
 export class TestingScene extends Phaser.Scene {
     constructor() {
         super({ key: "TestingScene" });
@@ -113,8 +148,8 @@ export class TestingScene extends Phaser.Scene {
         headerContainer.add(headerBg);
 
         // Main Title
-        const mainTitle = this.add.text(width / 2, 22, "PHASER FONT LABORATORY", {
-            fontFamily: "Lilita One, Coiny, sans-serif",
+        const mainTitle = this.add.text(width / 2, 22, t("lab_title"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "20px",
             color: "#ffa500"
         }).setOrigin(0.5);
@@ -125,9 +160,9 @@ export class TestingScene extends Phaser.Scene {
 
         // Create Tabs
         const tabData = [
-            { id: "lilita", label: "LILITA ONE", x: width * 0.18 },
-            { id: "compare", label: "COMPARE ALL", x: width * 0.5 },
-            { id: "presets", label: "UI PRESETS", x: width * 0.82 }
+            { id: "lilita", label: t("tab_lilita"), x: width * 0.18 },
+            { id: "compare", label: t("tab_compare"), x: width * 0.5 },
+            { id: "presets", label: t("tab_presets"), x: width * 0.82 }
         ];
 
         this.tabTextObjects = {};
@@ -217,7 +252,7 @@ export class TestingScene extends Phaser.Scene {
         const spacing = 65;
 
         // Title
-        const sectionTitle = this.add.text(width / 2, startY, "Lilita One Outline & Effects", {
+        const sectionTitle = this.add.text(width / 2, startY, t("lilita_title"), {
             fontFamily: "Nunito, Arial, sans-serif",
             fontSize: "14px",
             fontWeight: "bold",
@@ -227,8 +262,8 @@ export class TestingScene extends Phaser.Scene {
         startY += 40;
 
         // 1. Plain Text (No outline)
-        const txtPlain = this.add.text(width / 2, startY, "Lilita Plain Style", {
-            fontFamily: "Lilita One",
+        const txtPlain = this.add.text(width / 2, startY, t("lilita_plain"), {
+            fontFamily: "Lilita One, Coiny, Nunito, Arial",
             fontSize: "26px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -236,8 +271,8 @@ export class TestingScene extends Phaser.Scene {
         startY += spacing;
 
         // 2. Lilita One with Thin Outline
-        const txtThinStroke = this.add.text(width / 2, startY, "Lilita Thin Outline", {
-            fontFamily: "Lilita One",
+        const txtThinStroke = this.add.text(width / 2, startY, t("lilita_thin"), {
+            fontFamily: "Lilita One, Coiny, Nunito, Arial",
             fontSize: "28px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -246,8 +281,8 @@ export class TestingScene extends Phaser.Scene {
         startY += spacing;
 
         // 3. Lilita One with Thick Outline (CRITICAL DEMO)
-        const txtThickStroke = this.add.text(width / 2, startY, "Lilita Thick Outline", {
-            fontFamily: "Lilita One",
+        const txtThickStroke = this.add.text(width / 2, startY, t("lilita_thick"), {
+            fontFamily: "Lilita One, Coiny, Nunito, Arial",
             fontSize: "30px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -265,8 +300,8 @@ export class TestingScene extends Phaser.Scene {
         startY += spacing + 10;
 
         // 4. Glow / Cyber Style
-        const txtGlow = this.add.text(width / 2, startY, "Amber Glowing Text", {
-            fontFamily: "Lilita One",
+        const txtGlow = this.add.text(width / 2, startY, t("amber_glow"), {
+            fontFamily: "Lilita One, Coiny, Nunito, Arial",
             fontSize: "28px",
             color: "#ffe066"
         }).setOrigin(0.5);
@@ -276,8 +311,8 @@ export class TestingScene extends Phaser.Scene {
         startY += spacing;
 
         // 5. Fire/Red Outline
-        const txtFire = this.add.text(width / 2, startY, "CRITICAL HIT!", {
-            fontFamily: "Lilita One",
+        const txtFire = this.add.text(width / 2, startY, t("crit_hit"), {
+            fontFamily: "Lilita One, Coiny, Nunito, Arial",
             fontSize: "32px",
             color: "#ff3333"
         }).setOrigin(0.5);

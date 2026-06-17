@@ -6,6 +6,7 @@ import { MissionScene } from "./mission.js";
 import { TestScene } from "./testEffect.js";
 import * as api from "../webapp/api.js";
 import * as utlity from "../utility.js";
+import { t } from "../translations.js";
 
 
 const BOTTOM = 740;
@@ -391,8 +392,8 @@ export class WorldScene extends Phaser.Scene {
             modalContainer.add(card);
 
             // Title Text
-            const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 25, "UNLOCK MAP", {
-                fontFamily: "Lilita One, Arial, sans-serif",
+            const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 25, t("unlock_map_title"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "20px",
                 color: "#d97706" // Amber 600
             }).setOrigin(0.5).setScrollFactor(0);
@@ -400,8 +401,8 @@ export class WorldScene extends Phaser.Scene {
             modalContainer.add(titleTxt);
 
             // Body Text
-            const bodyTxt = this.add.text(modalX, modalY - 15, `Do you want to unlock\n${mapName.toUpperCase()} for ${cost} TON?`, {
-                fontFamily: "Lilita One, Arial, sans-serif",
+            const bodyTxt = this.add.text(modalX, modalY - 15, t("unlock_map_desc", { name: mapName.toUpperCase(), cost: cost }), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "14px",
                 color: "#0f172a",
                 align: "center"
@@ -412,8 +413,8 @@ export class WorldScene extends Phaser.Scene {
             // Confirm Button (btn_blank tinted green)
             const btnConfirm = this.add.image(modalX - 60, modalY + 60, "btn_blank").setDisplaySize(90, 40).setInteractive({ useHandCursor: true }).setScrollFactor(0);
             btnConfirm.setTint(0x16a34a);
-            const confirmTxt = this.add.text(modalX - 60, modalY + 60, "BUY", {
-                fontFamily: "Lilita One, Arial, sans-serif",
+            const confirmTxt = this.add.text(modalX - 60, modalY + 60, t("buy"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "14px",
                 color: "#ffffff"
             }).setOrigin(0.5).setScrollFactor(0);
@@ -471,8 +472,8 @@ export class WorldScene extends Phaser.Scene {
                     this.worldIconGroup.add(badge);
 
                     // Text
-                    const comingSoonText = this.add.text(w.x + 40, w.y + 38, "COMING\nSOON", {
-                        fontFamily: "Lilita One, Arial, sans-serif",
+                    const comingSoonText = this.add.text(w.x + 40, w.y + 38, t("coming_soon"), {
+                        fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                         fontSize: "9px",
                         color: "#f59e0b",
                         align: "center"
@@ -511,8 +512,8 @@ export class WorldScene extends Phaser.Scene {
 
                     // Level requirement text
                     if (mapMeta && mapMeta.level > 1) {
-                        const lvlText = this.add.text(w.x + 40, w.y + 51, `Lv.${mapMeta.level}`, {
-                            fontFamily: "Lilita One, Arial, sans-serif",
+                        const lvlText = this.add.text(w.x + 40, w.y + 51, t("level_locked", { level: mapMeta.level }), {
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "9px",
                             color: "#fbbf24"
                         }).setOrigin(0.5);
@@ -532,7 +533,7 @@ export class WorldScene extends Phaser.Scene {
                     api.getMapInfo(w.name).then(res => {
                         utlity.destroyloadingOverlay(this);
                         if (!res || !res.success) {
-                            utlity.showNotification(this, "Failed to load map info");
+                            utlity.showNotification(this, t("failed_to_load_map"));
                             return;
                         }
 
@@ -570,7 +571,7 @@ export class WorldScene extends Phaser.Scene {
 
                         // Header Title
                         const titleText = this.add.text(0, -220 + 8, w.name.toUpperCase(), {
-                            fontFamily: "Lilita One, Outfit, sans-serif",
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "20px",
                             color: "#ffffff"
                         }).setOrigin(0.5);
@@ -596,8 +597,8 @@ export class WorldScene extends Phaser.Scene {
                         info_container.add(btn_close);
 
                         // Capture Progress Labels (Light Theme)
-                        const lblCaptured = this.add.text(-150, -135, "CAPTURED SPECIES:", {
-                            fontFamily: "Lilita One, Outfit, sans-serif",
+                        const lblCaptured = this.add.text(-150, -135, t("captured_species"), {
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "14px",
                             color: "#334155"
                         }).setOrigin(0, 0.5);
@@ -605,7 +606,7 @@ export class WorldScene extends Phaser.Scene {
                         info_container.add(lblCaptured);
 
                         const valCaptured = this.add.text(150, -135, `${capturedCount} / ${totalMapMonster}`, {
-                            fontFamily: "Lilita One, Outfit, sans-serif",
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "16px",
                             color: "#059669"
                         }).setOrigin(1, 0.5);
@@ -633,16 +634,16 @@ export class WorldScene extends Phaser.Scene {
                         }
 
                         // Boss Status Section (Light Theme)
-                        const lblBoss = this.add.text(-150, -65, "BOSS STATUS:", {
-                            fontFamily: "Lilita One, Outfit, sans-serif",
+                        const lblBoss = this.add.text(-150, -65, t("boss_status"), {
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "14px",
                             color: "#334155"
                         }).setOrigin(0, 0.5);
                         lblBoss.setStroke("#ffffff", 3);
                         info_container.add(lblBoss);
 
-                        const valBoss = this.add.text(150, -65, isBossDefeated ? "DEFEATED" : "ACTIVE", {
-                            fontFamily: "Lilita One, Outfit, sans-serif",
+                        const valBoss = this.add.text(150, -65, isBossDefeated ? t("defeated") : t("active"), {
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "14px",
                             color: isBossDefeated ? "#059669" : "#d97706"
                         }).setOrigin(1, 0.5);
@@ -656,8 +657,8 @@ export class WorldScene extends Phaser.Scene {
                         info_container.add(sepLine);
 
                         // Area monsters list header
-                        const areaText = this.add.text(-150, -15, "MONSTERS IN AREA:", {
-                            fontFamily: "Lilita One, Outfit, sans-serif",
+                        const areaText = this.add.text(-150, -15, t("monsters_in_area"), {
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "14px",
                             color: "#0284c7"
                         }).setOrigin(0, 0.5);
@@ -750,8 +751,8 @@ export class WorldScene extends Phaser.Scene {
                         goBg.fillStyle(0xffffff, 0.2);
                         goBg.fillRoundedRect(-80, -22, 160, 20, { tl: 12, tr: 12, bl: 0, br: 0 });
 
-                        const goText = this.add.text(0, 0, "ENTER MAP", {
-                            fontFamily: "Lilita One, Outfit, sans-serif",
+                        const goText = this.add.text(0, 0, t("enter_map"), {
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "18px",
                             color: "#ffffff"
                         }).setOrigin(0.5);
@@ -780,20 +781,20 @@ export class WorldScene extends Phaser.Scene {
                     }).catch(err => {
                         console.error(err);
                         utlity.destroyloadingOverlay(this);
-                        utlity.showNotification(this, "Failed to load map info");
+                        utlity.showNotification(this, t("failed_to_load_map"));
                     });
                 } else {
                     const mapMeta = MapUnlockCost[w.name];
                     const isActive = mapMeta ? mapMeta.active : true;
 
                     if (!isActive) {
-                        utlity.showNotification(this, "Coming Soon!");
+                        utlity.showNotification(this, t("coming_soon_notification"));
                         return;
                     }
 
                     // Level check
                     if (this.USER.level < mapMeta.level) {
-                        utlity.showNotification(this, `Reach Lv.${mapMeta.level} to unlock!`);
+                        utlity.showNotification(this, t("reach_level_to_unlock", { level: mapMeta.level }));
                         return;
                     }
 
@@ -816,12 +817,12 @@ export class WorldScene extends Phaser.Scene {
                                 this.scene.stop();
                                 this.scene.start("MapScene", { map: w.name });
                             } else {
-                                utlity.showNotification(this, data?.reason || "Failed to unlock map");
+                                utlity.showNotification(this, data?.reason || t("failed_to_unlock_map"));
                             }
                         }).catch(err => {
                             console.error(err);
                             utlity.destroyloadingOverlay(this);
-                            utlity.showNotification(this, "Error unlocking map");
+                            utlity.showNotification(this, t("error_unlocking_map"));
                         });
                     });
                 }
@@ -858,8 +859,8 @@ export class WorldScene extends Phaser.Scene {
         cardBg.fillRoundedRect(modalX - ribbonW / 2, modalY - modalH / 2 - 12, ribbonW, ribbonH, 10);
         cardBg.strokeRoundedRect(modalX - ribbonW / 2, modalY - modalH / 2 - 12, ribbonW, ribbonH, 10);
 
-        const titleText = this.add.text(modalX, modalY - modalH / 2 + 8, "CONGRATULATIONS!", {
-            fontFamily: "Lilita One, Outfit, sans-serif",
+        const titleText = this.add.text(modalX, modalY - modalH / 2 + 8, t("congratulations"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "20px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -868,8 +869,8 @@ export class WorldScene extends Phaser.Scene {
 
         let contentY = modalY - modalH / 2 + 50;
 
-        const welcomeText = this.add.text(modalX, contentY, "Welcome to Project D!", {
-            fontFamily: "Lilita One, Outfit, sans-serif",
+        const welcomeText = this.add.text(modalX, contentY, t("welcome_project_d"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "18px",
             color: "#0f172a"
         }).setOrigin(0.5);
@@ -878,8 +879,8 @@ export class WorldScene extends Phaser.Scene {
         contentY += 35;
 
         const refCount = prelaunchReward.registeredReferralsCount;
-        const refTitle = this.add.text(modalX, contentY, `Pre-launch Referrals: ${refCount}`, {
-            fontFamily: "Nunito, Arial, sans-serif",
+        const refTitle = this.add.text(modalX, contentY, t("prelaunch_referrals", { count: refCount }), {
+            fontFamily: "Nunito, sans-serif",
             fontSize: "15px",
             fontWeight: "bold",
             color: "#475569"
@@ -889,11 +890,11 @@ export class WorldScene extends Phaser.Scene {
         contentY += 25;
 
         if (refCount > 0) {
-            const itemsText = this.add.text(modalX, contentY, 
+            const itemsText = this.add.text(modalX, contentY,
                 `🎁 +${prelaunchReward.monstaBalls} MonstaBall(s)\n` +
                 `🎁 +${prelaunchReward.healSpells} HealSpell(s)\n` +
                 `🎁 +${prelaunchReward.ragePotions} RagePotion(s)`, {
-                fontFamily: "Nunito, Arial, sans-serif",
+                fontFamily: "Nunito, sans-serif",
                 fontSize: "14px",
                 color: "#1e293b",
                 align: "center",
@@ -902,8 +903,8 @@ export class WorldScene extends Phaser.Scene {
             modalContainer.add(itemsText);
             contentY += 60;
         } else {
-            const noRefText = this.add.text(modalX, contentY, "No pre-launch referrals found.", {
-                fontFamily: "Nunito, Arial, sans-serif",
+            const noRefText = this.add.text(modalX, contentY, t("no_prelaunch_referrals"), {
+                fontFamily: "Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#94a3b8",
                 fontStyle: "italic"
@@ -915,8 +916,8 @@ export class WorldScene extends Phaser.Scene {
         contentY += 15;
 
         if (prelaunchReward.hasStarterBundle) {
-            const bundleTitle = this.add.text(modalX, contentY, "🎁 Starter Bundle Unlocked!", {
-                fontFamily: "Lilita One, Outfit, sans-serif",
+            const bundleTitle = this.add.text(modalX, contentY, t("starter_bundle_unlocked"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "16px",
                 color: "#10b981"
             }).setOrigin(0.5);
@@ -924,8 +925,8 @@ export class WorldScene extends Phaser.Scene {
 
             contentY += 20;
 
-            const bundleItems = this.add.text(modalX, contentY, "+100 GOLD, +5 MonstaBalls, +5 HealSpells", {
-                fontFamily: "Nunito, Arial, sans-serif",
+            const bundleItems = this.add.text(modalX, contentY, t("starter_bundle_items"), {
+                fontFamily: "Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#059669",
                 fontWeight: "bold"
@@ -936,8 +937,8 @@ export class WorldScene extends Phaser.Scene {
 
         const btnClose = this.add.image(modalX, modalY + modalH / 2 - 35, "btn_blank").setDisplaySize(120, 40).setInteractive({ useHandCursor: true });
         btnClose.setTint(0x16a34a);
-        const closeTxt = this.add.text(modalX, modalY + modalH / 2 - 35, "CLAIM", {
-            fontFamily: "Lilita One, Arial, sans-serif",
+        const closeTxt = this.add.text(modalX, modalY + modalH / 2 - 35, t("claim"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "16px",
             color: "#ffffff"
         }).setOrigin(0.5);

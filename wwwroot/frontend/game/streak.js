@@ -2,6 +2,7 @@ import * as api from "../webapp/api.js";
 import { state } from "../state.js";
 import { checkClick } from "./game.js";
 import { showNotification } from "../utility.js";
+import { t } from "../translations.js";
 
 export class StreakScene extends Phaser.Scene {
     constructor() {
@@ -52,8 +53,8 @@ export class StreakScene extends Phaser.Scene {
         this.container.add(bannerBg);
 
         // Header Text: "7-DAY STREAK"
-        const titleText = this.add.text(modalX, modalY - modalH / 2, "7-DAY STREAK", {
-            fontFamily: "Lilita One, Arial, sans-serif",
+        const titleText = this.add.text(modalX, modalY - modalH / 2, t("seven_day_streak"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "22px",
             color: "#f59e0b" // Amber gold
         }).setOrigin(0.5);
@@ -62,8 +63,8 @@ export class StreakScene extends Phaser.Scene {
         this.container.add(titleText);
 
         // Subtitle: "Log in every day to get awesome rewards!"
-        const subtitleText = this.add.text(modalX, modalY - modalH / 2 + 42, "Log in every day to get awesome rewards!", {
-            fontFamily: "Nunito, Arial, sans-serif",
+        const subtitleText = this.add.text(modalX, modalY - modalH / 2 + 42, t("streak_subtitle"), {
+            fontFamily: "Nunito, sans-serif",
             fontSize: "13px",
             color: "#94a3b8" // Slate 400
         }).setOrigin(0.5);
@@ -160,8 +161,8 @@ export class StreakScene extends Phaser.Scene {
             this.container.add(pill);
 
             // Day text inside the pill
-            const dayText = this.add.text(cx, cy - cardH / 2 + 13, `DAY ${d.day}`, {
-                fontFamily: "Lilita One, Arial, sans-serif",
+            const dayText = this.add.text(cx, cy - cardH / 2 + 13, t("streak_day", { day: d.day }), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "11px",
                 color: "#ffffff"
             }).setOrigin(0.5);
@@ -177,7 +178,7 @@ export class StreakScene extends Phaser.Scene {
 
             // Amount/label text at bottom
             const amtText = this.add.text(cx, cy + cardH / 2 - 14, d.amt, {
-                fontFamily: "Lilita One, Arial, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "12px",
                 color: isActive ? "#fbbf24" : "#cbd5e1"
             }).setOrigin(0.5);
@@ -214,8 +215,8 @@ export class StreakScene extends Phaser.Scene {
             btnClaim.setTint(0xeab308); // Golden yellow
             this.container.add(btnClaim);
 
-            const claimText = this.add.text(modalX, btnY, "CLAIM REWARD", {
-                fontFamily: "Lilita One, Arial, sans-serif",
+            const claimText = this.add.text(modalX, btnY, t("claim_reward"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "18px",
                 color: "#ffffff"
             }).setOrigin(0.5);
@@ -230,7 +231,7 @@ export class StreakScene extends Phaser.Scene {
                 try {
                     const res = await api.claimStreak();
                     if (res && res.success) {
-                        showNotification(this, `Claimed Day ${res.day} Reward!`);
+                        showNotification(this, t("claimed_day_reward", { day: res.day }));
                         
                         const worldScene = this.scene.get("WorldScene");
                         if (worldScene) {
@@ -247,12 +248,12 @@ export class StreakScene extends Phaser.Scene {
                             this.closeScene();
                         });
                     } else {
-                        showNotification(this, res ? res.reason : "Failed to claim reward.");
+                        showNotification(this, res ? res.reason : t("failed_to_claim"));
                         btnClaim.setInteractive();
                     }
                 } catch (err) {
                     console.error("Error claiming streak:", err);
-                    showNotification(this, "Connection failed.");
+                    showNotification(this, t("connection_failed"));
                     btnClaim.setInteractive();
                 }
             });
@@ -263,8 +264,8 @@ export class StreakScene extends Phaser.Scene {
             btnClaim.setTint(0x4b5563); // Dark grey
             this.container.add(btnClaim);
 
-            const claimText = this.add.text(modalX, btnY, "COME BACK TOMORROW", {
-                fontFamily: "Lilita One, Arial, sans-serif",
+            const claimText = this.add.text(modalX, btnY, t("come_back_tomorrow"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "14px",
                 color: "#94a3b8"
             }).setOrigin(0.5);

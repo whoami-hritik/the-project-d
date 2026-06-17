@@ -1,8 +1,9 @@
 import * as api from "../webapp/api.js";
-import { state } from "../state.js";
+import { state, setLanguage } from "../state.js";
 import { checkClick } from "./game.js";
 import { showNotification, createloadingOverlay, destroyloadingOverlay } from "../utility.js";
 import { sendDeposit, initTonConnect, getWalletAddress, disconnectWallet } from "../webapp/tonconnect.js";
+import { t } from "../translations.js";
 
 export class ProfileScene extends Phaser.Scene {
     constructor() {
@@ -83,8 +84,8 @@ export class ProfileScene extends Phaser.Scene {
         this.container.add(ribbon);
 
         // Title Text with gradient fill
-        const titleText = this.add.text(ribbonX, ribbonY + ribbonH / 2, "PLAYER PROFILE", {
-            fontFamily: "Lilita One, sans-serif",
+        const titleText = this.add.text(ribbonX, ribbonY + ribbonH / 2, t("player_profile"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "22px"
         }).setOrigin(0.5);
         const titleGrad = titleText.context.createLinearGradient(0, 0, 0, titleText.height);
@@ -184,7 +185,7 @@ export class ProfileScene extends Phaser.Scene {
         const name = (this.USER.username || this.USER.firstName || "Player").toUpperCase();
 
         const usernameText = this.add.text(nameX, nameY, name, {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "18px",
             color: "#0f172a" // Slate 900 (dark text)
         });
@@ -220,7 +221,7 @@ export class ProfileScene extends Phaser.Scene {
 
             // Value
             const valText = this.add.text(x + 22, y + pillH / 2, formatNumber(value), {
-                fontFamily: "Lilita One, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "10px",
                 color: textFillColor
             }).setOrigin(0, 0.5);
@@ -251,8 +252,8 @@ export class ProfileScene extends Phaser.Scene {
             btnBg.strokeRoundedRect(0, 0, 140, 22, 6);
             connectBtn.add(btnBg);
 
-            const btnText = this.add.text(70, 11, "CONNECT WALLET", {
-                fontFamily: "Lilita One, sans-serif",
+            const btnText = this.add.text(70, 11, t("connect_wallet"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "11px",
                 color: "#ffffff"
             }).setOrigin(0.5);
@@ -282,11 +283,11 @@ export class ProfileScene extends Phaser.Scene {
                     if (ui) {
                         await ui.openModal();
                     } else {
-                        showNotification(this, "TON Connect is currently unavailable.");
+                        showNotification(this, t("ton_unavailable"));
                     }
                 } catch (err) {
                     console.error("Failed to connect wallet:", err);
-                    showNotification(this, "Failed to connect wallet.");
+                    showNotification(this, t("failed_connect"));
                 }
             });
         } else {
@@ -309,8 +310,8 @@ export class ProfileScene extends Phaser.Scene {
             this.container.add(addrText);
 
             // Disconnect button [x]
-            const discText = this.add.text(nameX + 16 + addrText.width + 10, walletY + 11, "✖ Disconnect", {
-                fontFamily: "Lilita One, sans-serif",
+            const discText = this.add.text(nameX + 16 + addrText.width + 10, walletY + 11, t("disconnect"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "10px",
                 color: "#ef4444"
             }).setOrigin(0, 0.5).setInteractive({ useHandCursor: true });
@@ -321,7 +322,7 @@ export class ProfileScene extends Phaser.Scene {
             discText.on("pointerout", () => discText.setScale(1.0));
             discText.on("pointerup", async (pointer) => {
                 if (!checkClick(pointer)) return;
-                if (window.confirm("Do you want to disconnect your wallet?")) {
+                if (window.confirm(t("disconnect_confirm"))) {
                     try {
                         await disconnectWallet();
                     } catch (err) {
@@ -346,7 +347,7 @@ export class ProfileScene extends Phaser.Scene {
         this.container.add(badgeG);
 
         const expBadgeText = this.add.text(modalX - modalW / 2 + 41, expY, "EXP", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "11px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -376,7 +377,7 @@ export class ProfileScene extends Phaser.Scene {
 
         // XP Text Overlay
         const xpText = this.add.text(barX + barW / 2, expY, `${currentXP} / ${maxXP}`, {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "11px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -396,8 +397,8 @@ export class ProfileScene extends Phaser.Scene {
         this.container.add(statsG);
 
         // Stats Title
-        const statsTitleText = this.add.text(modalX, statsBoxY + 16, "STATS", {
-            fontFamily: "Lilita One, sans-serif",
+        const statsTitleText = this.add.text(modalX, statsBoxY + 16, t("stats"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "15px",
             color: "#0f172a"
         }).setOrigin(0.5);
@@ -406,11 +407,11 @@ export class ProfileScene extends Phaser.Scene {
 
         // Stats Rows data
         const stats = [
-            { label: "BATTLES  WON", val: String(this.USER.totalVictory || 0) },
-            { label: "BATTLES  LOST", val: String(Math.max(0, (this.USER.totalBattles || 0) - (this.USER.totalVictory || 0))) },
-            { label: "WIN  RATE", val: `${this.USER.totalBattles > 0 ? Math.round(((this.USER.totalVictory || 0) / this.USER.totalBattles) * 100) : 0}%` },
-            { label: "TOTAL  CAPTURED", val: String(this.USER.totalCaptured || 0) },
-            { label: "PLAYER  LEVEL", val: String(monsterLvl) }
+            { label: t("battles_won"), val: String(this.USER.totalVictory || 0) },
+            { label: t("battles_lost"), val: String(Math.max(0, (this.USER.totalBattles || 0) - (this.USER.totalVictory || 0))) },
+            { label: t("win_rate"), val: `${this.USER.totalBattles > 0 ? Math.round(((this.USER.totalVictory || 0) / this.USER.totalBattles) * 100) : 0}%` },
+            { label: t("total_captured"), val: String(this.USER.totalCaptured || 0) },
+            { label: t("player_level"), val: String(monsterLvl) }
         ];
 
         stats.forEach((item, index) => {
@@ -427,7 +428,7 @@ export class ProfileScene extends Phaser.Scene {
 
             // Stats Value (Lilita One)
             const valText = this.add.text(modalX + statsBoxW / 2 - 16, rowY, item.val, {
-                fontFamily: "Lilita One, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#0f172a"
             }).setOrigin(1, 0);
@@ -438,8 +439,8 @@ export class ProfileScene extends Phaser.Scene {
         // Team slots title
         const teamY = cardTop + 390;
 
-        const teamTitleText = this.add.text(modalX, teamY, "ACTIVE TEAM", {
-            fontFamily: "Lilita One, sans-serif",
+        const teamTitleText = this.add.text(modalX, teamY, t("active_team"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "15px",
             color: "#0f172a"
         }).setOrigin(0.5);
@@ -482,8 +483,8 @@ export class ProfileScene extends Phaser.Scene {
         depBg.strokeRoundedRect(-buttonW / 2, -buttonH / 2, buttonW, buttonH, 12);
         depBtnContainer.add(depBg);
 
-        const depText = this.add.text(0, 0, "DEPOSIT TON", {
-            fontFamily: "Lilita One, sans-serif",
+        const depText = this.add.text(0, 0, t("deposit_ton"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "14px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -520,8 +521,8 @@ export class ProfileScene extends Phaser.Scene {
         witBg.strokeRoundedRect(-buttonW / 2, -buttonH / 2, buttonW, buttonH, 12);
         witBtnContainer.add(witBg);
 
-        const witText = this.add.text(0, 0, "WITHDRAW", {
-            fontFamily: "Lilita One, sans-serif",
+        const witText = this.add.text(0, 0, t("withdraw"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "14px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -545,7 +546,84 @@ export class ProfileScene extends Phaser.Scene {
         witZone.on("pointerup", (pointer) => {
             this.tweens.add({ targets: witBtnContainer, scaleX: 1.0, scaleY: 1.0, duration: 50 });
             if (!checkClick(pointer)) return;
-            showNotification(this, "Withdrawal coming soon!");
+            showNotification(this, t("withdraw_soon"));
+        });
+
+        // --- PREMIUM LANGUAGE TOGGLE PILL ---
+        const langToggleY = cardTop + 546;
+        const langBtn = this.add.container(modalX, langToggleY);
+
+        const currentLang = state.language || "en";
+
+        const langBg = this.add.graphics();
+        langBg.fillStyle(0x0f172a, 1); // Dark slate base
+        langBg.lineStyle(1.5, 0x94a3b8, 0.8); // Slate 400 outline
+        langBg.fillRoundedRect(-50, -11, 100, 22, 11);
+        langBg.strokeRoundedRect(-50, -11, 100, 22, 11);
+        langBtn.add(langBg);
+
+        const globeText = this.add.text(-38, 0, "🌐", {
+            fontFamily: "Nunito, sans-serif",
+            fontSize: "10px",
+        }).setOrigin(0, 0.5);
+        langBtn.add(globeText);
+
+        const enText = this.add.text(-12, 0, "EN", {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: currentLang === "en" ? "#fbbf24" : "#94a3b8"
+        }).setOrigin(0, 0.5);
+        if (currentLang === "en") enText.setStroke("#000000", 2);
+        langBtn.add(enText);
+
+        const dividerText = this.add.text(8, 0, "|", {
+            fontFamily: "Nunito, sans-serif",
+            fontSize: "10px",
+            color: "#475569"
+        }).setOrigin(0, 0.5);
+        langBtn.add(dividerText);
+
+        const ruText = this.add.text(25, 0, "RU", {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: currentLang === "ru" ? "#fbbf24" : "#94a3b8"
+        }).setOrigin(0, 0.5);
+        if (currentLang === "ru") ruText.setStroke("#000000", 2);
+        langBtn.add(ruText);
+
+        const langHit = this.add.rectangle(0, 0, 100, 22, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+        langBtn.add(langHit);
+        this.container.add(langBtn);
+
+        langHit.on("pointerover", () => {
+            langBg.clear();
+            langBg.fillStyle(0x1e293b, 1);
+            langBg.lineStyle(1.5, 0xf59e0b, 1);
+            langBg.fillRoundedRect(-50, -11, 100, 22, 11);
+            langBg.strokeRoundedRect(-50, -11, 100, 22, 11);
+            langBtn.setScale(1.05);
+        });
+
+        langHit.on("pointerout", () => {
+            langBg.clear();
+            langBg.fillStyle(0x0f172a, 1);
+            langBg.lineStyle(1.5, 0x94a3b8, 0.8);
+            langBg.fillRoundedRect(-50, -11, 100, 22, 11);
+            langBg.strokeRoundedRect(-50, -11, 100, 22, 11);
+            langBtn.setScale(1.0);
+        });
+
+        langHit.on("pointerdown", () => {
+            langBtn.setScale(0.95);
+        });
+
+        langHit.on("pointerup", (pointer) => {
+            langBtn.setScale(1.0);
+            if (!checkClick(pointer)) return;
+            const nextLang = currentLang === "en" ? "ru" : "en";
+            setLanguage(nextLang);
+            this.scene.restart();
         });
     }
 
@@ -582,8 +660,8 @@ export class ProfileScene extends Phaser.Scene {
 
         // 3. Title
         const titleY = dialogY - dialogHeight / 2 + 25;
-        const titleText = this.add.text(dialogX, titleY, "DEPOSIT TON", {
-            fontFamily: "Lilita One, sans-serif",
+        const titleText = this.add.text(dialogX, titleY, t("deposit_ton"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "20px",
             color: "#0f172a"
         }).setOrigin(0.5);
@@ -606,8 +684,8 @@ export class ProfileScene extends Phaser.Scene {
 
         // 5. Instruction text
         let currY = titleY + 28;
-        const instructionText = this.add.text(dialogX, currY, "SEND ANY AMOUNT OF TON TO", {
-            fontFamily: "Lilita One, sans-serif",
+        const instructionText = this.add.text(dialogX, currY, t("deposit_instruction"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "12px",
             color: "#475569" // Slate 600
         }).setOrigin(0.5);
@@ -615,8 +693,8 @@ export class ProfileScene extends Phaser.Scene {
 
         // 6. Address Section
         currY += 28;
-        const addrHeading = this.add.text(dialogX - dialogWidth / 2 + 25, currY, "WALLET ADDRESS", {
-            fontFamily: "Lilita One, sans-serif",
+        const addrHeading = this.add.text(dialogX - dialogWidth / 2 + 25, currY, t("wallet_address"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "11px",
             color: "#0f172a"
         });
@@ -658,8 +736,8 @@ export class ProfileScene extends Phaser.Scene {
         copyAddrBg.strokeRoundedRect(-70, -12, 140, 24, 6);
         copyAddrBtn.add(copyAddrBg);
 
-        const copyAddrText = this.add.text(0, 0, "COPY ADDRESS", {
-            fontFamily: "Lilita One, sans-serif",
+        const copyAddrText = this.add.text(0, 0, t("copy_address"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "10px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -678,13 +756,13 @@ export class ProfileScene extends Phaser.Scene {
             this.tweens.add({ targets: copyAddrBtn, scaleX: 1.0, scaleY: 1.0, duration: 50 });
             if (!checkClick(pointer)) return;
             navigator.clipboard.writeText(address);
-            showNotification(this, "Address Copied!");
+            showNotification(this, t("address_copied"));
         });
 
         // 7. Comment Section
         currY += 35;
-        const commentHeading = this.add.text(dialogX - dialogWidth / 2 + 25, currY, "REQUIRED COMMENT (MEMO)", {
-            fontFamily: "Lilita One, sans-serif",
+        const commentHeading = this.add.text(dialogX - dialogWidth / 2 + 25, currY, t("required_memo"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "11px",
             color: "#b45309" // Dark amber
         });
@@ -700,7 +778,7 @@ export class ProfileScene extends Phaser.Scene {
         this.depositModal.add(commentBox);
 
         const commentText = this.add.text(dialogX, currY + 9, comment, {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "14px",
             color: "#b45309"
         }).setOrigin(0.5);
@@ -718,8 +796,8 @@ export class ProfileScene extends Phaser.Scene {
         copyCommBg.strokeRoundedRect(-70, -12, 140, 24, 6);
         copyCommBtn.add(copyCommBg);
 
-        const copyCommText = this.add.text(0, 0, "COPY COMMENT", {
-            fontFamily: "Lilita One, sans-serif",
+        const copyCommText = this.add.text(0, 0, t("copy_comment"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "10px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -738,7 +816,7 @@ export class ProfileScene extends Phaser.Scene {
             this.tweens.add({ targets: copyCommBtn, scaleX: 1.0, scaleY: 1.0, duration: 50 });
             if (!checkClick(pointer)) return;
             navigator.clipboard.writeText(comment);
-            showNotification(this, "Comment Copied!");
+            showNotification(this, t("comment_copied"));
         });
 
         // 8. Action Buttons (Open Wallet & Check Payment)
@@ -754,8 +832,8 @@ export class ProfileScene extends Phaser.Scene {
         openWalletBg.strokeRoundedRect(-65, -16, 130, 32, 8);
         openWalletBtn.add(openWalletBg);
 
-        const openWalletText = this.add.text(0, 0, "OPEN WALLET", {
-            fontFamily: "Lilita One, sans-serif",
+        const openWalletText = this.add.text(0, 0, t("open_wallet"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "11px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -795,8 +873,8 @@ export class ProfileScene extends Phaser.Scene {
         verifyBg.strokeRoundedRect(-65, -16, 130, 32, 8);
         verifyBtn.add(verifyBg);
 
-        const verifyText = this.add.text(0, 0, "VERIFY", {
-            fontFamily: "Lilita One, sans-serif",
+        const verifyText = this.add.text(0, 0, t("verify"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "11px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -832,14 +910,14 @@ export class ProfileScene extends Phaser.Scene {
             destroyloadingOverlay(this);
 
             if (verified) {
-                showNotification(this, "Deposit confirmed successfully!");
+                showNotification(this, t("deposit_success"));
                 if (this.depositModal) {
                     this.depositModal.destroy();
                     this.depositModal = null;
                 }
                 this.scene.restart();
             } else {
-                showNotification(this, "Deposit not detected yet. Please wait a moment and click verify again.");
+                showNotification(this, t("deposit_not_detected"));
             }
         });
     }
@@ -883,8 +961,8 @@ export class ProfileScene extends Phaser.Scene {
             lvlBox.fillRoundedRect(x - 22, y + 12, 44, 13, 3);
             this.teamContainer.add(lvlBox);
 
-            const lvlText = this.add.text(x, y + 18, `Lv.${monster.level}`, {
-                fontFamily: "Lilita One, sans-serif",
+            const lvlText = this.add.text(x, y + 18, t("level_locked", { level: monster.level }), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "9px",
                 color: "#ffffff"
             }).setOrigin(0.5);

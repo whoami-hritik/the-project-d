@@ -9,10 +9,16 @@ export const state = {
             return null;
         }
     })(),
-    isLoaded : false
+    isLoaded : false,
+    language: localStorage.getItem("language") || (window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code === 'ru' ? 'ru' : 'en')
 }
 
 export function updateUser(){
     
+}
+
+export function setLanguage(lang) {
+    state.language = lang;
+    localStorage.setItem("language", lang);
 }
 

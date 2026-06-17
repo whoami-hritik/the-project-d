@@ -2,6 +2,7 @@ import * as api from "../webapp/api.js";
 import { tg } from "../webapp/telegram.js";
 import { checkClick } from "./game.js";
 import { showNotification } from "../utility.js";
+import { t } from "../translations.js";
 
 export class ReferralScene extends Phaser.Scene {
     constructor() {
@@ -65,8 +66,8 @@ export class ReferralScene extends Phaser.Scene {
         this.container.add(ribbon);
 
         // Title text
-        const titleText = this.add.text(ribbonX, ribbonY + 4, "🤝 REFERRALS", {
-            fontFamily: "Lilita One, sans-serif",
+        const titleText = this.add.text(ribbonX, ribbonY + 4, t("referrals_title"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "20px"
         }).setOrigin(0.5);
         const titleGrad = titleText.context.createLinearGradient(0, 0, 0, titleText.height);
@@ -104,14 +105,14 @@ export class ReferralScene extends Phaser.Scene {
         rewardsBg.strokeRoundedRect(35, 140, 330, 105, 12);
         this.container.add(rewardsBg);
 
-        const rewardsTitle = this.add.text(200, 155, "🎁 Share Your Link & Earn Rewards", {
-            fontFamily: "Lilita One, sans-serif",
+        const rewardsTitle = this.add.text(200, 155, t("referrals_header"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "14px",
             color: "#0f172a" // Slate 900
         }).setOrigin(0.5);
         this.container.add(rewardsTitle);
 
-        const rewardsDesc1 = this.add.text(50, 175, "• You get: 5 GOLD, 1 MonstaBall when referred friend", {
+        const rewardsDesc1 = this.add.text(50, 175, t("referrals_reward1"), {
             fontFamily: "Nunito, sans-serif",
             fontSize: "11px",
             fontWeight: "800",
@@ -119,7 +120,7 @@ export class ReferralScene extends Phaser.Scene {
         });
         this.container.add(rewardsDesc1);
 
-        const rewardsDesc1Sub = this.add.text(58, 192, "reaches Level 2 (Valid Referral Rule)", {
+        const rewardsDesc1Sub = this.add.text(58, 192, t("referrals_reward1_rule"), {
             fontFamily: "Nunito, sans-serif",
             fontSize: "11px",
             fontWeight: "800",
@@ -127,7 +128,7 @@ export class ReferralScene extends Phaser.Scene {
         });
         this.container.add(rewardsDesc1Sub);
 
-        const rewardsDesc2 = this.add.text(50, 212, "• You also get: 5% of their deposits (TON) in GOLD!", {
+        const rewardsDesc2 = this.add.text(50, 212, t("referrals_reward2"), {
             fontFamily: "Nunito, sans-serif",
             fontSize: "11px",
             fontWeight: "800",
@@ -145,7 +146,7 @@ export class ReferralScene extends Phaser.Scene {
         statsBg.strokeRoundedRect(210, 255, 155, 75, 12);
         this.container.add(statsBg);
 
-        this.invitedTitle = this.add.text(112.5, 270, "Total Invited", {
+        this.invitedTitle = this.add.text(112.5, 270, t("total_invited"), {
             fontFamily: "Nunito, sans-serif",
             fontSize: "12px",
             fontWeight: "800",
@@ -154,13 +155,13 @@ export class ReferralScene extends Phaser.Scene {
         this.container.add(this.invitedTitle);
 
         this.invitedCount = this.add.text(112.5, 298, "0", {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "26px",
             color: "#0f172a"
         }).setOrigin(0.5);
         this.container.add(this.invitedCount);
 
-        this.earnedTitle = this.add.text(287.5, 270, "Total Earned", {
+        this.earnedTitle = this.add.text(287.5, 270, t("total_earned"), {
             fontFamily: "Nunito, sans-serif",
             fontSize: "12px",
             fontWeight: "800",
@@ -168,8 +169,8 @@ export class ReferralScene extends Phaser.Scene {
         }).setOrigin(0.5);
         this.container.add(this.earnedTitle);
 
-        this.earnedCount = this.add.text(287.5, 298, "0 GOLD\n0 BALLS", {
-            fontFamily: "Lilita One, sans-serif",
+        this.earnedCount = this.add.text(287.5, 298, `0 ${t("gold_unit")}\n0 ${t("balls_unit")}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "14px",
             color: "#ca8a04",
             align: "center"
@@ -184,7 +185,7 @@ export class ReferralScene extends Phaser.Scene {
         linkBg.strokeRoundedRect(35, 340, 330, 40, 8);
         this.container.add(linkBg);
 
-        this.referralLinkText = this.add.text(45, 352, "Generating link...", {
+        this.referralLinkText = this.add.text(45, 352, t("generating_link"), {
             fontFamily: "monospace",
             fontSize: "11px",
             color: "#475569"
@@ -192,16 +193,16 @@ export class ReferralScene extends Phaser.Scene {
         this.container.add(this.referralLinkText);
 
         // Buttons: Copy & Share
-        this.btnCopy = this.createButton(112.5, 405, 155, 35, "Copy Link", 0x3b82f6, () => {
+        this.btnCopy = this.createButton(112.5, 405, 155, 35, t("copy_link"), 0x3b82f6, () => {
             this.copyLinkToClipboard();
         });
-        this.btnShare = this.createButton(287.5, 405, 155, 35, "Share Link", 0x10b981, () => {
+        this.btnShare = this.createButton(287.5, 405, 155, 35, t("share_link"), 0x10b981, () => {
             this.shareLinkTelegram();
         });
 
         // 8. Referred Friends Section Header
-        const friendsHeader = this.add.text(40, 445, "REFERRED FRIENDS", {
-            fontFamily: "Lilita One, sans-serif",
+        const friendsHeader = this.add.text(40, 445, t("referred_friends"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "14px",
             color: "#475569"
         });
@@ -235,7 +236,7 @@ export class ReferralScene extends Phaser.Scene {
         this.container.add(btnBg);
 
         const btnText = this.add.text(x, y, text, {
-            fontFamily: "Lilita One, sans-serif",
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "14px",
             color: "#ffffff"
         }).setOrigin(0.5);
@@ -271,7 +272,7 @@ export class ReferralScene extends Phaser.Scene {
             if (result && result.success) {
                 // Update stats
                 this.invitedCount.setText(result.totalReferrals);
-                this.earnedCount.setText(`${result.totalEarnedGold} GOLD\n${result.totalEarnedBalls || 0} BALLS`);
+                this.earnedCount.setText(`${result.totalEarnedGold} ${t("gold_unit")}\n${result.totalEarnedBalls || 0} ${t("balls_unit")}`);
                 
                 // Update Link
                 this.referralLink = result.referralLink;
@@ -285,12 +286,12 @@ export class ReferralScene extends Phaser.Scene {
                 // Populate referred list
                 this.populateFriendsList(result.referrals);
             } else {
-                this.referralLinkText.setText("Failed to load link").setColor("#ef4444");
+                this.referralLinkText.setText(t("failed_to_load_link")).setColor("#ef4444");
                 showNotification(this, result.reason);
             }
         } catch (error) {
             console.error("Failed to load referral data:", error);
-            this.referralLinkText.setText("Error loading link").setColor("#ef4444");
+            this.referralLinkText.setText(t("error_loading_link")).setColor("#ef4444");
         } finally {
             this.destroyloadingOverlay();
         }
@@ -301,8 +302,8 @@ export class ReferralScene extends Phaser.Scene {
         this.listHeight = 0;
 
         if (!friends || friends.length === 0) {
-            const noFriendsText = this.add.text(200, 520, "No friends invited yet.\nShare your link to invite!", {
-                fontFamily: "Lilita One, sans-serif",
+            const noFriendsText = this.add.text(200, 520, t("no_friends_yet"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#94a3b8",
                 align: "center"
@@ -324,7 +325,7 @@ export class ReferralScene extends Phaser.Scene {
             this.listContainer.add(entryBg);
 
             // Display name
-            let name = friend.firstName || "Anonymous";
+            let name = friend.firstName || t("anonymous");
             if (friend.lastName) name += " " + friend.lastName;
             if (friend.username) name = `@${friend.username} (${name})`;
             
@@ -333,7 +334,7 @@ export class ReferralScene extends Phaser.Scene {
             }
 
             const nameText = this.add.text(45, yPos + 8, name, {
-                fontFamily: "Lilita One, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "13px",
                 color: "#0f172a"
             });
@@ -344,7 +345,7 @@ export class ReferralScene extends Phaser.Scene {
                 month: 'short',
                 day: 'numeric'
             });
-            const detailsText = this.add.text(45, yPos + 26, `Lvl: ${friend.level} • Joined: ${dateStr}`, {
+            const detailsText = this.add.text(45, yPos + 26, t("referred_friend_details", { level: friend.level, date: dateStr }), {
                 fontFamily: "Nunito, sans-serif",
                 fontSize: "10px",
                 fontWeight: "700",
@@ -355,10 +356,10 @@ export class ReferralScene extends Phaser.Scene {
             // Status or reward
             const isValid = friend.level >= 2;
             const statusLabelColor = isValid ? "#16a34a" : "#ca8a04";
-            const statusTextStr = isValid ? "+5 GOLD +1 BALL" : "PENDING";
+            const statusTextStr = isValid ? t("reward_referred_friend") : t("pending");
 
             const rewardLabel = this.add.text(355, yPos + 24, statusTextStr, {
-                fontFamily: "Lilita One, sans-serif",
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "11px",
                 color: statusLabelColor
             }).setOrigin(1, 0.5);
@@ -384,7 +385,7 @@ export class ReferralScene extends Phaser.Scene {
         if (!this.referralLink) return;
 
         navigator.clipboard.writeText(this.referralLink).then(() => {
-            showNotification(this, "Link Copied!");
+            showNotification(this, t("link_copied"));
         }).catch(err => {
             console.error("Failed to copy:", err);
             if (tg) {

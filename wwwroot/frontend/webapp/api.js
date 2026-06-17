@@ -1,6 +1,6 @@
 import { tg } from "./telegram.js";
 import { state } from "../state.js";
-const init = tg.initData;
+const init = tg ? (tg.initData || "dev") : "dev";
 const BASE_URL = window.location.origin + "/monsterworld/"
 export function decodeResponse(base64Data) {
 

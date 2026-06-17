@@ -1,6 +1,7 @@
 import * as api from "../webapp/api.js";
 import * as utility from "../utility.js";
 import { showNotification } from "../utility.js";
+import { t } from "../translations.js";
 
 export class LabScene extends Phaser.Scene {
     constructor() {
@@ -150,8 +151,8 @@ export class LabScene extends Phaser.Scene {
             const goldCost = requiredSpells * 10;
 
             healBtn = this.add.image(125, 550, "btn_blank").setDisplaySize(110, 38).setOrigin(0).setInteractive({ useHandCursor: true });
-            healText = this.add.text(180, 569, `HEAL ${goldCost}G`, {
-                fontFamily: "Lilita One, sans-serif",
+            healText = this.add.text(180, 569, t("heal_cost", { cost: goldCost }), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "12px",
                 color: "#ffffff"
             }).setOrigin(0.5, 0.5);
@@ -160,13 +161,13 @@ export class LabScene extends Phaser.Scene {
             healBtn.on("pointerup", () => {
                 api.HealMonsterWithGold(this.monsInfo.instanceId).then(result => {
                     if (result && result.success) {
-                        showNotification(this, "Monster fully healed!");
+                        showNotification(this, t("monster_fully_healed"));
                         if (result.monster) {
                             Object.assign(this.monster, result.monster);
                         }
                         this.scene.restart({ monster: this.monster });
                     } else {
-                        showNotification(this, result ? result.reason : "Healing failed");
+                        showNotification(this, result ? result.reason : t("healing_failed"));
                     }
                 });
             });
@@ -187,8 +188,8 @@ export class LabScene extends Phaser.Scene {
             graphics.lineStyle(2, 0xffffff, 0.9);
             graphics.strokeRoundedRect(0, 0, 115, 38, 10);
             
-            const text = this.add.text(57.5, 19, `LEVEL UP\n${levelUpGoldCost} GOLD`, {
-                fontFamily: "Lilita One, sans-serif",
+            const text = this.add.text(57.5, 19, t("level_up_cost", { cost: levelUpGoldCost }), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "11px",
                 color: "#ffffff",
                 align: "center",
@@ -203,13 +204,13 @@ export class LabScene extends Phaser.Scene {
             levelupContainer.on("pointerup", () => {
                 api.LevelUpMonster(this.monsInfo.instanceId).then(result => {
                     if (result && result.success) {
-                        showNotification(this, "Monster Leveled Up!");
+                        showNotification(this, t("monster_leveled_up"));
                         if (result.monster) {
                             Object.assign(this.monster, result.monster);
                         }
                         this.scene.restart({ monster: this.monster });
                     } else {
-                        showNotification(this, result ? result.reason : "Level up failed");
+                        showNotification(this, result ? result.reason : t("level_up_failed"));
                     }
                 });
             });
@@ -281,14 +282,14 @@ export class LabScene extends Phaser.Scene {
         descBg.setDisplaySize(this.scale.width - 40, 75);
         descBg.setAlpha(0.9);
 
-        const descTitle = this.add.text(35, 725, "TAP A SKILL FOR INFO", {
-            fontFamily: "Lilita One, sans-serif",
+        const descTitle = this.add.text(35, 725, t("tap_skill_for_info"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "16px",
             color: "#fce09b"
         }).setOrigin(0, 0);
         descTitle.setStroke("#000000", 3);
 
-        const descBody = this.add.text(35, 747, "Select any skill icon above to read its combat description.", {
+        const descBody = this.add.text(35, 747, t("tap_skill_desc"), {
             fontFamily: "Outfit, sans-serif",
             fontSize: "12px",
             color: "#ffffff",
@@ -380,7 +381,7 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
     const xpBarFill = scene.add.image(120, 420, "xpbar_fill").setOrigin(0).setDisplaySize(0, 30);
 
     const xpText = scene.add.text(200, 435, `${monsInfo.xp} / ${monsInfo.maxXP || 100} XP`, {
-        fontFamily: "Lilita One, sans-serif",
+        fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
         fontSize: "14px",
         color: "#ffffff"
     }).setOrigin(0.5, 0.5).setDepth(1);
@@ -414,8 +415,8 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                         graphics.lineStyle(2, 0xffffff, 0.9);
                         graphics.strokeRoundedRect(0, 0, 140, 44, 12);
                         
-                        const text = scene.add.text(70, 22, `LEVEL UP\n${levelUpGoldCost} GOLD`, {
-                            fontFamily: "Lilita One, sans-serif",
+                        const text = scene.add.text(70, 22, t("level_up_cost", { cost: levelUpGoldCost }), {
+                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "12px",
                             color: "#ffffff",
                             align: "center",

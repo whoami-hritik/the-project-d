@@ -122,13 +122,14 @@ export class PreloadScene extends Phaser.Scene {
 
         //battle map backgrounds
         this.load.image("bgs_camp", "images/map/area_bootcamp/camp.png");
-        this.load.image("bgs_riverfall_water", "images/map/area_riverfall/water.png");
-        this.load.image("bgs_riverfall_cave", "images/map/area_riverfall/cave.png");
-        this.load.image("bgs_riverfall_tall_pine", "images/map/area_riverfall/tall_pine.png");
+        this.load.image("bgs_riverfall_water", "images/map/area_cave/water.jpg");
+        this.load.image("bgs_riverfall_cave", "images/map/area_cave/cave.jpg");
+        this.load.image("bgs_riverfall_tall_pine", "images/map/area_cave/tall_pine.jpg");
 
-        this.load.image("bgs_costa", "images/map/area_costa/camp.png");
-        this.load.image("bgs_volcano", "images/map/area_volcano/camp.png");
+        this.load.image("bgs_costa", "images/map/area_costa/beach.jpg");
+        this.load.image("bgs_volcano", "images/map/area_volcano/volcano.jpg");
 
+        this.load.image("bgs_castle", "images/map/area_boss/boss_castle.jpg")
         this.load.image("bgs_out_temple", "images/map/area_boss/boss_out_temple.jpg")
 
         this.load.image("btn_world", "images/buttons/btn_world.png");
@@ -231,7 +232,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("icon_atk", "images/general/icon_atk.png");
         this.load.image("icon_def", "images/general/icon_def.png");
         this.load.image("speed_icon", "images/general/speed_icon.png");
-        this.load.image("levelup_blast", "images/general/levelup_blast.png");
+
         this.load.image("btn_blank", "images/general/btn_blank.png");
         this.load.image("btn_cancel", "images/general/btn_cancel.png");
         this.load.image("settings_button", "images/general/settings_button.png");
@@ -380,6 +381,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.spritesheet("deck_shuffle", "images/battle/deck_shuffle.png", { frameWidth: 220, frameHeight: 220 });
         this.load.spritesheet("card_use", "images/battle/card_use.png", { frameWidth: 150, frameHeight: 150 });
 
+        this.load.spritesheet("levelup_blast", "images/general/levelup_blast.png", { frameWidth: 240, frameHeight: 660 });
 
 
 
@@ -502,7 +504,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.spritesheet("electric_punch", "images/battle/abilities/fx/electric_punch.png", { frameWidth: 372, frameHeight: 230 });
         this.load.spritesheet("subzero", "images/battle/abilities/fx/winter.png", { frameWidth: 300, frameHeight: 300 });
         this.load.spritesheet("thunderstorm", "images/battle/abilities/fx/thunderbolt.png", { frameWidth: 180, frameHeight: 940 });
-        this.load.spritesheet("suck_life", "images/battle/abilities/fx/leach.png", { frameWidth: 70, frameHeight: 70 });
+        this.load.spritesheet("suck_life", "images/battle/abilities/fx/leech.png", { frameWidth: 70, frameHeight: 70 });
         this.load.spritesheet("static_shock", "images/battle/abilities/fx/static_shock.png", { frameWidth: 266, frameHeight: 320 });
 
         this.load.spritesheet("avalanche", "images/battle/abilities/fx/boulder_ice.png", { frameWidth: 279, frameHeight: 220 });
@@ -517,6 +519,10 @@ export class PreloadScene extends Phaser.Scene {
         this.load.spritesheet("double_bite", "images/battle/abilities/fx/double_bite.png", { frameWidth: 230, frameHeight: 316 });
         this.load.spritesheet("healing_rain", "images/battle/abilities/fx/healing_rain.png", { frameWidth: 320, frameHeight: 380 });
         this.load.spritesheet("healing_rain", "images/battle/abilities/fx/healing_rain.png", { frameWidth: 320, frameHeight: 380 });
+
+
+
+        this.load.image("levelup_blast", "images/battle/levelup_blast.png");
 
         //ability images
         this.load.image("leaf_strike", "images/battle/abilities/fx/rain_leaf.png");
@@ -634,6 +640,13 @@ export class PreloadScene extends Phaser.Scene {
             frames: this.anims.generateFrameNumbers("sick_fx", { start: 0, end: 4 }),
             frameRate: 10,
             repeat: -1
+        })
+
+        this.anims.create({
+            key: "anim_levelup_blast",
+            frames: this.anims.generateFrameNumbers("levelup_blast"),
+            frameRate: 8,
+            repeat: 0
         })
 
         this.anims.create({

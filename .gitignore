@@ -1,6 +1,8 @@
 # Build results
 bin/
 obj/
+var/
+node_modules/
 
 # Visual Studio
 .vs/

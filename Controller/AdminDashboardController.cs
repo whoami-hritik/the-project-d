@@ -199,6 +199,23 @@ namespace monster_world.Controller
                 })
                 .ToListAsync();
 
+            // Fetch user's monsters
+            var monsters = await _context.Monsters
+                .AsNoTracking()
+                .Where(m => m.OwnerID == userId)
+                .Select(m => new {
+                    m.InstanceId,
+                    m.Id,
+                    m.Title,
+                    m.Level,
+                    m.XP,
+                    m.MaxXP,
+                    m.Rarity,
+                    m.Element,
+                    m.IsFighting
+                })
+                .ToListAsync();
+
             // Return everything
             return Ok(new
             {
@@ -208,7 +225,53 @@ namespace monster_world.Controller
                 Withdrawals = withdrawals,
                 Transactions = parsedTransactions,
                 Summary = summary,
-                Referrals = referrals
+                Referrals = referrals,
+                Monsters = monsters
+            });
+        }
+
+        [HttpGet("overview-stats")]
+        public async Task<IActionResult> GetOverviewStats()
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            int totalUsers = await _context.Users.CountAsync();
+            
+            // Deposits (TON and USDT)
+            double totalDepositsTon = await _context.Deposits.Where(d => d.Successful || d.Completed).SumAsync(d => d.Amount);
+            double totalDepositsUsdt = await _context.Analytics.SumAsync(a => a.TotalDeposit);
+            
+            // Withdrawals (EGGS and TON)
+            double totalWithdrawalsEggs = await _context.Withdraws.Where(w => w.Completed && w.Currency == "EGGS").SumAsync(w => w.Amount);
+            double totalWithdrawalsTon = await _context.Withdraws.Where(w => w.Completed && w.Currency == "TON").SumAsync(w => w.Amount);
+            
+            // Total Eggs (pool supply + user balances in circulation)
+            double totalEggsPool = 0;
+            var pool = await _context.Pool.FirstOrDefaultAsync(x => x.PoolID == 1);
+            if (pool != null)
+            {
+                totalEggsPool = pool.TotalEGGS;
+            }
+            double totalEggsCirculation = await _context.Users.SumAsync(u => u.Balance.EGGS);
+            double totalEggsCombined = totalEggsPool + totalEggsCirculation;
+
+            // Total Gold
+            double totalGoldCirculation = await _context.Users.SumAsync(u => u.Balance.GOLD);
+
+            return Ok(new
+            {
+                TotalUsers = totalUsers,
+                TotalDepositsTon = totalDepositsTon,
+                TotalDepositsUsdt = totalDepositsUsdt,
+                TotalWithdrawalsEggs = totalWithdrawalsEggs,
+                TotalWithdrawalsTon = totalWithdrawalsTon,
+                TotalEggsPool = totalEggsPool,
+                TotalEggsCirculation = totalEggsCirculation,
+                TotalEggsCombined = totalEggsCombined,
+                TotalGoldCirculation = totalGoldCirculation
             });
         }
     }

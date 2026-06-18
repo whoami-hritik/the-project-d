@@ -667,6 +667,34 @@
             <button class="logout-btn" onclick="handleLogout()">Disconnect</button>
         </header>
 
+        <!-- Global Stats Row -->
+        <div class="global-stats-bar" style="display: flex; gap: 2rem; padding: 1.25rem 2rem; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); overflow-x: auto; flex-wrap: wrap;">
+            <div class="stat-pill" style="display: flex; flex-direction: column; min-width: 120px;">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Total Users</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: var(--accent-primary); margin-top: 0.25rem;" id="global-users">0</span>
+            </div>
+            <div style="border-left: 1px solid var(--border-color); align-self: stretch;"></div>
+            <div class="stat-pill" style="display: flex; flex-direction: column; min-width: 160px;">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Total Deposits</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: #4ade80; margin-top: 0.25rem;" id="global-deposits">0 TON / $0</span>
+            </div>
+            <div style="border-left: 1px solid var(--border-color); align-self: stretch;"></div>
+            <div class="stat-pill" style="display: flex; flex-direction: column; min-width: 180px;">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Total Withdrawals</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: #f87171; margin-top: 0.25rem;" id="global-withdrawals">0 EGGS / 0 TON</span>
+            </div>
+            <div style="border-left: 1px solid var(--border-color); align-self: stretch;"></div>
+            <div class="stat-pill" style="display: flex; flex-direction: column; min-width: 160px;">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Total EGGS Supply</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: #38bdf8; margin-top: 0.25rem;" id="global-eggs">0 EGGS</span>
+            </div>
+            <div style="border-left: 1px solid var(--border-color); align-self: stretch;"></div>
+            <div class="stat-pill" style="display: flex; flex-direction: column; min-width: 140px;">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Total GOLD Supply</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: #fbbf24; margin-top: 0.25rem;" id="global-gold">0 GOLD</span>
+            </div>
+        </div>
+
         <div class="workspace">
             <!-- Sidebar: User list -->
             <div class="sidebar">
@@ -762,6 +790,29 @@
                             </div>
                         </div>
 
+                    </div>
+
+                    <!-- Monster Team & Inventory -->
+                    <div class="section-card" style="margin-top: 2rem;">
+                        <h3 class="section-title"><span>🦖 Dynamon Team & Inventory</span> <span class="badge" id="monsters-count" style="background: var(--bg-element); color: var(--text-secondary)">0</span></h3>
+                        <div class="data-table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Instance ID</th>
+                                        <th>Monster ID / Name</th>
+                                        <th>Level</th>
+                                        <th>EXP / Max EXP</th>
+                                        <th>Rarity</th>
+                                        <th>Element</th>
+                                        <th>Team Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="monsters-table-body">
+                                    <!-- Dynamic monsters list -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <div class="dashboard-grid">
@@ -871,10 +922,29 @@
             document.getElementById('dashboard-screen').style.display = 'none';
         }
 
+        async function loadOverviewStats() {
+            try {
+                const response = await fetch(`${API_BASE}/overview-stats`, {
+                    headers: getHeaders()
+                });
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('global-users').innerText = stats.totalUsers.toLocaleString();
+                    document.getElementById('global-deposits').innerText = `${stats.totalDepositsTon.toFixed(2)} TON / $${stats.totalDepositsUsdt.toFixed(2)}`;
+                    document.getElementById('global-withdrawals').innerText = `${stats.totalWithdrawalsEggs.toFixed(2)} EGGS / ${stats.totalWithdrawalsTon.toFixed(2)} TON`;
+                    document.getElementById('global-eggs').innerText = `${stats.totalEggsCombined.toFixed(2)} EGGS (Pool: ${stats.totalEggsPool.toFixed(2)} | User: ${stats.totalEggsCirculation.toFixed(2)})`;
+                    document.getElementById('global-gold').innerText = `${stats.totalGoldCirculation.toLocaleString(undefined, {maximumFractionDigits: 0})} GOLD`;
+                }
+            } catch (err) {
+                console.error("Failed to load overview stats:", err);
+            }
+        }
+
         function showDashboard() {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('dashboard-screen').style.display = 'flex';
             loadUsersList();
+            loadOverviewStats();
         }
 
         // --- Login / Logout Handling ---
@@ -1075,6 +1145,39 @@
                         </td>
                     `;
                     referralsTableBody.appendChild(tr);
+                });
+            }
+
+            // Monsters Inventory
+            const monstersTableBody = document.getElementById('monsters-table-body');
+            document.getElementById('monsters-count').innerText = data.monsters ? data.monsters.length : 0;
+            monstersTableBody.innerHTML = '';
+            if (!data.monsters || data.monsters.length === 0) {
+                monstersTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted)">No Dynamons in inventory</td></tr>';
+            } else {
+                data.monsters.forEach(m => {
+                    const tr = document.createElement('tr');
+                    const statusClass = m.isFighting ? 'text-success font-bold' : 'text-muted';
+                    const statusText = m.isFighting ? '⚔️ In Battle Team' : '💤 Idle';
+                    
+                    let rarityColor = 'var(--text-muted)';
+                    if (m.rarity === 'legendary') rarityColor = '#f59e0b';
+                    else if (m.rarity === 'epic') rarityColor = '#a855f7';
+                    else if (m.rarity === 'rare') rarityColor = '#3b82f6';
+                    
+                    tr.innerHTML = `
+                        <td class="text-mono" style="font-size: 0.8rem;">${m.instanceId}</td>
+                        <td>
+                            <div class="font-bold" style="color: ${rarityColor};">${m.title || m.id}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${m.id}</div>
+                        </td>
+                        <td class="font-bold">Lvl ${m.level}</td>
+                        <td class="text-mono" style="font-size: 0.8rem;">${m.xp} / ${m.maxXP}</td>
+                        <td style="color: ${rarityColor}; text-transform: capitalize; font-weight: 600;">${m.rarity}</td>
+                        <td style="text-transform: capitalize;">${m.element || 'Normal'}</td>
+                        <td class="${statusClass}">${statusText}</td>
+                    `;
+                    monstersTableBody.appendChild(tr);
                 });
             }
 

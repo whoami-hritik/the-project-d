@@ -19,6 +19,7 @@ namespace monster_world.Models
         public int Level { get; set; }
         public int MaxHP { get; set; }
         public int HP { get; set; }
+        public DateTime LastHpRegenAt { get; set; } = DateTime.UtcNow;
         public int ATK { get; set; }
         public int DEF { get; set; }
         public int SPD { get; set; }
@@ -35,6 +36,42 @@ namespace monster_world.Models
             HP = Math.Min(HP + healing, MaxHP);
             Log(InstanceId, Level, action);
         }
+
+        public bool ApplyPassiveRegen()
+        {
+            var now = DateTime.UtcNow;
+            var regenStart = LastHpRegenAt == default(DateTime)
+                ? (CaptureAt == default(DateTime) ? now : CaptureAt)
+                : LastHpRegenAt;
+
+            if (HP >= MaxHP)
+            {
+                if (LastHpRegenAt != now)
+                {
+                    LastHpRegenAt = now;
+                    return true;
+                }
+                return false;
+            }
+
+            int ticks = (int)(now.Subtract(regenStart).TotalMinutes / 10.0);
+            if (ticks <= 0)
+                return false;
+
+            int healPerTick = Math.Max(1, (int)Math.Ceiling(MaxHP * 0.05));
+            int healAmount = Math.Min(healPerTick * ticks, MaxHP - HP);
+            if (healAmount <= 0)
+            {
+                LastHpRegenAt = regenStart.AddMinutes(ticks * 10);
+                return true;
+            }
+
+            HP = Math.Min(HP + healAmount, MaxHP);
+            LastHpRegenAt = regenStart.AddMinutes(ticks * 10);
+            Log(InstanceId, Level, "passive_heal");
+            return true;
+        }
+
         public void Log(string monster, int level, string action)
         {
             Logs.Add(DateTime.UtcNow+"|"+monster+"|"+level+"|"+action);

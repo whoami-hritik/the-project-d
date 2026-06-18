@@ -150,6 +150,7 @@ namespace TGBOT
                                          "• `/user <uid>` - Inspect user data, balances, items, and monsters\n" +
                                          "• `/totalplayers` - View total registered players\n" +
                                          "• `/analytics` - View game financial and token analytics\n" +
+                                         "• `/referralBoard` - View top 10 referrers leaderboard\n" +
                                          "• `/resetdb <password>` - Wipe all user data (requires password: `AdminDBReset2026!`)\n" +
                                          "• `/maintenance [message]` - Enable maintenance mode (blocks non-admin users)\n" +
                                          "• `/removemaintenance` - Disable maintenance mode\n" +
@@ -328,11 +329,21 @@ namespace TGBOT
                                 }
                             }
 
-                            // 4. Deposits
+                            // 4. Total Users
+                            int totalUsersCount = users.Count;
+
+                            // 5. Total Deposits
                             double totalDepositsCount = await _dbContext.Deposits.Where(d => d.Successful || d.Completed).SumAsync(d => d.Amount);
                             double totalDepositsAnalytics = await _dbContext.Analytics.SumAsync(a => a.TotalDeposit);
 
-                            // 5. Top 20 EGG holders
+                            // 6. Total Withdrawals
+                            double totalWithdrawalsEggs = await _dbContext.Withdraws.Where(w => w.Completed && w.Currency == "EGGS").SumAsync(w => w.Amount);
+                            double totalWithdrawalsTon = await _dbContext.Withdraws.Where(w => w.Completed && w.Currency == "TON").SumAsync(w => w.Amount);
+
+                            // 7. Total Gold in Circulation
+                            double totalGoldCirculation = users.Sum(u => u.Balance.GOLD);
+
+                            // 8. Top 20 EGG holders
                             var topHolders = await _dbContext.Users
                                 .Where(u => u.Balance.EGGS > 0)
                                 .OrderByDescending(u => u.Balance.EGGS)
@@ -342,15 +353,24 @@ namespace TGBOT
 
                             var message = $"📊 <b>Project D Analytics Report</b> 📊\n" +
                                           $"----------------------------------\n\n" +
+                                          $"👥 <b>User Base</b>:\n" +
+                                          $"• Total Registered Players: <code>{totalUsersCount}</code>\n\n" +
                                           $"🍳 <b>EGGS Emission</b>:\n" +
                                           $"• Total Pool Supply: <code>{totalEggsPool:F4} EGGS</code>\n" +
-                                          $"• In Circulation: <code>{totalEggsCirculation:F4} EGGS</code>\n\n" +
-                                          $"💰 <b>TON to GOLD Conversions</b>:\n" +
+                                          $"• In Circulation: <code>{totalEggsCirculation:F4} EGGS</code>\n" +
+                                          $"• Combined Total Eggs: <code>{(totalEggsPool + totalEggsCirculation):F4} EGGS</code>\n\n" +
+                                          $"💰 <b>GOLD Circulation</b>:\n" +
+                                          $"• Total Gold in Circulation: <code>{totalGoldCirculation:F0} GOLD</code>\n" +
+                                          $"• Total Gold Generated from TON: <code>{totalGoldFromTon:F0} GOLD</code>\n\n" +
+                                          $"📥 <b>Deposits</b>:\n" +
+                                          $"• Completed Deposits (TON): <code>{totalDepositsCount:F4} TON</code>\n" +
+                                          $"• Analytics Logged (USDT): <code>{totalDepositsAnalytics:F4} USDT</code>\n\n" +
+                                          $"📤 <b>Withdrawals</b>:\n" +
+                                          $"• Completed Withdrawals (EGGS): <code>{totalWithdrawalsEggs:F4} EGGS</code>\n" +
+                                          $"• Completed Withdrawals (TON): <code>{totalWithdrawalsTon:F4} TON</code>\n\n" +
+                                          $"🔄 <b>TON to GOLD Conversions</b>:\n" +
                                           $"• TON Exchanged: <code>{totalTonConvertedToGold:F4} TON</code>\n" +
                                           $"• GOLD Generated: <code>{totalGoldFromTon:F0} GOLD</code>\n\n" +
-                                          $"📥 <b>Deposits</b>:\n" +
-                                          $"• Completed Deposits: <code>{totalDepositsCount:F4} TON</code>\n" +
-                                          $"• Analytics Logged: <code>{totalDepositsAnalytics:F4} USDT</code>\n\n" +
                                           $"🏆 <b>Top 20 EGGS Holders</b> (Balance > 0):\n";
 
                             if (topHolders.Any())
@@ -374,6 +394,140 @@ namespace TGBOT
                         catch (Exception ex)
                         {
                             await _bot.SendMessage(commander.Chatid, $"❌ Failed to generate analytics: {ex.Message}");
+                        }
+                    });
+
+            commander.Bind("referralBoard", async () =>
+                    {
+                        if (!IsAdmin(commander.Chatid)) return;
+
+                        try
+                        {
+                            var dbReferrals = await _dbContext.Referrals.ToListAsync();
+                            
+                            var prelaunchReferrals = new List<PrelaunchReferral>();
+                            string referralsPath = "/root/project-d-prelaunch/data/referrals.json";
+                            if (System.IO.File.Exists(referralsPath))
+                            {
+                                var referralsJson = await System.IO.File.ReadAllTextAsync(referralsPath);
+                                prelaunchReferrals = System.Text.Json.JsonSerializer.Deserialize<List<PrelaunchReferral>>(referralsJson, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                            }
+                            
+                            var prelaunchPending = new List<PendingReferral>();
+                            string pendingPath = "/root/project-d-prelaunch/data/pending_referrals.json";
+                            if (System.IO.File.Exists(pendingPath))
+                            {
+                                var pendingJson = await System.IO.File.ReadAllTextAsync(pendingPath);
+                                prelaunchPending = System.Text.Json.JsonSerializer.Deserialize<List<PendingReferral>>(pendingJson, new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new();
+                            }
+
+                            var registeredUserIds = await _dbContext.Users.Select(u => u.ID).ToListAsync();
+                            var registeredUserMap = await _dbContext.Users.ToDictionaryAsync(u => u.ID, u => u);
+
+                            var referrerStats = new Dictionary<long, (int Registered, int Pending)>();
+
+                            foreach (var pr in prelaunchReferrals)
+                            {
+                                if (pr.referrals == null || pr.referrals.Count == 0) continue;
+                                if (!referrerStats.ContainsKey(pr.id))
+                                {
+                                    referrerStats[pr.id] = (0, 0);
+                                }
+
+                                var current = referrerStats[pr.id];
+                                foreach (var refId in pr.referrals)
+                                {
+                                    if (registeredUserIds.Contains(refId))
+                                    {
+                                        current.Registered++;
+                                    }
+                                    else
+                                    {
+                                        current.Pending++;
+                                    }
+                                }
+                                referrerStats[pr.id] = current;
+                            }
+
+                            foreach (var p in prelaunchPending)
+                            {
+                                if (!referrerStats.ContainsKey(p.referrerId))
+                                {
+                                    referrerStats[p.referrerId] = (0, 0);
+                                }
+                                var current = referrerStats[p.referrerId];
+                                if (registeredUserIds.Contains(p.newUserId))
+                                {
+                                    current.Registered++;
+                                }
+                                else
+                                {
+                                    current.Pending++;
+                                }
+                                referrerStats[p.referrerId] = current;
+                            }
+
+                            foreach (var r in dbReferrals)
+                            {
+                                if (r.Referrals == null || r.Referrals.Count == 0) continue;
+                                if (!referrerStats.ContainsKey(r.ID))
+                                {
+                                    referrerStats[r.ID] = (0, 0);
+                                }
+                                var current = referrerStats[r.ID];
+                                foreach (var refId in r.Referrals)
+                                {
+                                    current.Registered++;
+                                }
+                                referrerStats[r.ID] = current;
+                            }
+
+                            var leaderboardList = new List<(long UserId, int Registered, int Pending, int Total, string DisplayName)>();
+                            foreach (var kv in referrerStats)
+                            {
+                                long userId = kv.Key;
+                                int reg = kv.Value.Registered;
+                                int pend = kv.Value.Pending;
+                                int total = reg + pend;
+
+                                string displayName = $"ID: {userId}";
+                                if (registeredUserMap.TryGetValue(userId, out var userObj))
+                                {
+                                    string userHandle = string.IsNullOrEmpty(userObj.Username) ? "" : $" (@{userObj.Username})";
+                                    displayName = $"{userObj.FirstName} {userObj.LastName}{userHandle}".Trim();
+                                }
+
+                                leaderboardList.Add((userId, reg, pend, total, displayName));
+                            }
+
+                            var top10 = leaderboardList
+                                .OrderByDescending(l => l.Total)
+                                .ThenByDescending(l => l.Registered)
+                                .Take(10)
+                                .ToList();
+
+                            var message = $"🏆 <b>Top 10 Referrals Leaderboard</b> 🏆\n" +
+                                          $"----------------------------------\n\n";
+
+                            int rank = 1;
+                            foreach (var item in top10)
+                            {
+                                message += $"{rank}. <b>{System.Net.WebUtility.HtmlEncode(item.DisplayName)}</b>\n" +
+                                           $"• Total: <code>{item.Total}</code> (Registered: <code>{item.Registered}</code> | Pending: <code>{item.Pending}</code>)\n" +
+                                           $"• User ID: <code>{item.UserId}</code>\n\n";
+                                rank++;
+                            }
+
+                            if (!top10.Any())
+                            {
+                                message += "<i>No referrals found.</i>\n";
+                            }
+
+                            await _bot.SendMessage(commander.Chatid, message, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+                        }
+                        catch (Exception ex)
+                        {
+                            await _bot.SendMessage(commander.Chatid, $"❌ Failed to generate referral board: {ex.Message}");
                         }
                     });
 
@@ -505,5 +659,17 @@ namespace TGBOT
                 Console.WriteLine("Unkonw Command");
             }
         }
+    }
+
+    public class PrelaunchReferral
+    {
+        public long id { get; set; }
+        public List<long> referrals { get; set; }
+    }
+
+    public class PendingReferral
+    {
+        public long referrerId { get; set; }
+        public long newUserId { get; set; }
     }
 }

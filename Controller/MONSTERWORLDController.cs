@@ -2288,9 +2288,18 @@ namespace monster_world.Controller
 
             if (monster.OwnerID != User.ID)
                 return Ok(new { success = false, reason = "not an owner"});
+
+            bool regenChanged = monster.ApplyPassiveRegen();
             
             if (monster.HP == monster.MaxHP)
+            {
+                if (regenChanged)
+                {
+                    _context.Monsters.Update(monster);
+                    await _context.SaveChangesAsync();
+                }
                 return Ok(new { success = false, reason = "hp is already max"});
+            }
 
             int requiredHealing = _gameplayService.CalculateHealing(monster);
             if (!(User.Items.HealSpell >= requiredHealing))
@@ -2324,9 +2333,18 @@ namespace monster_world.Controller
 
             if (monster.OwnerID != User.ID)
                 return Ok(new { success = false, reason = "not an owner"});
+
+            bool regenChanged = monster.ApplyPassiveRegen();
             
             if (monster.HP == monster.MaxHP)
+            {
+                if (regenChanged)
+                {
+                    _context.Monsters.Update(monster);
+                    await _context.SaveChangesAsync();
+                }
                 return Ok(new { success = false, reason = "hp is already max"});
+            }
 
             int missingHP = monster.MaxHP - monster.HP;
             int requiredSpells = (int)Math.Ceiling(missingHP / 100.0);
@@ -2344,6 +2362,21 @@ namespace monster_world.Controller
             return Ok(new { success = true, monster, goldLeft = User.Balance.GOLD });
         }
 
+        private async Task<bool> TryApplyPassiveRegen(Monster monster)
+        {
+            if (monster == null)
+                return false;
+
+            bool changed = monster.ApplyPassiveRegen();
+            if (changed)
+            {
+                _context.Monsters.Update(monster);
+                await _context.SaveChangesAsync();
+            }
+
+            return changed;
+        }
+
         [HttpGet("user/monsters/all")]
         public async Task<IActionResult> GetAllUserMonsters()
         {
@@ -2353,6 +2386,21 @@ namespace monster_world.Controller
             var monsters = await _context.Monsters
                 .Where(m => User.Monsters.Contains(m.InstanceId))
                 .ToListAsync();
+
+            bool anyChanged = false;
+            foreach (var monster in monsters)
+            {
+                if (monster.ApplyPassiveRegen())
+                {
+                    anyChanged = true;
+                    _context.Monsters.Update(monster);
+                }
+            }
+
+            if (anyChanged)
+            {
+                await _context.SaveChangesAsync();
+            }
 
             return Ok(new { success = true, monsters });
         }
@@ -2429,10 +2477,14 @@ namespace monster_world.Controller
             if (monster == null)
                 return Ok(new { success = false, reason = "monster not found" });
 
-            
             if (monster.OwnerID != User.ID)
                 return Ok(new { success = false, reason = "not an owner"});
 
+            if (monster.ApplyPassiveRegen())
+            {
+                _context.Monsters.Update(monster);
+                await _context.SaveChangesAsync();
+            }
 
             MonsDef def = _gameplayService.GetMonsDef(monster.Id);
             // LevelTable levelTable = _gameplayService.GetLevelTable(def.LvlTableId);

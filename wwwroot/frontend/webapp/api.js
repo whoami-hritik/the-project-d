@@ -92,7 +92,7 @@ export async function pollDeposits() {
             "InitData": init
         }
     };
-    const result = await post("poll-deposits", options);
+    const result = await post("verify-deposit", options);
     if (result) {
         if (result.success && result.user) {
             state.user = result.user;

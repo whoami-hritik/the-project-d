@@ -40,6 +40,9 @@ namespace monster_world.Controller
         private readonly PoolService _poolService;
         private readonly Telegram.Bot.ITelegramBotClient _botClient;
         private static readonly HttpClient _httpClient = new HttpClient();
+        private static readonly object _pollLock = new object();
+        private static DateTime _lastGlobalDepositPollTime = DateTime.MinValue;
+        private static readonly System.Threading.SemaphoreSlim _depositSemaphore = new System.Threading.SemaphoreSlim(1, 1);
 
         public MonsterWorld(
             AppDbContext context, 
@@ -535,7 +538,7 @@ namespace monster_world.Controller
             return Ok(new{ success = true, DepositAddress});
         }
 
-        [HttpPost("poll-deposits")]
+        [HttpPost("verify-deposit")]
         public async Task<IActionResult> PollDeposits()
         {
             HttpContext.Items.TryGetValue("User", out var userVal);
@@ -543,17 +546,42 @@ namespace monster_world.Controller
 
             UserBase currentUser = await _userService.GetOrCreateUser((TelegramUser)userVal);
 
-            string depositAddress = System.Environment.GetEnvironmentVariable("DEPOSIT_ADDRESS")
-                ?? "UQADl5J3n3LHZqoZQ0HkvHLVXiZYS2t0l6GQ938qy8t3aQKf";
-            string tonApiBaseUrl = System.Environment.GetEnvironmentVariable("TONAPI_URL") ?? "https://tonapi.io/v2";
+            // Global rate limit check: Only allow one actual TON API call/process globally every 5 minutes
+            bool shouldPoll = false;
+            lock (_pollLock)
+            {
+                if (DateTime.UtcNow - _lastGlobalDepositPollTime >= TimeSpan.FromMinutes(5))
+                {
+                    shouldPoll = true;
+                    _lastGlobalDepositPollTime = DateTime.UtcNow;
+                }
+            }
 
-            var url = $"{tonApiBaseUrl}/blockchain/accounts/{depositAddress}/transactions?limit=30";
+            if (!shouldPoll)
+            {
+                // Rate limited globally - return successfully with the current user state to avoid breaking polling clients.
+                return Ok(new 
+                { 
+                    success = true, 
+                    credited = false, 
+                    amount = 0.0,
+                    user = MapTo.UserBaseDto(currentUser)
+                });
+            }
 
-            bool credited = false;
-            double creditedAmount = 0;
-
+            // Acquire the semaphore to guarantee thread-safe database processing and avoid race conditions/double credits
+            await _depositSemaphore.WaitAsync();
             try
             {
+                string depositAddress = System.Environment.GetEnvironmentVariable("DEPOSIT_ADDRESS")
+                    ?? "UQADl5J3n3LHZqoZQ0HkvHLVXiZYS2t0l6GQ938qy8t3aQKf";
+                string tonApiBaseUrl = System.Environment.GetEnvironmentVariable("TONAPI_URL") ?? "https://tonapi.io/v2";
+
+                var url = $"{tonApiBaseUrl}/blockchain/accounts/{depositAddress}/transactions?limit=30";
+
+                bool credited = false;
+                double creditedAmount = 0;
+
                 var response = await _httpClient.GetAsync(url);
                 if (response.IsSuccessStatusCode)
                 {
@@ -569,7 +597,7 @@ namespace monster_world.Controller
                             {
                                 if (string.IsNullOrEmpty(tx.Hash)) continue;
 
-                                // Check if this transaction was already processed
+                                // Double check if this transaction was already processed
                                 bool exists = await _context.Deposits.AnyAsync(d => d.Hash == tx.Hash);
                                 if (exists) continue;
 
@@ -662,20 +690,34 @@ namespace monster_world.Controller
                         }
                     }
                 }
+
+                return Ok(new 
+                { 
+                    success = true, 
+                    credited = credited, 
+                    amount = creditedAmount,
+                    user = MapTo.UserBaseDto(currentUser)
+                });
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error polling deposits: {ex.Message}");
                 await _tgbot.NotifyAdmin($"Error polling deposits: {ex.Message}");
+                // Reset last poll time on transient exception to allow retry
+                lock (_pollLock)
+                {
+                    _lastGlobalDepositPollTime = DateTime.MinValue;
+                }
+                return Ok(new 
+                { 
+                    success = false, 
+                    reason = "An error occurred during verification. Please try again."
+                });
             }
-
-            return Ok(new 
-            { 
-                success = true, 
-                credited = credited, 
-                amount = creditedAmount,
-                user = MapTo.UserBaseDto(currentUser)
-            });
+            finally
+            {
+                _depositSemaphore.Release();
+            }
         }
 
         [ValidateRequestIgnore]
@@ -926,6 +968,16 @@ namespace monster_world.Controller
                 Node = "", 
                 AttackersId = new List<string>(),
             });
+
+            if (form.AttackersId == null || form.AttackersId.Count == 0)
+            {
+                return Ok(new { success = false, reason = "No monsters selected for battle." });
+            }
+
+            if (form.AttackersId.Count > User.UnlockedSlots)
+            {
+                return Ok(new { success = false, reason = $"Selected monsters exceed unlocked team slots. Max allowed: {User.UnlockedSlots}" });
+            }
 
             if (!User.UnlockedWorlds.Contains(form.Map))
             {

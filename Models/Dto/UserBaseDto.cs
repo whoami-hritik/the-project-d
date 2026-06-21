@@ -15,6 +15,7 @@ namespace monster_world.Models.Dto
         public double CRYSTAL { get; set; }
         public double EGGS { get; set; }
         public List<string> UnlockedWorlds { get; set; }
+        public int UnlockedSlots { get; set; }
         public bool Bonus { get; set; }
         public long TotalVictory { get; set; }
         public int TotalBattles { get; set; }

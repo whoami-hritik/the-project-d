@@ -62,7 +62,7 @@ export async function loadUser() {
 
     if (result) {
         if (!result.isMaintenance) {
-            state.user = result.user;
+            state.user = result.User || result.user;
             state.isLoaded = true;
             console.log("User loaded");
         }
@@ -84,6 +84,23 @@ export async function getDepositAddress() {
     }
 }
 
+export async function pollDeposits() {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        }
+    };
+    const result = await post("poll-deposits", options);
+    if (result) {
+        if (result.success && result.user) {
+            state.user = result.user;
+        }
+        return result;
+    }
+}
+
 
 export async function loadInventory(pageIndex) {
     const options = {
@@ -102,14 +119,14 @@ export async function loadInventory(pageIndex) {
 }
 
 
-export async function Attack(BattleId, SkillId) {
+export async function Attack(BattleId, SkillId, MonsterId) {
     const options = {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "InitData": init
         },
-        body: { BattleId, SkillId }
+        body: { BattleId, SkillId, MonsterId }
     }
 
     const result = await post("battle/attack", options);
@@ -136,14 +153,14 @@ export async function EscapeBattle(battleId) {
     }
 }
 
-export async function CatchMonster(battleId) {
+export async function CatchMonster(battleId, MonsterId) {
     const options = {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "InitData": init
         },
-        body: { battleId }
+        body: { battleId, MonsterId }
     }
     const result = await post("monster/catch", options);
     if (result) {
@@ -170,14 +187,14 @@ export async function spawnLocations(world) {
         return result;
     }
 }
-export async function StartBattle(world, node, attackerId) {
+export async function StartBattle(world, node, attackerIds) {
     const options = {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "InitData": init
         },
-        body: { Map: world, node, attackerId }
+        body: { Map: world, Node: node, AttackersId: attackerIds }
     }
     const result = await post("battle/start", options);
     if (result) {
@@ -185,6 +202,7 @@ export async function StartBattle(world, node, attackerId) {
         return result;
     }
 }
+
 
 export async function GetBonus(index) {
     const options = {
@@ -347,14 +365,14 @@ export async function UnlockWorld(worldId) {
     }
 }
 
-export async function UseItem(BattleId, Consumable) {
+export async function UseItem(BattleId, Consumable, MonsterId) {
     const options = {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "InitData": init
         },
-        body: { BattleId, Consumable, mode: "MonostaBle" }
+        body: { BattleId, Consumable, MonsterId, mode: "MonostaBle" }
     };
     const result = await post("use-consumable", options);
     if (result) {
@@ -507,6 +525,20 @@ export async function AcceptAgreement() {
         }
     };
     const result = await post("user/accept-agreement", options);
+    if (result) {
+        return result;
+    }
+}
+
+export async function UnlockSlots() {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        }
+    };
+    const result = await post("unlock-slots", options);
     if (result) {
         return result;
     }

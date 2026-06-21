@@ -9,6 +9,13 @@ export const state = {
             return null;
         }
     })(),
+    selectedMonsters: (() => {
+        try {
+            return JSON.parse(localStorage.getItem("selectedMonsters") || "[]");
+        } catch (e) {
+            return [];
+        }
+    })(),
     isLoaded : false,
     language: localStorage.getItem("language") || (window.Telegram?.WebApp?.initDataUnsafe?.user?.language_code === 'ru' ? 'ru' : 'en')
 }
@@ -21,4 +28,3 @@ export function setLanguage(lang) {
     state.language = lang;
     localStorage.setItem("language", lang);
 }
-

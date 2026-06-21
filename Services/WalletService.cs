@@ -20,6 +20,9 @@ namespace monster_world.Services
     // Deserialized manually via JsonConvert → needs Newtonsoft attributes
     public class TonTransaction
     {
+        [JsonProperty("hash")]
+        public string Hash { get; set; }
+
         [JsonProperty("success")]
         public bool Success { get; set; }
 
@@ -31,6 +34,12 @@ namespace monster_world.Services
 
         [JsonProperty("out_msgs")]
         public List<TonMessage> OutMsgs { get; set; }
+    }
+
+    public class TonTransactionsList
+    {
+        [JsonProperty("transactions")]
+        public List<TonTransaction> Transactions { get; set; }
     }
 
     public class TonMessage

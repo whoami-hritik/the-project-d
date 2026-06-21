@@ -51,6 +51,12 @@ namespace monster_world.Models
         public long ReferrerID { get; set; }
         public bool ReferrerRewarded { get; set; } = false;
         public List<string> UnlockedWorlds { get; set; }
+        private int _unlockedSlots = 1;
+        public int UnlockedSlots
+        {
+            get => System.Math.Max(1, _unlockedSlots);
+            set => _unlockedSlots = System.Math.Max(1, value);
+        }
         public List<string> Monsters { get; set; }
         public Items Items { get; set; }
         public List<string> Transactions { get; set; }

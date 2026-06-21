@@ -10,6 +10,8 @@ namespace monster_world.Models
     // main gameplay config
     public class GameConfig
     {
+        [JsonPropertyName("team")]
+        public Team TeamData { get; set; }
 
         [JsonPropertyName("eggEmission")]
         public List<EmissionRate> EGGEmission { get; set; }
@@ -76,6 +78,15 @@ namespace monster_world.Models
 
         [JsonPropertyName("missionToSeed")]
         public List<Mission> MissionsToSeed { get; set; } = new();
+    }
+
+    public class Team
+    {
+        [JsonPropertyName("maxSlots")]
+        public int maxSlots { get; set; }
+        
+        [JsonPropertyName("costofSlot")]
+        public Dictionary<string, double> CostOfSlot { get; set; }
     }
 
 

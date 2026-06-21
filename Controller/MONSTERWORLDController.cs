@@ -16,6 +16,8 @@ using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Mvc.Filters;
+using System.IO.Compression;
+using monster_world.Mapper;
 
 
 
@@ -225,6 +227,7 @@ namespace monster_world.Controller
             }
 
             UserBase User = await _userService.GetOrCreateUser(telegramUser, referrerId);
+            await CleanUpTimedOutBattles(User.ID);
 
             object prelaunchReward = null;
             if (User.Bonus)
@@ -532,6 +535,149 @@ namespace monster_world.Controller
             return Ok(new{ success = true, DepositAddress});
         }
 
+        [HttpPost("poll-deposits")]
+        public async Task<IActionResult> PollDeposits()
+        {
+            HttpContext.Items.TryGetValue("User", out var userVal);
+            if (userVal == null) return Unauthorized();
+
+            UserBase currentUser = await _userService.GetOrCreateUser((TelegramUser)userVal);
+
+            string depositAddress = System.Environment.GetEnvironmentVariable("DEPOSIT_ADDRESS")
+                ?? "UQADl5J3n3LHZqoZQ0HkvHLVXiZYS2t0l6GQ938qy8t3aQKf";
+            string tonApiBaseUrl = System.Environment.GetEnvironmentVariable("TONAPI_URL") ?? "https://tonapi.io/v2";
+
+            var url = $"{tonApiBaseUrl}/blockchain/accounts/{depositAddress}/transactions?limit=30";
+
+            bool credited = false;
+            double creditedAmount = 0;
+
+            try
+            {
+                var response = await _httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    var json = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(json) && json.TrimStart().StartsWith('{'))
+                    {
+                        var txList = JsonConvert.DeserializeObject<TonTransactionsList>(json);
+                        if (txList != null && txList.Transactions != null)
+                        {
+                            // Process transactions from oldest to newest (reverse order)
+                            var reversedTx = txList.Transactions.AsEnumerable().Reverse().ToList();
+                            foreach (var tx in reversedTx)
+                            {
+                                if (string.IsNullOrEmpty(tx.Hash)) continue;
+
+                                // Check if this transaction was already processed
+                                bool exists = await _context.Deposits.AnyAsync(d => d.Hash == tx.Hash);
+                                if (exists) continue;
+
+                                if (!tx.Success) continue;
+
+                                var outMsg = tx.OutMsgs?.FirstOrDefault();
+                                string comment = outMsg?.DecodedBody?.Text ?? tx.InMsg?.DecodedBody?.Text;
+
+                                if (string.IsNullOrEmpty(comment) || !long.TryParse(comment, out long userId))
+                                    continue;
+
+                                // Find user matching transaction comment/payload
+                                UserBase txUser = await _context.Users.FirstOrDefaultAsync(u => u.ID == userId);
+                                if (txUser == null) continue;
+
+                                // Process deposit
+                                long valueNano = outMsg?.Value > 0 ? outMsg.Value : (tx.InMsg?.Value ?? 0);
+                                double tonAmount = valueNano / 1_000_000_000.0;
+
+                                txUser.Credit("TON", tonAmount, "deposit=" + tx.Hash);
+                                _context.Users.Update(txUser);
+
+                                UserAnalytics analytics = await _context.Analytics.FirstOrDefaultAsync(a => a.ID == txUser.ID);
+                                if (analytics == null)
+                                {
+                                    analytics = new UserAnalytics { ID = txUser.ID };
+                                    await _context.Analytics.AddAsync(analytics);
+                                }
+                                double USDTConversion = await GetTonPrice() * tonAmount;
+                                analytics.TotalDeposit += USDTConversion;
+
+                                // Referral bonus
+                                if (txUser.ReferrerID > 0)
+                                {
+                                    var referrer = await _context.Users.FirstOrDefaultAsync(r => r.ID == txUser.ReferrerID);
+                                    if (referrer != null)
+                                    {
+                                        double goldBonus = tonAmount * 0.05;
+                                        referrer.Credit("GOLD", goldBonus, $"referral_deposit_bonus={txUser.ID}");
+                                        _context.Users.Update(referrer);
+
+                                        try
+                                        {
+                                            string friendName = string.IsNullOrEmpty(txUser.Username) 
+                                                ? $"{txUser.FirstName} {txUser.LastName}".Trim() 
+                                                : $"@{txUser.Username}";
+
+                                            string msg = $"💸 You received a referral deposit bonus!\n\n" +
+                                                         $"👤 Friend: {friendName}\n" +
+                                                         $"💰 Deposit: {tonAmount:F2} TON\n" +
+                                                         $"🎁 Your 5% Bonus: +{goldBonus:F4} GOLD";
+
+                                            _ = _botClient.SendMessage(txUser.ReferrerID, msg);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Console.WriteLine($"[REFERRAL] Failed: {ex.Message}");
+                                        }
+                                    }
+                                }
+
+                                // Create deposit record
+                                Deposit deposit = new()
+                                {
+                                    UserID = txUser.ID,
+                                    Amount = tonAmount,
+                                    Balance = new Balance { TON = txUser.Balance.TON, GOLD = txUser.Balance.GOLD, CRYSTAL = 0 },
+                                    Successful = true,
+                                    Completed = true,
+                                    Hash = tx.Hash,
+                                    Time = DateTimeOffset.FromUnixTimeSeconds(tx.Utime).UtcDateTime,
+                                    SuccessfulAt = DateTime.UtcNow
+                                };
+
+                                await _context.Deposits.AddAsync(deposit);
+                                await _context.SaveChangesAsync();
+
+                                // Notify user and admin
+                                string AdminMsg = $"Deposit Done via Polling!\n\n ID: {txUser.ID}\nDeposit Amt: {tonAmount:F2} TON\nHash: {tx.Hash}\nTON Bal: {txUser.Balance.TON}\nGOLD Bal: {txUser.Balance.GOLD}";
+                                await _tgbot.Notify(txUser.ID, $"Deposit confirmed! {tonAmount:F2} TON added to your balance.");
+                                await _tgbot.NotifyAdmin(AdminMsg);
+
+                                if (txUser.ID == currentUser.ID)
+                                {
+                                    credited = true;
+                                    creditedAmount = tonAmount;
+                                    currentUser = txUser;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error polling deposits: {ex.Message}");
+                await _tgbot.NotifyAdmin($"Error polling deposits: {ex.Message}");
+            }
+
+            return Ok(new 
+            { 
+                success = true, 
+                credited = credited, 
+                amount = creditedAmount,
+                user = MapTo.UserBaseDto(currentUser)
+            });
+        }
+
         [ValidateRequestIgnore]
         [HttpGet("proxy-avatar")]
         public async Task<IActionResult> ProxyAvatar([FromQuery] string url)
@@ -733,6 +879,37 @@ namespace monster_world.Controller
             return Ok(new { success = true, spawns = locations });
         }
 
+        [HttpPost("unlock-slots")]
+        public async Task<IActionResult> UnlockSlots()
+        {
+            HttpContext.Items.TryGetValue("User", out var user);
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser) user);
+
+            // var form = await GetForm()
+
+            
+
+            Team teamData = _gameplayService.GetTeamData();
+
+            if (User.UnlockedSlots >= teamData.maxSlots)
+            {
+                return Ok( new { success = false, reason = "max team slots limit reached"});
+            }
+
+            double UnlockCost =  (User.UnlockedSlots+1) * teamData.CostOfSlot["GOLD"]; 
+
+            if (User.Balance.GOLD < UnlockCost)
+            {
+                return Ok( new { success = false, reason = $"insufficient balance. Needed: {UnlockCost} GOLD. User {User.Username} (ID: {User.ID}) has: {User.Balance.GOLD} GOLD."});
+            }
+            
+            User.Credit("GOLD", -UnlockCost, $"unlocked_slot={User.UnlockedSlots+1}");
+            User.UnlockedSlots += 1;
+            await _context.SaveChangesAsync();
+
+            return Ok( new { success = true, User = MapTo.UserBaseDto(User)});
+        }
+
         [HttpPost("battle/start")]
         public async Task<IActionResult> FightBattle()
         {
@@ -743,16 +920,63 @@ namespace monster_world.Controller
             }
 
             UserBase User = await _userService.GetOrCreateUser(telegramUser);
-            var form = await GetForm(new { Map = "", Node = "", AttackerId = "" });
+            var form = await GetForm(new 
+            { 
+                Map = "", 
+                Node = "", 
+                AttackersId = new List<string>(),
+            });
 
             if (!User.UnlockedWorlds.Contains(form.Map))
             {
                 return Ok(new { success = false, reason = "Map locked" });
             }
-            if (!User.Monsters.Contains(form.AttackerId))
+
+            List<Monster> PlayerMonsters = new();
+            foreach (var m in form.AttackersId)
             {
-                return Ok(new { success = false, reason = "no such monster found" });
+                if (!User.Monsters.Contains(m))
+                {
+                    return Ok(new { success = false, reason = "no such monster found" });
+                }
+
+                var monster = await _context.Monsters.FirstOrDefaultAsync(x => x.InstanceId == m);
+                if (monster == null || monster.OwnerID != User.ID)
+                {
+                    return Ok(new { success = false, reason = "invalid monster hash or not owner"});
+                }
+
+                if (monster.IsFighting)
+                {
+                    //old battle lookup
+                    var battle = _context.Battles.FirstOrDefault(b => b.PlayerMonsters.Any(x => x.InstanceId ==  monster.InstanceId && b.Status == BattleStatus.Active));
+
+                    if (battle != null)
+                    {
+                        if (battle.StartedAt.AddMinutes(2) <= DateTime.UtcNow)
+                        {
+                            battle.Status = BattleStatus.Forfeited;
+                            monster.IsFighting = false;
+                        }
+                        else 
+                        {
+                            return Ok(new { success = false, reason = "monster already in battle" });
+                        }
+                    }
+                }
+                monster.ApplyPassiveRegen();
+                monster.LastHpRegenAt = DateTime.UtcNow;
+                if (monster.HP > 0)
+                {
+                    PlayerMonsters.Add(monster);
+                }
+            } 
+            
+            if (PlayerMonsters.Count == 0)
+            {
+                return Ok(new { success = false, reason = "No healthy monsters selected for battle. Please heal them first!" });
             }
+            
 
             WorldSpawns spawns = await _context.Spawns.FirstOrDefaultAsync(x => x.UserId == User.ID);
             if (spawns == null)
@@ -771,36 +995,7 @@ namespace monster_world.Controller
                 return Ok(new { success = false, reason = "not an active location" });
             }
 
-            Monster Attacker = _context.Monsters.FirstOrDefault(m => m.InstanceId == form.AttackerId);
-            if (Attacker == null || Attacker.OwnerID != User.ID)
-            {
-                return Ok(new { success = false, reason = "invalid monster hash or not owner" });
-            }
-            if (Attacker.HP <= 0)
-            {
-                return Ok(new { success = false, reason = "monster HP is 0" });
-            }
-
-            if (Attacker.IsFighting)
-            {
-                //old battle lookup
-                var battle = _context.Battles.FirstOrDefault(b => b.PlayerMonster.InstanceId == Attacker.InstanceId && b.Status == BattleStatus.Active);
-
-                if (battle != null)
-                {
-                    if (battle.StartedAt.AddMinutes(2) <= DateTime.UtcNow)
-                    {
-                        battle.Status = BattleStatus.Forfeited;
-                        Attacker.IsFighting = false;
-                    }
-                    else 
-                    {
-                        return Ok(new { success = false, reason = "monster already in battle" });
-                    }
-                }
-            }
-
-            Monster Enemymonster = null;
+            List<Monster> Enemymonsters = new();
 
             if (form.Node == "BOSS")
             {
@@ -850,14 +1045,20 @@ namespace monster_world.Controller
                 int bossLevel = Extentions.Extentions.RandomBetween(rndLevels, ":");
 
                
-                Enemymonster = _gameplayService.CreateMonsterInstance(bossId, 0, bossLevel);
-                Enemymonster.IsBoss = true;
+                Monster Boss = _gameplayService.CreateMonsterInstance(bossId, 0, bossLevel);
+                Boss.IsBoss = true;
 
                 // Scale boss stats to provide a legendary challenge
-                Enemymonster.MaxHP = (int)(Enemymonster.MaxHP * 1.5);
-                Enemymonster.HP = Enemymonster.MaxHP;
-                Enemymonster.ATK = (int)(Enemymonster.ATK * 1.1);
-                Enemymonster.DEF = (int)(Enemymonster.DEF * 1.2);
+                int scale = 1;
+                if (PlayerMonsters.Count> 2)
+                {
+                    scale = 2;
+                }
+                Boss.MaxHP = (int)(Boss.MaxHP * scale);
+                Boss.HP = Boss.MaxHP;
+                Boss.ATK = (int)(Boss.ATK * scale);
+                Boss.DEF = (int)(Boss.DEF * scale);
+                Enemymonsters.Add(Boss);
 
 
             }
@@ -872,49 +1073,38 @@ namespace monster_world.Controller
                 List<MonsDef> monsDefs = _gameplayService.GetRandomNodeMonster(form.Map, randomRarity, form.Node);
                 MonsDef monsDef = _gameplayService.RandomMons(monsDefs);
                 Console.WriteLine($"[CONSOLE]monsDef = {monsDef.MonsterId} {monsDef.Title} {monsDef.Element}");
-                int rndLevel = rnd.Next(1, Attacker.Level + 5);
+                int rndLevel = rnd.Next(1, User.Level + 5);
 
-                Enemymonster = _gameplayService.CreateMonsterInstance(monsDef.MonsterId, 0, rndLevel);
-
+                var monster = _gameplayService.CreateMonsterInstance(monsDef.MonsterId, 0, rndLevel);
+                Enemymonsters.Add(monster);
                 
             }
-            //boss battle logic
-
-            
-            // var NodeMonsters = _gameplayService.GetLocationMonsters(form.World, form.Node);
-            // if (NodeMonsters == null || !NodeMonsters.Any())
+            BattleState battleState = _battleService.CreateBattle(PlayerMonsters, Enemymonsters, form.Map);
+            // battleState = 
             // {
-            //     return BadRequest(new { success = false, reason = "no monsters at location" });
-            // }
+            //     PlayerId = User.ID,
+            //     PlayerMonster = Attacker,
+            //     EnemyMonster = Enemymonster,
+            //     PlayerState = new MonsterState(Attacker),
+            //     EnemyState = new MonsterState(Enemymonster),
+            //     Status = BattleStatus.Active,
+            //     StartedAt = DateTime.UtcNow,
+            //     Map = form.Map,
+            //     TurnCount = 0,
+            //     PlayerActiveSkills = _battleService.GetActiveSkills(Attacker),
+            //     EnemyActiveSkills = _battleService.GetActiveSkills(Enemymonster),
+            //     PlayerCooldownSkill = null,
+            //     EnemyCooldownSkill = null,
+            //     PlayerLastEffect = null,
+            //     EnemyLastEffect = null,
+            // };
 
-            
-            // string selectMonsterId = NodeMonsters[rnd.Next(NodeMonsters.Count)];
-            
-            BattleState battleState = new()
-            {
-                PlayerId = User.ID,
-                PlayerMonster = Attacker,
-                EnemyMonster = Enemymonster,
-                PlayerState = new MonsterState(Attacker),
-                EnemyState = new MonsterState(Enemymonster),
-                Status = BattleStatus.Active,
-                StartedAt = DateTime.UtcNow,
-                Map = form.Map,
-                TurnCount = 0,
-                PlayerActiveSkills = _battleService.GetActiveSkills(Attacker),
-                EnemyActiveSkills = _battleService.GetActiveSkills(Enemymonster),
-                PlayerCooldownSkill = null,
-                EnemyCooldownSkill = null,
-                PlayerLastEffect = null,
-                EnemyLastEffect = null,
-            };
-
-            Attacker.IsFighting = true;
+            // Attacker.IsFighting = true;
             User.TotalBattles += 1;
             User.DailyBattles += 1;
 
 
-            if (battleState.EnemyMonster.IsBoss)
+            if (battleState.EnemyMonsters.Any(x => x.IsBoss == true))
             {
                 battleState.BossBattle = true;
             }
@@ -956,19 +1146,20 @@ namespace monster_world.Controller
             var form = await GetForm( new
             {
                 Consumable = "",
+                MonsterId = "",
                 BattleId = new Guid()
             });
 
             BattleState battleState = await _context.Battles
-                .Include(b => b.PlayerMonster)
-                .Include(b => b.EnemyMonster)
+                .Include(b => b.PlayerMonsters)
+                .Include(b => b.EnemyMonsters)
                 .FirstOrDefaultAsync(x => x.BattleId == form.BattleId);
 
             if (battleState == null)
             {
                 return Ok(new { success = false, reason = "battle not found"});
             }
-            if (battleState.PlayerMonster == null || battleState.EnemyMonster == null)
+            if (battleState.PlayerMonsters.Count == 0 || battleState.EnemyMonsters.Count == 0)
             {
                 return Ok( new { success = false, reason = "invalid battle data"});
             }
@@ -986,9 +1177,17 @@ namespace monster_world.Controller
             if (battleState.StartedAt.AddMinutes(15) < DateTime.UtcNow && battleState.Status == BattleStatus.Active)
             {
                 battleState.Status = BattleStatus.Forfeited;
-                battleState.PlayerMonster.IsFighting = false;
+                battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
                 await _context.SaveChangesAsync();
                 return Ok( new { success = false, reason = "battle is forfeited"});
+            }
+            foreach (var m in battleState.PlayerMonsters)
+            {
+                if (!User.Monsters.Contains(m.InstanceId) || !battleState.PlayerMonsters.Contains(m))
+                {
+                    return Ok(new { success = false, reason = "monster not found"});
+                }
+                
             }
             
             string consumable = form.Consumable;
@@ -1008,16 +1207,26 @@ namespace monster_world.Controller
             
             if (consumable_id == "HealSpell")
             {
+                Monster monster = battleState.PlayerMonsters.FirstOrDefault(x => x.InstanceId == form.MonsterId);
                 battleState.BattleConusmable.HealSpell += 1;
-                battleState.PlayerMonster.HealMonster(100, "battle_heal");
-                User.AddItems(consumable, -1, $"heal={battleState.PlayerMonster.InstanceId}");
+                
+                int hpBefore = monster.HP;
+                monster.HealMonster(100, "battle_heal");
+                int hpHealed = monster.HP - hpBefore;
+                if (hpHealed > 0)
+                {
+                    User.DailyHealedHP += hpHealed;
+                }
+                
+                User.AddItems(consumable, -1, $"heal={monster.InstanceId}");
             }
             else
             {
                 User.AddItems(consumable, -1, $"use={battleState.BattleId}");
-                battleState.PlayerActiveSkills.Add(consumable_id+"-consumable");
+                battleState.PlayerStates.FirstOrDefault(x => x.InstanceId == form.MonsterId ).ActiveSkills.Add(consumable_id+"-consumable");
             }
 
+            _context.Users.Update(User);
             await _context.SaveChangesAsync();
             return Ok( new { success = true, battleState});
         }
@@ -1036,22 +1245,26 @@ namespace monster_world.Controller
             var form = await GetForm( new
             {
                 BattleId = new Guid(),
-                SkillId = ""
+                SkillId = "",
+                MonsterId = ""
             });
 
-            BattleState battleState = await _context.Battles.Include(b => b.PlayerMonster).Include(b => b.EnemyMonster).FirstOrDefaultAsync(b => b.BattleId == form.BattleId);
+            BattleState battleState = await _context.Battles.Include(b => b.PlayerMonsters).Include(b => b.EnemyMonsters).FirstOrDefaultAsync(b => b.BattleId == form.BattleId);
 
             if (battleState == null)
                 return Ok( new { success = false, reason = "battle not found"});
 
-            if (battleState.PlayerMonster == null || battleState.EnemyMonster == null)
+            if (battleState.PlayerMonsters == null || battleState.EnemyMonsters == null)
+            {
                 return Ok( new { success = false, reason = "invalid battle data"});
+            }
+            if (battleState.PlayerStates == null || battleState.EnemyStates == null)
+            {
+                return Ok( new { success = false, reason = "invalid monster state"});
+            }
+                
 
-            battleState.PlayerState ??= new MonsterState(battleState.PlayerMonster);
-            battleState.EnemyState ??= new MonsterState(battleState.EnemyMonster);
-            battleState.PlayerActiveSkills ??= _battleService.GetActiveSkills(battleState.PlayerMonster);
-            battleState.EnemyActiveSkills ??= _battleService.GetActiveSkills(battleState.EnemyMonster);
-
+         
             if (battleState.PlayerId != User.ID)
                 return Ok( new { success = false });
 
@@ -1061,23 +1274,38 @@ namespace monster_world.Controller
             if (battleState.StartedAt.AddMinutes(15) < DateTime.UtcNow && battleState.Status == BattleStatus.Active)
             {
                 battleState.Status = BattleStatus.Forfeited;
-                battleState.PlayerMonster.IsFighting = false;
+                battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
                 await _context.SaveChangesAsync();
                 return Ok( new { success = false, reason = "battle is forfeited"});
             }
 
-            if (!battleState.PlayerActiveSkills.Contains(form.SkillId))
-                return Ok( new { success = false, reason = "unknown skill"});
+            Monster AttackingMonster = battleState.PlayerMonsters.FirstOrDefault(x => x.InstanceId == form.MonsterId);
+            Monster DefendingMonster = battleState.EnemyMonsters.First();
+            MonsterState attackerState = battleState.PlayerStates.FirstOrDefault( x => x.InstanceId == form.MonsterId );
+            MonsterState defenderState = battleState.EnemyStates.FirstOrDefault(x => x.InstanceId == DefendingMonster.InstanceId );
+            if (AttackingMonster == null || attackerState == null || DefendingMonster == null || defenderState == null) 
+            {
+                return Ok(new { success = true, reason = "unknowm monster id or monster state"});
+            }
 
-            if (battleState.PlayerCooldownSkill == form.SkillId)
+
+            if (!attackerState.ActiveSkills.Contains(form.SkillId))
+            {
+                return Ok( new { success = false, reason = "unknown skill"});
+            }
+    
+            if (attackerState.CooldownSkill == form.SkillId)
+            {
                 return Ok( new { success = false, reason = "skill cooldown"});
+            }
+                
 
             string skillId = form.SkillId.Split('-', 2)[0];
             SkillDef skillDef = _gameplayService.GetSkillDef(skillId);
             if (skillDef == null)
                 return Ok( new { success = false, reason = "unknown skill"});
 
-            if (battleState.PlayerState.Energy - skillDef.EnergyCost < 0)
+            if (attackerState.Energy - skillDef.EnergyCost < 0)
             {
                 return Ok( new { success = false, reason = "no sufficient energy to use the skill"});
             }
@@ -1086,19 +1314,19 @@ namespace monster_world.Controller
             battleState.TurnCount += 1;
 
             // --- Energy Regeneration Boost (SPD-based) ---
-            int playerEnergyRegen = 10 + (battleState.PlayerMonster.SPD / 5);
-            int enemyEnergyRegen = 10 + (battleState.EnemyMonster.SPD / 5);
-            battleState.PlayerState.Energy = Math.Min(100, battleState.PlayerState.Energy + playerEnergyRegen);
-            battleState.EnemyState.Energy = Math.Min(100, battleState.EnemyState.Energy + enemyEnergyRegen);
+            int playerEnergyRegen = 10 + (AttackingMonster.SPD / 5);
+            int enemyEnergyRegen = 10 + (DefendingMonster.SPD / 5);
+            attackerState.Energy = Math.Min(100, attackerState.Energy + playerEnergyRegen);
+            defenderState.Energy = Math.Min(100, defenderState.Energy + enemyEnergyRegen);
 
             //player attack on enemy
-            MonsterState PlayerState = battleState.PlayerState;
-            MonsterState EnemyState = battleState.EnemyState;
+            // MonsterState PlayerState = battleState.PlayerState;
+            // MonsterState EnemyState = battleState.EnemyState;
             //reset pending heal
-            PlayerState.PendingHeal = 0;
-            EnemyState.PendingHeal = 0;
+            attackerState.PendingHeal = 0;
+            defenderState.PendingHeal = 0;
             
-            AttackResult playerAttack = _battleService.PlayerAttack(ref battleState, form.SkillId, ref PlayerState, ref EnemyState);
+            AttackResult playerAttack = _battleService.MonsterAttack(battleState, form.SkillId, AttackingMonster, DefendingMonster, attackerState, defenderState);
             AttackResult enemyAttack = null;
 
             Dictionary<string, double> rewards = null;
@@ -1112,46 +1340,50 @@ namespace monster_world.Controller
                     bossBattle.BattleIds.Add(battleState.BattleId);
                 }
             }
-            int upXP = _gameplayService.GetMonsterXp(battleState.PlayerMonster.Role);
+            int upXP = _gameplayService.GetMonsterXp(AttackingMonster.Role);
 
 
-            battleState.PlayerState = PlayerState;
-            battleState.EnemyState = EnemyState;
+            // battleState.PlayerState = PlayerState;
+            // battleState.EnemyState = EnemyState;
 
-            if (battleState.PlayerMonster.HP >= battleState.PlayerMonster.MaxHP)
-             {   battleState.PlayerMonster.HP = battleState.PlayerMonster.MaxHP;}
-
-            //player lose
-            if (battleState.PlayerMonster.HP <= 0)
+            if (AttackingMonster.HP >= AttackingMonster.MaxHP)
             {
-                battleState.PlayerMonster.HP = 0;
-                battleState.PlayerMonster.IsFighting = false;
-                battleState.Victory = false;
-                battleState.Status = BattleStatus.Completed;
+                AttackingMonster.HP = AttackingMonster.MaxHP;
+            }
+            //player lose
+            if (AttackingMonster.HP <= 0)
+            {
+                AttackingMonster.HP = 0;
+                if (battleState.PlayerMonsters.All(m => m.HP <= 0))
+                {
+                    battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
+                    battleState.Victory = false;
+                    battleState.Status = BattleStatus.Completed;
 
-                battleState.PlayerMonster.AddXP(upXP);
+                    AttackingMonster.AddXP(upXP);
 
-                rewards = await _mapService.CalculateRewards(battleState);
-                DistributeRewards(ref User, rewards);
-                battleState.RewardProcessed = true;
+                    rewards = await _mapService.CalculateRewards(battleState);
+                    DistributeRewards(ref User, rewards);
+                    battleState.RewardProcessed = true;
 
-                await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync();
 
-                return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards });
-
+                    return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards });
+                }
             }
 
+
             //player won
-            if (battleState.EnemyMonster.HP <= 0)
+            if (DefendingMonster.HP <= 0)
             {
-                battleState.EnemyMonster.HP = 0;
-                battleState.PlayerMonster.IsFighting = false;
+                DefendingMonster.HP = 0;
+                battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
                 User.TotalVictory += 1;
                 User.DailyVictory += 1;
                 battleState.Victory = true;
                 battleState.Status = BattleStatus.Completed;
 
-                battleState.PlayerMonster.AddXP(upXP*2);
+                AttackingMonster.AddXP(upXP*2);
 
                 //give victory reward to player
                 rewards = await _mapService.CalculateRewards(battleState);
@@ -1162,27 +1394,42 @@ namespace monster_world.Controller
 
                 return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards });
             }
-            
-            enemyAttack = _battleService.EnemyAttack(ref battleState, ref EnemyState, ref PlayerState);
 
-            battleState.PlayerState = PlayerState;
-            battleState.EnemyState = EnemyState;
-            
-            if (battleState.EnemyMonster.HP >= battleState.EnemyMonster.MaxHP)
-                battleState.EnemyMonster.HP = battleState.EnemyMonster.MaxHP;
 
-            //enemy loase
-            if (battleState.EnemyMonster.HP <= 0)
+
+
+
+
+            //enemy skill selection
+            string enemyCooldownSkill = defenderState.CooldownSkill;
+            var availableSkills = defenderState.ActiveSkills?
+                .Where(s => s != enemyCooldownSkill)
+                .ToList();
+
+            Random rnd = new Random();
+            string enemySkillId = availableSkills[rnd.Next(availableSkills.Count)];
+            
+            enemyAttack = _battleService.MonsterAttack(battleState, enemySkillId, DefendingMonster, AttackingMonster, defenderState, attackerState);
+
+            
+            if (DefendingMonster.HP >= DefendingMonster.MaxHP)
             {
-                battleState.EnemyMonster.HP = 0;
-                battleState.PlayerMonster.IsFighting = false;
+                DefendingMonster.HP = DefendingMonster.MaxHP;
+            }
+                
+
+            //enemy lose
+            if (DefendingMonster.HP <= 0)
+            {
+                DefendingMonster.HP = 0;
+                battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
                 User.TotalVictory += 1;
                 User.DailyVictory += 1;
                 battleState.Victory = true;
                 battleState.Status = BattleStatus.Completed;
 
 
-                battleState.PlayerMonster.AddXP(upXP*2);
+                AttackingMonster.AddXP(upXP*2);
 
 
                 //give victory reward to player
@@ -1198,20 +1445,21 @@ namespace monster_world.Controller
             }
 
             //player lose
-            if (battleState.PlayerMonster.HP <= 0)
+            if (AttackingMonster.HP <= 0)
             {
-                battleState.PlayerMonster.HP = 0;
-                battleState.PlayerMonster.IsFighting = false;
-                battleState.Victory = false;
-                battleState.Status = BattleStatus.Completed;
+                AttackingMonster.HP = 0;
+                if (battleState.PlayerMonsters.All(m => m.HP <= 0))
+                {
+                    battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
+                    battleState.Victory = false;
+                    battleState.Status = BattleStatus.Completed;
 
+                    AttackingMonster.AddXP(upXP);
 
-                battleState.PlayerMonster.AddXP(upXP);
-
-
-                rewards = await _mapService.CalculateRewards(battleState);
-                DistributeRewards(ref User, rewards);
-                battleState.RewardProcessed = true;
+                    rewards = await _mapService.CalculateRewards(battleState);
+                    DistributeRewards(ref User, rewards);
+                    battleState.RewardProcessed = true;
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -1238,10 +1486,11 @@ namespace monster_world.Controller
             
             var form = await GetForm( new
             {
+                MonsterId = "",
                 BattleId = new Guid()
             });
 
-            BattleState battleState = await _context.Battles.Include(b => b.PlayerMonster).Include(b => b.EnemyMonster).FirstOrDefaultAsync(b => b.BattleId == form.BattleId);
+            BattleState battleState = await _context.Battles.Include(b => b.PlayerMonsters).Include(b => b.EnemyMonsters).FirstOrDefaultAsync(b => b.BattleId == form.BattleId);
             if (battleState == null)
                 return Ok(new { success = false });
             
@@ -1254,34 +1503,48 @@ namespace monster_world.Controller
             if (battleState.StartedAt.AddMinutes(15) < DateTime.UtcNow && battleState.Status == BattleStatus.Active)
             {
                 battleState.Status = BattleStatus.Forfeited;
-                battleState.PlayerMonster.IsFighting = false;
+                battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
                 await _context.SaveChangesAsync();
                 return Ok( new { success = false, reason = "battle is forfeited"});
             }
 
-            battleState.PlayerState ??= new MonsterState(battleState.PlayerMonster);
-            battleState.EnemyState ??= new MonsterState(battleState.EnemyMonster);
-            battleState.PlayerActiveSkills ??= _battleService.GetActiveSkills(battleState.PlayerMonster);
-            battleState.EnemyActiveSkills ??= _battleService.GetActiveSkills(battleState.EnemyMonster);
+            // battleState.PlayerState ??= new MonsterState(battleState.PlayerMonster);
+            // battleState.EnemyState ??= new MonsterState(DefendingMonster);
+
+            MonsterState attackerState = battleState.PlayerStates.FirstOrDefault(x => x.InstanceId == form.MonsterId);
+            Monster AttackingMonster = battleState.PlayerMonsters.FirstOrDefault(x => x.InstanceId == form.MonsterId);
+            Monster DefendingMonster = battleState.EnemyMonsters.First();
+            MonsterState defenderState = battleState.EnemyStates.FirstOrDefault(x => x.InstanceId == DefendingMonster.InstanceId);
+
+            if (AttackingMonster == null || attackerState == null || DefendingMonster == null || defenderState == null) 
+            {
+                return Ok(new { success = true, reason = "unknowm monster id or monster state"});
+            }
+
+
+            // battleState.PlayerActiveSkills ??= _battleService.GetActiveSkills(battleState.PlayerMonster);
+            defenderState.ActiveSkills ??= _battleService.GetActiveSkills(DefendingMonster);
 
             if (User.Items.MonstaBall <= 0)
+            {
                 return Ok( new { success = false, reason = "not enough monsta ball"});
+            }
 
             double catchChance;
             try
             {
-                catchChance = _gameplayService.GetOddRange(battleState.EnemyMonster);
+                catchChance = _gameplayService.GetOddRange(DefendingMonster);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[CatchMonster] failed to compute catch odds for rarity='{battleState.EnemyMonster.Rarity}' hp={battleState.EnemyMonster.HP}: {ex}");
+                Console.WriteLine($"[CatchMonster] failed to compute catch odds for rarity='{DefendingMonster.Rarity}' hp={DefendingMonster.HP}: {ex}");
                 return Ok(new { success = false, reason = "catch odds unavailable" });
             }
 
             battleState.TurnCount += 1;
             Random random = new Random();
 
-            int upXP = _gameplayService.GetMonsterXp(battleState.PlayerMonster.Role);
+            int upXP = _gameplayService.GetMonsterXp(DefendingMonster.Role);
             Dictionary<string, double> rewards = new();
 
             AttackResult playerAttack = new();
@@ -1289,24 +1552,26 @@ namespace monster_world.Controller
 
             if (User.Items.MonstaBall > 0)
             {
-                User.AddItems("MonstaBall", -1, $"trycatch={battleState.EnemyMonster.InstanceId}");
+                User.AddItems("MonstaBall", -1, $"trycatch={DefendingMonster.InstanceId}");
                 battleState.BattleConusmable.MonstaBall += 1;
             }
             
+
+            //catch is successfull
             if (random.NextDouble() <= catchChance)
             {
-                battleState.EnemyMonster.OwnerID = User.ID;
-                User.Monsters.Add(battleState.EnemyMonster.InstanceId);
+                DefendingMonster.OwnerID = User.ID;
+                User.Monsters.Add(DefendingMonster.InstanceId);
                 User.TotalVictory += 1;
                 User.DailyVictory += 1;
                 battleState.Victory = true;
-                battleState.PlayerMonster.IsFighting = false;
-                battleState.EnemyMonster.CaptureAt = DateTime.UtcNow;
+                battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
+                DefendingMonster.CaptureAt = DateTime.UtcNow;
                 battleState.Status = BattleStatus.Completed;
                 
                 //give the victory rewards
 
-                battleState.PlayerMonster.AddXP(upXP*2);
+                AttackingMonster.AddXP(upXP*2);
 
                 rewards = await _mapService.CalculateRewards(battleState);
                 DistributeRewards(ref User, rewards);
@@ -1318,25 +1583,37 @@ namespace monster_world.Controller
                 
             }
 
-            //catch is unsuccessful, let enemy attack
-            MonsterState PlayerState = battleState.PlayerState;
-            MonsterState EnemyState = battleState.EnemyState;
+            // //catch is unsuccessful, let enemy attack
+            // MonsterState PlayerState = battleState.PlayerState;
+            // MonsterState EnemyState = battleState.EnemyState;
 
-            enemyAttack = _battleService.EnemyAttack(ref battleState, ref EnemyState, ref PlayerState);
 
-            battleState.PlayerState = PlayerState;
-            battleState.EnemyState = EnemyState;
+             //enemy skill selection
+        
+            string enemyCooldownSkill = defenderState.CooldownSkill;
+            var availableSkills = defenderState.ActiveSkills?
+                .Where(s => s != enemyCooldownSkill)
+                .ToList();
+
+            Random rnd = new Random();
+            string enemySkillId = availableSkills[rnd.Next(availableSkills.Count)];
+            
+            enemyAttack = _battleService.MonsterAttack(battleState, enemySkillId, DefendingMonster, AttackingMonster, defenderState, attackerState);
 
             
-            
-            if (battleState.EnemyMonster.HP >= battleState.EnemyMonster.MaxHP)
-                battleState.EnemyMonster.HP = battleState.EnemyMonster.MaxHP;
-
-            //enemy loase
-            if (battleState.EnemyMonster.HP <= 0)
+            if (DefendingMonster.HP >= DefendingMonster.MaxHP)
             {
-                battleState.EnemyMonster.HP = 0;
-                battleState.PlayerMonster.IsFighting = false;
+                DefendingMonster.HP = DefendingMonster.MaxHP;
+            }
+            
+            if (DefendingMonster.HP >= DefendingMonster.MaxHP)
+                DefendingMonster.HP = DefendingMonster.MaxHP;
+
+            //enemy lose
+            if (DefendingMonster.HP <= 0)
+            {
+                DefendingMonster.HP = 0;
+                battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
                 User.TotalVictory += 1;
                 User.DailyVictory += 1;
                 battleState.Victory = true;
@@ -1344,7 +1621,7 @@ namespace monster_world.Controller
 
 
                 //give victory reward to player
-                battleState.PlayerMonster.AddXP(upXP*2);
+                AttackingMonster.AddXP(upXP*2);
 
                 rewards = await _mapService.CalculateRewards(battleState);
                 DistributeRewards(ref User, rewards);
@@ -1360,18 +1637,21 @@ namespace monster_world.Controller
             }
 
             //player lose
-            if (battleState.PlayerMonster.HP <= 0)
+            if (AttackingMonster.HP <= 0)
             {
-                battleState.PlayerMonster.HP = 0;
-                battleState.PlayerMonster.IsFighting = false;
-                battleState.Victory = false;
-                battleState.Status = BattleStatus.Completed;
+                AttackingMonster.HP = 0;
+                if (battleState.PlayerMonsters.All(m => m.HP <= 0))
+                {
+                    battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
+                    battleState.Victory = false;
+                    battleState.Status = BattleStatus.Completed;
 
-                battleState.PlayerMonster.AddXP(upXP);
+                    AttackingMonster.AddXP(upXP);
 
-                rewards = await _mapService.CalculateRewards(battleState);
-                DistributeRewards(ref User, rewards);
-                battleState.RewardProcessed = true;
+                    rewards = await _mapService.CalculateRewards(battleState);
+                    DistributeRewards(ref User, rewards);
+                    battleState.RewardProcessed = true;
+                }
             }
 
             await _context.SaveChangesAsync();
@@ -1383,32 +1663,26 @@ namespace monster_world.Controller
         public async Task<IActionResult> EscapeBattle()
         {
             HttpContext.Items.TryGetValue("User", out var user);
-            UserBase User = await _userService.GetOrCreateUser((TelegramUser)user); //testuser
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser)user);
             var form = await GetForm( new
             {
                 BattleId = new Guid()
             });
 
-            BattleState battleState = await _context.Battles.Include(b => b.PlayerMonster).Include(b => b.EnemyMonster).FirstOrDefaultAsync(b => b.BattleId == form.BattleId);
+            BattleState battleState = await _context.Battles.Include(b => b.PlayerMonsters).Include(b => b.EnemyMonsters).FirstOrDefaultAsync(b => b.BattleId == form.BattleId);
             if (battleState == null)
-                return Ok(new { success = false });
+                return Ok(new { success = false, reason = "unknown battle" });
             
             if (battleState.PlayerId != User.ID)
-                return Ok( new { success = false });
+                return Ok( new { success = false, reason = "not your battle" });
             
             if (battleState.Status != BattleStatus.Active)
                 return Ok( new { success = true, reason = "battle is ended" });
             
-            if (battleState.StartedAt.AddMinutes(15) < DateTime.UtcNow && battleState.Status == BattleStatus.Active)
-            {
-                battleState.Status = BattleStatus.Forfeited;
-                battleState.PlayerMonster.IsFighting = false;
-                await _context.SaveChangesAsync();
-                return Ok( new { success = true, reason = "battle is forfeited"});
-            }
+            
 
             battleState.Status = BattleStatus.Forfeited;
-            battleState.PlayerMonster.IsFighting = false;
+            battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
             
 
             await _context.SaveChangesAsync();
@@ -1425,11 +1699,40 @@ namespace monster_world.Controller
             return Ok(new { success = true, Items = User.Items });
         }
 
+        private async Task CleanUpTimedOutBattles(long userId)
+        {
+            try
+            {
+                var timedOutBattles = await _context.Battles
+                    .Include(b => b.PlayerMonsters)
+                    .Where(b => b.PlayerId == userId && b.Status == BattleStatus.Active && b.StartedAt.AddMinutes(15) < DateTime.UtcNow)
+                    .ToListAsync();
+
+                if (timedOutBattles.Any())
+                {
+                    foreach (var b in timedOutBattles)
+                    {
+                        b.Status = BattleStatus.Forfeited;
+                        foreach (var m in b.PlayerMonsters)
+                        {
+                            m.IsFighting = false;
+                        }
+                    }
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error cleaning up timed out battles: {ex.Message}");
+            }
+        }
+
         [HttpPost("inventory")]
         public async Task<IActionResult> Inventory()
         {
             HttpContext.Items.TryGetValue("User", out var user);
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)user); //testuser
+            await CleanUpTimedOutBattles(User.ID);
 
             var form = await GetForm(new { pageIndex = 0 });
 
@@ -1448,6 +1751,20 @@ namespace monster_world.Controller
             var monsters = await _context.Monsters
                 .Where(m => monsterIds.Contains(m.InstanceId))
                 .ToListAsync();
+
+            bool changed = false;
+            foreach (var monster in monsters)
+            {
+                if (monster.ApplyPassiveRegen())
+                {
+                    _context.Monsters.Update(monster);
+                    changed = true;
+                }
+            }
+            if (changed)
+            {
+                await _context.SaveChangesAsync();
+            }
 
             return Ok(new { success = true, Monsters = monsters, totalMonsters = User.Monsters.Count() });
         }
@@ -2311,6 +2628,7 @@ namespace monster_world.Controller
             monster.HP = monster.MaxHP;
             User.DailyHealedHP += hpHealed;
 
+            _context.Users.Update(User);
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, monster });
@@ -2357,6 +2675,7 @@ namespace monster_world.Controller
             monster.HP = monster.MaxHP;
             User.DailyHealedHP += missingHP;
 
+            _context.Users.Update(User);
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, monster, goldLeft = User.Balance.GOLD });
@@ -2382,6 +2701,7 @@ namespace monster_world.Controller
         {
             HttpContext.Items.TryGetValue("User", out var user);
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)user);
+            await CleanUpTimedOutBattles(User.ID);
 
             var monsters = await _context.Monsters
                 .Where(m => User.Monsters.Contains(m.InstanceId))

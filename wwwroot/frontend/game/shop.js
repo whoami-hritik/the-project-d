@@ -2,16 +2,18 @@ import * as api from "../webapp/api.js";
 import { state } from "../state.js";
 import { showNotification } from "../utility.js";
 import { t } from "../translations.js";
+import { checkClick } from "./game.js";
 
 export class ShopScene extends Phaser.Scene {
     constructor() {
         super({ key: "ShopScene" });
     }
 
-    init() {
+    init(data) {
         this.width = this.scale.width;
         this.height = this.scale.height;
-        this.activeTab = "Items"; // "Packs", "Items", "Exchange"
+        this.activeTab = data && data.activeTab ? data.activeTab : "Items"; // "Packs", "Items", "Exchange"
+        this.onlyItems = data && data.onlyItems ? data.onlyItems : false;
         this.items = {};
         this.shopItems = {};
         this.exchangePairs = [];
@@ -243,6 +245,36 @@ export class ShopScene extends Phaser.Scene {
         const modalY = this.height / 2;
         const tabsY = modalY - 585 / 2 + 88;
 
+        if (this.onlyItems) {
+            // Draw a prominent TON Deposit button in place of tabs
+            const depBtnW = 180;
+            const depBtnH = 28;
+
+            this.tabGraphics.fillStyle(0x059669, 1); // Emerald 600
+            this.tabGraphics.lineStyle(1.5, 0x0f172a, 1); // Dark outline
+            this.tabGraphics.fillRoundedRect(modalX - depBtnW / 2, tabsY, depBtnW, depBtnH, 8);
+            this.tabGraphics.strokeRoundedRect(modalX - depBtnW / 2, tabsY, depBtnW, depBtnH, 8);
+
+            const txt = this.add.text(modalX, tabsY + depBtnH / 2, t("deposit_ton").toUpperCase(), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+                fontSize: "12px",
+                color: "#ffffff"
+            }).setOrigin(0.5);
+            txt.setStroke("#064e3b", 2.5);
+            txt.setShadow(1, 1, "#000000", 0, true, true);
+            this.container.add(txt);
+            this.tabTexts.push(txt);
+
+            const zone = this.add.zone(modalX, tabsY + depBtnH / 2, depBtnW, depBtnH).setInteractive({ useHandCursor: true });
+            this.container.add(zone);
+            zone.on("pointerup", (pointer) => {
+                if (!checkClick(pointer)) return;
+                this.showDepositModal();
+            });
+            this.tabInteractiveZones.push(zone);
+            return;
+        }
+
         const tabs = [
             { name: "Packs", x: modalX - 110, w: 90 },
             { name: "Items", x: modalX, w: 90 },
@@ -286,7 +318,8 @@ export class ShopScene extends Phaser.Scene {
             // Interactive zone added to this.container so it switches depth and receives clicks correctly!
             const zone = this.add.zone(tab.x, tabsY + 14, tab.w, 28).setInteractive({ useHandCursor: true });
             this.container.add(zone);
-            zone.on("pointerup", () => {
+            zone.on("pointerup", (pointer) => {
+                if (!checkClick(pointer)) return;
                 if (this.activeTab !== tab.name) {
                     this.activeTab = tab.name;
                     this.createTabs();
@@ -942,7 +975,7 @@ export class ShopScene extends Phaser.Scene {
         const btnMinus = this.add.image(modalX - 50, modalY + 20, "btn_blank").setDisplaySize(32, 32).setInteractive({ useHandCursor: true });
         btnMinus.setTint(0xef4444);
         modalContainer.add(btnMinus);
-        
+
         // Plus Button using btn_blank tinted green
         const btnPlus = this.add.image(modalX + 50, modalY + 20, "btn_blank").setDisplaySize(32, 32).setInteractive({ useHandCursor: true });
         btnPlus.setTint(0x22c55e);
@@ -1256,5 +1289,330 @@ export class ShopScene extends Phaser.Scene {
         if (num >= 1000) return (num / 1000).toFixed(1) + "K";
         if (num % 1 !== 0) return num.toFixed(2);
         return num.toString();
+    }
+
+    showDepositModal() {
+        if (this.depositModal) {
+            this.depositModal.destroy();
+        }
+
+        this.depositModal = this.add.container(0, 0).setDepth(305);
+
+        // 1. Full Screen Overlay to dim background
+        const depOverlay = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.8)
+            .setOrigin(0)
+            .setInteractive();
+        this.depositModal.add(depOverlay);
+
+        // 2. Dialog Background
+        const dialogWidth = 340;
+        const dialogHeight = 440;
+        const dialogX = this.width / 2;
+        const dialogY = this.height / 2;
+
+        const shadow = this.add.graphics();
+        shadow.fillStyle(0x020617, 0.4);
+        shadow.fillRoundedRect(dialogX - dialogWidth / 2 + 5, dialogY - dialogHeight / 2 + 5, dialogWidth, dialogHeight, 16);
+        this.depositModal.add(shadow);
+
+        const dialogBg = this.add.graphics();
+        dialogBg.fillStyle(0xf8fafc, 0.98); // Slate 50 (light background)
+        dialogBg.lineStyle(2.5, 0x0f172a, 1); // Slate 900 (dark outline)
+        dialogBg.fillRoundedRect(dialogX - dialogWidth / 2, dialogY - dialogHeight / 2, dialogWidth, dialogHeight, 16);
+        dialogBg.strokeRoundedRect(dialogX - dialogWidth / 2, dialogY - dialogHeight / 2, dialogWidth, dialogHeight, 16);
+        this.depositModal.add(dialogBg);
+
+        // 3. Title
+        const titleY = dialogY - dialogHeight / 2 + 25;
+        const titleText = this.add.text(dialogX, titleY, t("deposit_ton"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "20px",
+            color: "#0f172a"
+        }).setOrigin(0.5);
+        titleText.setStroke("#ffffff", 4.5);
+        this.depositModal.add(titleText);
+
+        // 4. Close Button [x]
+        const closeBtn = this.add.image(dialogX + dialogWidth / 2 - 25, titleY, "close-button")
+            .setDisplaySize(24, 24)
+            .setInteractive({ useHandCursor: true });
+        this.depositModal.add(closeBtn);
+        closeBtn.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            this.depositModal.destroy();
+            this.depositModal = null;
+        });
+
+        const address = "UQADl5J3n3LHZqoZQ0HkvHLVXiZYS2t0l6GQ938qy8t3aQKf";
+        const comment = String(this.USER.id || "");
+
+        // 5. Instruction text
+        let currY = titleY + 28;
+        const instructionText = this.add.text(dialogX, currY, t("deposit_instruction"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "12px",
+            color: "#475569" // Slate 600
+        }).setOrigin(0.5);
+        this.depositModal.add(instructionText);
+
+        // 6. Address Section
+        currY += 28;
+        const addrHeading = this.add.text(dialogX - dialogWidth / 2 + 25, currY, t("wallet_address"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#0f172a"
+        });
+        addrHeading.setStroke("#ffffff", 2.5);
+        this.depositModal.add(addrHeading);
+
+        currY += 20;
+        const addrBox = this.add.graphics();
+        addrBox.fillStyle(0xe2e8f0, 1); // Light slate box
+        addrBox.lineStyle(1.5, 0x0f172a, 1); // Dark outline
+        addrBox.fillRoundedRect(dialogX - dialogWidth / 2 + 20, currY - 4, dialogWidth - 40, 48, 8);
+        addrBox.strokeRoundedRect(dialogX - dialogWidth / 2 + 20, currY - 4, dialogWidth - 40, 48, 8);
+        this.depositModal.add(addrBox);
+
+        const addrPart1 = address.slice(0, 24);
+        const addrPart2 = address.slice(24);
+        const addrText1 = this.add.text(dialogX, currY, addrPart1, {
+            fontFamily: "Nunito, sans-serif",
+            fontSize: "12px",
+            fontWeight: "800",
+            color: "#0f172a"
+        }).setOrigin(0.5);
+        const addrText2 = this.add.text(dialogX, currY + 18, addrPart2, {
+            fontFamily: "Nunito, sans-serif",
+            fontSize: "12px",
+            fontWeight: "800",
+            color: "#0f172a"
+        }).setOrigin(0.5);
+        this.depositModal.add([addrText1, addrText2]);
+
+        // Copy Address button
+        currY += 50;
+        const copyAddrBtn = this.add.container(dialogX, currY + 10);
+
+        const copyAddrBg = this.add.graphics();
+        copyAddrBg.fillStyle(0x334155, 1);
+        copyAddrBg.lineStyle(1.5, 0x0f172a, 1); // Dark outline
+        copyAddrBg.fillRoundedRect(-70, -12, 140, 24, 6);
+        copyAddrBg.strokeRoundedRect(-70, -12, 140, 24, 6);
+        copyAddrBtn.add(copyAddrBg);
+
+        const copyAddrText = this.add.text(0, 0, t("copy_address"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "10px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        copyAddrText.setStroke("#000000", 2.5);
+        copyAddrBtn.add(copyAddrText);
+
+        const copyAddrHit = this.add.rectangle(0, 0, 140, 24, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+        copyAddrBtn.add(copyAddrHit);
+        this.depositModal.add(copyAddrBtn);
+
+        copyAddrHit.on("pointerover", () => this.tweens.add({ targets: copyAddrBtn, scaleX: 1.05, scaleY: 1.05, duration: 100 }));
+        copyAddrHit.on("pointerout", () => this.tweens.add({ targets: copyAddrBtn, scaleX: 1.0, scaleY: 1.0, duration: 100 }));
+        copyAddrHit.on("pointerdown", () => this.tweens.add({ targets: copyAddrBtn, scaleX: 0.95, scaleY: 0.95, duration: 50 }));
+        copyAddrHit.on("pointerup", (pointer) => {
+            this.tweens.add({ targets: copyAddrBtn, scaleX: 1.0, scaleY: 1.0, duration: 50 });
+            if (!checkClick(pointer)) return;
+            navigator.clipboard.writeText(address);
+            showNotification(this, t("address_copied"));
+        });
+
+        // 7. Comment Section
+        currY += 35;
+        const commentHeading = this.add.text(dialogX - dialogWidth / 2 + 25, currY, t("required_memo"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#b45309" // Dark amber
+        });
+        commentHeading.setStroke("#ffffff", 2.5);
+        this.depositModal.add(commentHeading);
+
+        currY += 20;
+        const commentBox = this.add.graphics();
+        commentBox.fillStyle(0xfef3c7, 1); // Amber 100 light fill
+        commentBox.lineStyle(1.5, 0x0f172a, 1); // Dark outline
+        commentBox.fillRoundedRect(dialogX - dialogWidth / 2 + 20, currY - 4, dialogWidth - 40, 26, 8);
+        commentBox.strokeRoundedRect(dialogX - dialogWidth / 2 + 20, currY - 4, dialogWidth - 40, 26, 8);
+        this.depositModal.add(commentBox);
+
+        const commentText = this.add.text(dialogX, currY + 9, comment, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "14px",
+            color: "#b45309"
+        }).setOrigin(0.5);
+        commentText.setStroke("#ffffff", 2.5);
+        this.depositModal.add(commentText);
+
+        // Copy Comment button
+        currY += 30;
+        const copyCommBtn = this.add.container(dialogX, currY + 10);
+
+        const copyCommBg = this.add.graphics();
+        copyCommBg.fillStyle(0x334155, 1);
+        copyCommBg.lineStyle(1.5, 0x0f172a, 1); // Dark outline
+        copyCommBg.fillRoundedRect(-70, -12, 140, 24, 6);
+        copyCommBg.strokeRoundedRect(-70, -12, 140, 24, 6);
+        copyCommBtn.add(copyCommBg);
+
+        const copyCommText = this.add.text(0, 0, t("copy_comment"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "10px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        copyCommText.setStroke("#000000", 2.5);
+        copyCommBtn.add(copyCommText);
+
+        const copyCommHit = this.add.rectangle(0, 0, 140, 24, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+        copyCommBtn.add(copyCommHit);
+        this.depositModal.add(copyCommBtn);
+
+        copyCommHit.on("pointerover", () => this.tweens.add({ targets: copyCommBtn, scaleX: 1.05, scaleY: 1.05, duration: 100 }));
+        copyCommHit.on("pointerout", () => this.tweens.add({ targets: copyCommBtn, scaleX: 1.0, scaleY: 1.0, duration: 100 }));
+        copyCommHit.on("pointerdown", () => this.tweens.add({ targets: copyCommBtn, scaleX: 0.95, scaleY: 0.95, duration: 50 }));
+        copyCommHit.on("pointerup", (pointer) => {
+            this.tweens.add({ targets: copyCommBtn, scaleX: 1.0, scaleY: 1.0, duration: 50 });
+            if (!checkClick(pointer)) return;
+            navigator.clipboard.writeText(comment);
+            showNotification(this, t("comment_copied"));
+        });
+
+        // 8. Action Buttons (Open Wallet & Check Payment)
+        currY += 45;
+
+        // Open Wallet Button (Left)
+        const openWalletBtn = this.add.container(dialogX - 75, currY + 15);
+
+        const openWalletBg = this.add.graphics();
+        openWalletBg.fillStyle(0x0088cc, 1); // TON Blue
+        openWalletBg.lineStyle(1.5, 0x0f172a, 1); // Dark outline
+        openWalletBg.fillRoundedRect(-65, -16, 130, 32, 8);
+        openWalletBg.strokeRoundedRect(-65, -16, 130, 32, 8);
+        openWalletBtn.add(openWalletBg);
+
+        const openWalletText = this.add.text(0, 0, t("open_wallet"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        openWalletText.setStroke("#004466", 2.5);
+        openWalletBtn.add(openWalletText);
+
+        const openWalletHit = this.add.rectangle(0, 0, 130, 32, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+        openWalletBtn.add(openWalletHit);
+        this.depositModal.add(openWalletBtn);
+
+        openWalletHit.on("pointerover", () => this.tweens.add({ targets: openWalletBtn, scaleX: 1.05, scaleY: 1.05, duration: 100 }));
+        openWalletHit.on("pointerout", () => this.tweens.add({ targets: openWalletBtn, scaleX: 1.0, scaleY: 1.0, duration: 100 }));
+        openWalletHit.on("pointerdown", () => this.tweens.add({ targets: openWalletBtn, scaleX: 0.95, scaleY: 0.95, duration: 50 }));
+        openWalletHit.on("pointerup", (pointer) => {
+            this.tweens.add({ targets: openWalletBtn, scaleX: 1.0, scaleY: 1.0, duration: 50 });
+            if (!checkClick(pointer)) return;
+            const deepLink = `ton://transfer/${address}?text=${comment}`;
+            try {
+                if (window.Telegram && window.Telegram.WebApp) {
+                    window.Telegram.WebApp.openLink(deepLink);
+                } else {
+                    window.open(deepLink, "_blank");
+                }
+            } catch (err) {
+                window.open(deepLink, "_blank");
+            }
+        });
+
+        // Verify Payment Button (Right)
+        const verifyBtn = this.add.container(dialogX + 75, currY + 15);
+
+        const verifyBg = this.add.graphics();
+        verifyBg.fillStyle(0x10b981, 1); // Green 500
+        verifyBg.lineStyle(1.5, 0x0f172a, 1); // Dark outline
+        verifyBg.fillRoundedRect(-65, -16, 130, 32, 8);
+        verifyBg.strokeRoundedRect(-65, -16, 130, 32, 8);
+        verifyBtn.add(verifyBg);
+
+        const verifyText = this.add.text(0, 0, t("verify"), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        verifyText.setStroke("#064e3b", 2.5);
+        verifyBtn.add(verifyText);
+
+        const verifyHit = this.add.rectangle(0, 0, 130, 32, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+        verifyBtn.add(verifyHit);
+        this.depositModal.add(verifyBtn);
+
+        verifyHit.on("pointerover", () => this.tweens.add({ targets: verifyBtn, scaleX: 1.05, scaleY: 1.05, duration: 100 }));
+        verifyHit.on("pointerout", () => this.tweens.add({ targets: verifyBtn, scaleX: 1.0, scaleY: 1.0, duration: 100 }));
+        verifyHit.on("pointerdown", () => this.tweens.add({ targets: verifyBtn, scaleX: 0.95, scaleY: 0.95, duration: 50 }));
+        verifyHit.on("pointerup", async (pointer) => {
+            this.tweens.add({ targets: verifyBtn, scaleX: 1.0, scaleY: 1.0, duration: 50 });
+            if (!checkClick(pointer)) return;
+
+            this.createloadingOverlay();
+            showNotification(this, "Watching for deposit... Please wait up to 5 minutes.");
+
+            let attempts = 0;
+            const maxAttempts = 20; // 20 * 15 seconds = 300 seconds (5 minutes)
+            let verified = false;
+            let pollingInterval;
+
+            const performPoll = async () => {
+                attempts++;
+                try {
+                    const res = await api.pollDeposits();
+                    if (res && res.success && res.credited) {
+                        verified = true;
+                        this.USER = state.user || {};
+                        clearInterval(pollingInterval);
+                        this.destroyloadingOverlay();
+
+                        showNotification(this, t("deposit_success"));
+                        if (this.depositModal) {
+                            this.depositModal.destroy();
+                            this.depositModal = null;
+                        }
+                        this.scene.restart({ activeTab: this.activeTab, onlyItems: this.onlyItems });
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Error checking user balance via polling:", err);
+                }
+
+                if (attempts >= maxAttempts) {
+                    clearInterval(pollingInterval);
+                    this.destroyloadingOverlay();
+                    showNotification(this, t("deposit_not_detected"));
+                }
+            };
+
+            // Run first poll immediately
+            await performPoll();
+
+            if (!verified) {
+                pollingInterval = setInterval(performPoll, 15000);
+
+                // Clean up interval on scene shutdown or destroy
+                this.events.once("shutdown", () => clearInterval(pollingInterval));
+                this.events.once("destroy", () => clearInterval(pollingInterval));
+
+                // Also clean up if the deposit modal itself is destroyed
+                if (this.depositModal) {
+                    const originalDestroy = this.depositModal.destroy;
+                    this.depositModal.destroy = (...args) => {
+                        clearInterval(pollingInterval);
+                        originalDestroy.apply(this.depositModal, args);
+                    };
+                }
+            }
+        });
     }
 }

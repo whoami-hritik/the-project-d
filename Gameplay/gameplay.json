@@ -1,4 +1,10 @@
 {
+    "team": {
+        "maxSlots": 3,
+        "costofSlot": {
+            "GOLD": 100
+        }
+    },
     "eggEmission": [
         {
             "winType": "jackpot",
@@ -763,10 +769,10 @@
     ],
     "strongAgainst": {
         "fire": [
-            "grass",
+            "earth",
             "electric"
         ],
-        "grass": [
+        "earth": [
             "electric",
             "water"
         ],
@@ -780,7 +786,7 @@
         ],
         "dark": [
             "fire",
-            "grass"
+            "earth"
         ]
     },
     "elementMultiplier": {
@@ -825,33 +831,33 @@
     "rarityBudget": {
         "common": "180:200",
         "rare": "190:220",
-        "epic": "200:230",
-        "legendary": "240-260"
+        "epic": "240:260",
+        "legendary": "280-310"
     },
     "baseStat": [
         {
             "role": "aggressive",
-            "atk": "20:45",
+            "atk": "20:40",
             "def": "15:30",
             "spd": "20:30"
         },
         {
             "role": "defensive",
-            "atk": "15:30",
+            "atk": "20:30",
             "def": "30:50",
-            "spd": "10:25"
+            "spd": "15:25"
         },
         {
             "role": "speed",
-            "atk": "10:35",
-            "def": "15:25",
-            "spd": "20:35"
+            "atk": "10:30",
+            "def": "15:28",
+            "spd": "20:40"
         },
         {
             "role": "control",
-            "atk": "25:35",
+            "atk": "25:30",
             "def": "20:30",
-            "spd": "15:30"
+            "spd": "15:28"
         }
     ],
     "statsUp": [
@@ -892,7 +898,7 @@
         "monsters": [
             "grunko",
             "blubbo",
-            "brasko"
+            "blazik"
         ],
         "currency": {
             "GOLD": 15

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using monster_world.DBContext;
@@ -12,9 +13,11 @@ using monster_world.DBContext;
 namespace monster_world.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260619095833_AddUnlockedSlotsToUser")]
+    partial class AddUnlockedSlotsToUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,9 +247,6 @@ namespace monster_world.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsFighting")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsRegenerating")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("LastHpRegenAt")
@@ -822,59 +822,17 @@ namespace monster_world.Migrations
 
             modelBuilder.Entity("monster_world.Services.BattleState", b =>
                 {
-                    b.OwnsMany("monster_world.Services.MonsterState", "EnemyStates", b1 =>
+                    b.OwnsOne("System.Collections.Generic.List<monster_world.Services.MonsterState>", "EnemyStates", b1 =>
                         {
                             b1.Property<Guid>("BattleStateBattleId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<int>("Id")
-                                .ValueGeneratedOnAdd()
+                            b1.Property<int>("Capacity")
                                 .HasColumnType("integer");
 
-                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+                            b1.HasKey("BattleStateBattleId");
 
-                            b1.Property<List<string>>("ActiveSkills")
-                                .HasColumnType("text[]");
-
-                            b1.Property<int>("Aim")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("Atk")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("CooldownSkill")
-                                .HasColumnType("text");
-
-                            b1.Property<int>("Def")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("Energy")
-                                .HasColumnType("integer");
-
-                            b1.Property<bool>("Hypno")
-                                .HasColumnType("boolean");
-
-                            b1.Property<string>("InstanceId")
-                                .HasColumnType("text");
-
-                            b1.Property<bool>("JustMissed")
-                                .HasColumnType("boolean");
-
-                            b1.Property<string>("LastEffect")
-                                .HasColumnType("text");
-
-                            b1.Property<int>("PendingHeal")
-                                .HasColumnType("integer");
-
-                            b1.Property<bool>("Rage")
-                                .HasColumnType("boolean");
-
-                            b1.Property<bool>("Sick")
-                                .HasColumnType("boolean");
-
-                            b1.HasKey("BattleStateBattleId", "Id");
-
-                            b1.ToTable("Battles_EnemyStates");
+                            b1.ToTable("Battles");
 
                             b1.WithOwner()
                                 .HasForeignKey("BattleStateBattleId");
@@ -932,7 +890,7 @@ namespace monster_world.Migrations
 
                             b1.HasKey("BattleStateBattleId", "Id");
 
-                            b1.ToTable("Battles_PlayerStates");
+                            b1.ToTable("MonsterState");
 
                             b1.WithOwner()
                                 .HasForeignKey("BattleStateBattleId");

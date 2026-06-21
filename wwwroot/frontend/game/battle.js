@@ -4,6 +4,7 @@ import { ItemScene } from "./item.js";
 import { checkClick } from "./game.js";
 import { showNotification } from "../utility.js";
 import { MonsterUpgradeScreen } from "./lab.js";
+import { t } from "../translations.js";
 
 
 const ATTACKRT_POS = {
@@ -44,18 +45,63 @@ export class BattleScene extends Phaser.Scene {
     init(data) {
         this.world = data.map;
         this.node = data.node;
-        this.player = state.seletdMonster;
         this.battleState = data.battleState;
+
+        // Sync our local selectedMonsters with the fresh data from the server's battleState
+        if (data.selectedMonsters && data.battleState && data.battleState.playerMonsters) {
+            data.selectedMonsters = data.selectedMonsters.map(selectedMon => {
+                const freshMon = data.battleState.playerMonsters.find(m => m.instanceId === selectedMon.instanceId);
+                return freshMon ? freshMon : selectedMon;
+            });
+            // Update state and localStorage
+            state.selectedMonsters = data.selectedMonsters;
+            localStorage.setItem("selectedMonsters", JSON.stringify(state.selectedMonsters));
+        }
+
+        if (data.selectedMonsters && data.battleState && data.battleState.playerMonsters) {
+            this.selectedMonsters = data.selectedMonsters.filter(selectedMon => 
+                data.battleState.playerMonsters.some(m => m.instanceId === selectedMon.instanceId)
+            );
+        } else {
+            this.selectedMonsters = data.selectedMonsters;
+        }
+
+        this.player = this.selectedMonsters[0];
+        this.playerState = data.battleState.playerStates.find(state => state.instanceId === this.player.instanceId);
+        this.enemy = data.battleState.enemyMonsters[0];
+        this.enemyState = data.battleState.enemyStates.find(state => state.instanceId === this.enemy.instanceId);
         this.rewards = data.rewards;
         this.playerAttack = data.playerAttack;
         this.enemyAttack = data.enemyAttack;
         console.log(this.battleState);
+
+        // Reset UI objects from previous runs to prevent errors with destroyed game objects
+        this.moreButton = null;
+        this.itemsButton = null;
+        this.skillCards = null;
+        this.skillContainer = null;
+        this.overlay = null;
+        this.attacker = null;
+        this.defender = null;
+        this.attackerContainer = null;
+        this.defenderContainer = null;
+        this.moreOptions = null;
+        this.teamContainer = null;
+        this.backButton = null;
+        this.uiShield = null;
+        this.turnIndicator = null;
+        this.bgImage = null;
     }
 
     create() {
         this.width = this.scale.width;
         this.height = this.scale.height;
+
+        this.uiShield = this.add.rectangle(20, OPTIONS_POS_Y, 1000, 100, 0x000000, 0).setDepth(106).setOrigin(0.5, 1).setAlpha(0);
+
+
         this.initalizeBg();
+        this.initializeButtons();
         this.deckSuffle();
 
         this.events.on("useItem", this.useItem, this);
@@ -80,10 +126,14 @@ export class BattleScene extends Phaser.Scene {
             this.captureMonster();
         } else {
             this.preventOptions();
-            api.UseItem(this.battleState.battleId, item).then((result) => {
+            api.UseItem(this.battleState.battleId, item, this.player.instanceId).then((result) => {
                 if (result.success) {
-                    const oldSkillsCount = this.battleState.playerActiveSkills.length;
+                    const oldSkillsCount = this.playerState.activeSkills.length;
                     this.battleState = result.battleState;
+                    this.player = this.battleState.playerMonsters.find(m => m.instanceId === this.player.instanceId) || this.player;
+                    this.enemy = this.battleState.enemyMonsters.find(m => m.instanceId === this.enemy.instanceId) || this.enemy;
+                    this.playerState = this.battleState.playerStates.find(x => x.instanceId === this.playerState.instanceId);
+                    this.enemyState = this.battleState.enemyStates.find(x => x.instanceId === this.enemyState.instanceId);
 
                     // Update player and enemy HP/state in case the consumable changed them
                     this.updatePlayerHp();
@@ -91,7 +141,7 @@ export class BattleScene extends Phaser.Scene {
                     updatePlayerState(this);
                     updateEnemyState(this);
 
-                    if (this.battleState.playerActiveSkills.length > oldSkillsCount) {
+                    if (this.playerState.activeSkills.length > oldSkillsCount) {
                         // A new skill slot was added, re-render and animate the new card
                         this.renderActiveSkills(false, false, true);
                     }
@@ -120,56 +170,209 @@ export class BattleScene extends Phaser.Scene {
     }
 
     destroyOverlay() {
-        this.overlay.destroy();
+        if (this.overlay) {
+            this.overlay.destroy();
+            this.overlay = null;
+        }
+    }
+
+    showBattleReport(isPlayerAttacking) {
+        const attackResult = isPlayerAttacking ? this.playerAttack : this.enemyAttack;
+        const attackerState = isPlayerAttacking ? this.playerState : this.enemyState;
+        const defenderState = isPlayerAttacking ? this.enemyState : this.playerState;
+
+        if (!attackResult) return;
+
+        const reports = [];
+
+        if (attackResult.backfired) {
+            reports.push("report_backfire");
+        }
+        if (attackResult.isCrit) {
+            reports.push("report_critical");
+        }
+        const multiplier = (attackResult.elementMultiplier !== undefined && attackResult.elementMultiplier !== null)
+            ? attackResult.elementMultiplier
+            : attackResult.ElementMultiplier;
+
+        console.log("showBattleReport check - multiplier:", multiplier, "attackResult:", attackResult);
+
+        if (multiplier && multiplier <= 0.8) {
+            reports.push("report_weak");
+        }
+        if (multiplier && multiplier >= 1.2) {
+            reports.push("report_strong");
+        }
+
+        if (attackerState) {
+            if (attackerState.rage) {
+                reports.push("report_rage");
+            }
+            if (attackerState.sick) {
+                reports.push("report_sick");
+            }
+        }
+
+        if (reports.length === 0) return;
+
+        // Determine which container is the defender's container for this attack
+        const isOwn = toOwnEffectSkill.includes(attackerState ? attackerState.lastEffect : "");
+        const targetSelf = isOwn ? !attackResult.backfired : attackResult.backfired;
+        
+        let container;
+        let startY;
+        if (isPlayerAttacking) {
+            container = targetSelf ? this.attackerContainer : this.defenderContainer;
+            startY = targetSelf ? -30 : 82;
+        } else {
+            container = targetSelf ? this.defenderContainer : this.attackerContainer;
+            startY = targetSelf ? 82 : -30;
+        }
+
+        if (!container) return;
+
+        // Create a sub-container for centering
+        const reportContainer = this.add.container(120, startY);
+        container.add(reportContainer);
+
+        let totalWidth = 0;
+        const spacing = 6;
+        const sprites = [];
+
+        reports.forEach(reportKey => {
+            const img = this.add.image(0, 0, reportKey);
+            img.setDisplaySize(img.displayWidth / 1.5, img.displayHeight / 1.5);
+            sprites.push(img);
+            totalWidth += img.displayWidth + spacing;
+        });
+        totalWidth -= spacing;
+
+        let currentX = -totalWidth / 2;
+        sprites.forEach(img => {
+            img.setOrigin(0, 0.5);
+            img.x = currentX;
+            reportContainer.add(img);
+            currentX += img.displayWidth + spacing;
+        });
+
+        // Pop-in animation
+        reportContainer.setScale(0);
+        this.tweens.add({
+            targets: reportContainer,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 300,
+            ease: "Back.easeOut"
+        });
+
+        // Fade-out and destroy after 1.5 seconds
+        this.time.delayedCall(1500, () => {
+            if (this.scene && this.scene.isActive(this.scene.key)) {
+                const fadeY = startY + (startY < 0 ? -15 : 15);
+                this.tweens.add({
+                    targets: reportContainer,
+                    alpha: 0,
+                    y: fadeY,
+                    duration: 300,
+                    ease: "Power2",
+                    onComplete: () => {
+                        reportContainer.destroy();
+                    }
+                });
+            }
+        });
+    }
+
+    updateStatusPositions() {
+        if (this.attacker) {
+            if (this.playerHypno) {
+                this.playerHypno.setPosition(this.attacker.x - 10, this.attacker.y - this.attacker.displayHeight);
+            }
+            if (this.playerSick) {
+                this.playerSick.setPosition(this.attacker.x + 20, this.attacker.y - this.attacker.displayHeight);
+            }
+            if (this.playerRage) {
+                if (this.playerRage.fx_front) {
+                    this.playerRage.fx_front.setPosition(this.attacker.x, this.attacker.y);
+                }
+                if (this.playerRage.fx_back) {
+                    this.playerRage.fx_back.setPosition(this.attacker.x, this.attacker.y - 50);
+                }
+            }
+        }
+        if (this.defender) {
+            if (this.enemyHypno) {
+                this.enemyHypno.setPosition(this.defender.x - 10, this.defender.y - this.defender.displayHeight);
+            }
+            if (this.enemySick) {
+                this.enemySick.setPosition(this.defender.x + 20, this.defender.y - this.defender.displayHeight);
+            }
+            if (this.enemyRage) {
+                if (this.enemyRage.fx_front) {
+                    this.enemyRage.fx_front.setPosition(this.defender.x, this.defender.y);
+                }
+                if (this.enemyRage.fx_back) {
+                    this.enemyRage.fx_back.setPosition(this.defender.x, this.defender.y - 50);
+                }
+            }
+        }
     }
 
     initalizeBg() {
 
-        const img = this.add.image(0, 0, this.node.bgs).setOrigin(0);
-        img.setDisplaySize(this.width, this.height);
-        img.setDepth(0);
+        if (!this.bgImage) {
+            this.bgImage = this.add.image(0, 0, this.node.bgs).setOrigin(0);
+            this.bgImage.setDisplaySize(this.width, this.height);
+            this.bgImage.setDepth(0);
+        }
 
+        //add defender monster (only if not already created)
+        if (!this.defender) {
+            this.defender = this.add.sprite(600, DEFFENDER_POS.y, `front_${this.enemy.id}`);
+            this.defender.setDisplaySize(this.defender.displayWidth / 1.5, this.defender.displayHeight / 1.5).setOrigin(0.5, 1);
+            this.defender.setDepth(2);
 
-        //add attacker monster
+            this.tweens.add({
+                targets: this.defender,
+                x: DEFFENDER_POS.x,
+                duration: 300,
+                ease: 'Power2',
+                onUpdate: () => {
+                    this.updateStatusPositions();
+                }
+            });
+        }
 
-        this.defender = this.add.sprite(600, DEFFENDER_POS.y, `front_${this.battleState.enemyMonster.id}`);
-        this.defender.setDisplaySize(this.defender.displayWidth / 1.5, this.defender.displayHeight / 1.5).setOrigin(0.5, 1);
-        this.defender.setDepth(2);
-
-
-        this.attacker = this.add.sprite(-300, ATTACKRT_POS.y, `back_${this.battleState.playerMonster.id}`);
+        // Always recreate or update attacker
+        if (this.attacker) {
+            this.attacker.destroy();
+        }
+        this.attacker = this.add.sprite(-300, ATTACKRT_POS.y, `back_${this.player.id}`);
         this.attacker.setDisplaySize(this.attacker.displayWidth / 1.5, this.attacker.displayHeight / 1.5).setOrigin(0.5, 1);
         this.attacker.setDepth(2);
 
-        this.attackerAim = this.battleState.playerState.aim;
-        this.attackerAtk = this.battleState.playerState.atk;
-        this.attackerDef = this.battleState.playerState.def;
-        this.attackerSpd = this.battleState.playerState.spd;
+        this.attackerAim = this.playerState.aim;
+        this.attackerAtk = this.playerState.atk;
+        this.attackerDef = this.playerState.def;
+        this.attackerSpd = this.playerState.spd;
 
         this.tweens.add({
             targets: this.attacker,
             x: ATTACKRT_POS.x,
             duration: 300,
-            ease: 'Power2'
+            ease: 'Power2',
+            onUpdate: () => {
+                this.updateStatusPositions();
+            }
         });
 
-
-
-
-        this.tweens.add({
-            targets: this.defender,
-            x: DEFFENDER_POS.x,
-            duration: 300,
-            ease: 'Power2'
-        });
-
-
-
-
-
+        // Always recreate attacker container
+        if (this.attackerContainer) {
+            this.attackerContainer.destroy();
+        }
         this.attackerContainer = this.add.container(500, PLAYER_PANE.y);
 
-        const attackerPane = this.add.image(0, 0, `pane_big_${this.battleState.playerMonster.element}`);
+        const attackerPane = this.add.image(0, 0, `pane_big_${this.player.element}`);
         attackerPane.setDisplaySize(attackerPane.displayWidth / 1.5, attackerPane.displayHeight / 1.5)
             .setOrigin(0);
         this.attackerContainer.add(attackerPane);
@@ -178,7 +381,7 @@ export class BattleScene extends Phaser.Scene {
         playerLv.setDisplaySize(playerLv.displayWidth / 1.5, playerLv.displayHeight / 1.5).setOrigin(0);
         this.attackerContainer.add(playerLv);
 
-        const playerLevel = Array.from(this.battleState.playerMonster.level.toString(), chr => chr.charCodeAt(0));
+        const playerLevel = Array.from(this.player.level.toString(), chr => chr.charCodeAt(0));
         let playerLevelTokenWidth = 0;
         playerLevel.forEach(token => {
             const letter = this.add.image(playerLv.x + 10 + playerLevelTokenWidth, 10, `ch${token}`);
@@ -187,7 +390,7 @@ export class BattleScene extends Phaser.Scene {
             this.attackerContainer.add(letter);
         });
 
-        const attackerTitle = Array.from(this.battleState.playerMonster.title, chr => chr.charCodeAt(0));
+        const attackerTitle = Array.from(this.player.title, chr => chr.charCodeAt(0));
         let attackerTokenWidth = 0;
         attackerTitle.forEach(token => {
             const letter = this.add.image(10 + attackerTokenWidth, 10, `c${token}`);
@@ -211,52 +414,65 @@ export class BattleScene extends Phaser.Scene {
             ease: 'Power2'
         });
 
+        // Defender container (only if not already created)
+        if (!this.defenderContainer) {
+            this.defenderContainer = this.add.container(-200, ENEMY_PANE.y).setDepth(101);
+
+            const defenderPane = this.add.image(0, 0, `pane_big_${this.enemy.element}`);
+            defenderPane.setDisplaySize(defenderPane.displayWidth / 1.5, defenderPane.displayHeight / 1.5)
+                .setOrigin(0);
+            this.defenderContainer.add(defenderPane);
+
+            let defenderTokenWidth = 0
+            let levelTokenWidth = 0;
+            const enemyLv = this.add.image(defenderPane.displayWidth - 40, 10, "ch35")
+            enemyLv.setDisplaySize(enemyLv.displayWidth / 1.5, enemyLv.displayHeight / 1.5).setOrigin(0)
+
+            const enemyLevel = Array.from(this.enemy.level.toString(), chr => chr.charCodeAt(0));
+            enemyLevel.forEach(token => {
+                const letter = this.add.image(enemyLv.x + 10 + levelTokenWidth, 10, `ch${token}`);
+                letter.setDisplaySize(letter.displayWidth / 1.5, letter.displayHeight / 1.5).setOrigin(0);
+                levelTokenWidth += letter.displayWidth;
+                this.defenderContainer.add(letter);
+            });
+
+            this.defenderContainer.add(enemyLv)
+            const defenderTitle = Array.from(this.enemy.title, chr => chr.charCodeAt(0));
+            defenderTitle.forEach(token => {
+                const letter = this.add.image(10 + defenderTokenWidth, 10, `c${token}`);
+                letter.setDisplaySize(letter.displayWidth / 1.5, letter.displayHeight / 1.5).setOrigin(0);
+                defenderTokenWidth += letter.displayWidth;
+                this.defenderContainer.add(letter);
+            });
+            const DEFENDER_HP_BG = this.add.image(2.5, 40, "hpbar_big_bg");
+            DEFENDER_HP_BG.setDisplaySize(DEFENDER_HP_BG.displayWidth / 1.5, DEFENDER_HP_BG.displayHeight / 1.5).setOrigin(0);
+            const DEFENDER_HP = this.add.image(2.5, 40, "hpbar_big_fill");
+            DEFENDER_HP.setDisplaySize(DEFENDER_HP.displayWidth / 1.5, DEFENDER_HP.displayHeight / 1.5)
+                .setOrigin(0);
+            DEFENDER_HP.name = "hpbar_fill_green";
+            this.defenderContainer.add([DEFENDER_HP_BG, DEFENDER_HP]);
+            this.updateEnemyHp();
+
+            this.tweens.add({
+                targets: this.defenderContainer,
+                x: ENEMY_PANE.x,
+                duration: 400,
+                ease: 'Power2'
+            });
+        }
 
 
 
-        this.defenderContainer = this.add.container(-200, ENEMY_PANE.y).setDepth(101);
 
-        const defenderPane = this.add.image(0, 0, `pane_big_${this.battleState.enemyMonster.element}`);
-        defenderPane.setDisplaySize(defenderPane.displayWidth / 1.5, defenderPane.displayHeight / 1.5)
-            .setOrigin(0);
-        this.defenderContainer.add(defenderPane);
+        this.lastPlayerHp = this.player.hp;
+        this.lastEnemyHp = this.enemy.hp;
 
-        let defenderTokenWidth = 0
-        let levelTokenWidth = 0;
-        const enemyLv = this.add.image(defenderPane.displayWidth - 40, 10, "ch35")
-        enemyLv.setDisplaySize(enemyLv.displayWidth / 1.5, enemyLv.displayHeight / 1.5).setOrigin(0)
+        this.preventOptions();
 
-        const enemyLevel = Array.from(this.battleState.enemyMonster.level.toString(), chr => chr.charCodeAt(0));
-        enemyLevel.forEach(token => {
-            const letter = this.add.image(enemyLv.x + 10 + levelTokenWidth, 10, `ch${token}`);
-            letter.setDisplaySize(letter.displayWidth / 1.5, letter.displayHeight / 1.5).setOrigin(0);
-            levelTokenWidth += letter.displayWidth;
-            this.defenderContainer.add(letter);
-        });
+    }
 
-        this.defenderContainer.add(enemyLv)
-        const defenderTitle = Array.from(this.battleState.enemyMonster.title, chr => chr.charCodeAt(0));
-        defenderTitle.forEach(token => {
-            const letter = this.add.image(10 + defenderTokenWidth, 10, `c${token}`);
-            letter.setDisplaySize(letter.displayWidth / 1.5, letter.displayHeight / 1.5).setOrigin(0);
-            defenderTokenWidth += letter.displayWidth;
-            this.defenderContainer.add(letter);
-        });
-        const DEFENDER_HP_BG = this.add.image(2.5, 40, "hpbar_big_bg");
-        DEFENDER_HP_BG.setDisplaySize(DEFENDER_HP_BG.displayWidth / 1.5, DEFENDER_HP_BG.displayHeight / 1.5).setOrigin(0);
-        const DEFENDER_HP = this.add.image(2.5, 40, "hpbar_big_fill");
-        DEFENDER_HP.setDisplaySize(DEFENDER_HP.displayWidth / 1.5, DEFENDER_HP.displayHeight / 1.5)
-            .setOrigin(0);
-        DEFENDER_HP.name = "hpbar_fill_green";
-        this.defenderContainer.add([DEFENDER_HP_BG, DEFENDER_HP]);
-        this.updateEnemyHp();
+    initializeButtons() {
 
-        this.tweens.add({
-            targets: this.defenderContainer,
-            x: ENEMY_PANE.x,
-            duration: 400,
-            ease: 'Power2'
-        });
 
 
         this.turnIndicator = this.add.image(0, 0, "turn_indicator");
@@ -293,9 +509,14 @@ export class BattleScene extends Phaser.Scene {
             .setInteractive({ useHandCursor: true })
             .setOrigin(1);
 
+        this.shopButton = this.add.image(-this.catchButton.displayWidth - this.escapeButton.displayWidth - 10, 0, "btn_shop");
+        this.shopButton.setDisplaySize(this.shopButton.displayWidth / 1.5, this.shopButton.displayHeight / 1.5)
+            .setInteractive({ useHandCursor: true })
+            .setOrigin(1);
 
 
-        this.moreButton = this.add.image(-100, OPTIONS_POS_Y, "btn_more");
+
+        this.moreButton = this.add.image(40, OPTIONS_POS_Y, "btn_more");
         this.moreButton.setDisplaySize(this.moreButton.displayWidth / 1.5, this.moreButton.displayHeight / 1.5)
             .setInteractive({ useHandCursor: true })
             .setOrigin(0.5, 1);
@@ -305,9 +526,9 @@ export class BattleScene extends Phaser.Scene {
             .setOrigin(0.5, 1)
             .setDepth(-1);
 
-        this.uiShield = this.add.rectangle(20, OPTIONS_POS_Y, 1000, 100, 0x000000, 0).setDepth(106).setOrigin(0.5, 1);
 
-        this.moreOptions = this.add.container(395, 1000, [this.catchButton, this.escapeButton]).setDepth(101);
+
+        this.moreOptions = this.add.container(395, 1000, [this.catchButton, this.escapeButton, this.shopButton]).setDepth(101);
         this.skillContainer = this.add.container(0, OPTIONS_POS_Y, [this.itemsButton]);
         this.skillContainer.setDepth(105);
 
@@ -317,7 +538,11 @@ export class BattleScene extends Phaser.Scene {
 
         this.moreButton.on("pointerup", () => {
             this.createOverlay();
+
             this.backButton.setDepth(101);
+
+            this.showTeam();
+
             this.tweens.add({
                 targets: this.skillContainer,
                 y: 1000,
@@ -344,7 +569,15 @@ export class BattleScene extends Phaser.Scene {
             this.backButton.emit('pointerup');
             this.captureMonster();
         });
+
+        this.shopButton.on("pointerup", () => {
+            this.scene.launch("ShopScene", { activeTab: "Items", onlyItems: true });
+        });
         this.backButton.on("pointerup", () => {
+            if (this.player.hp <= 0) {
+                showNotification(this, "You must select a living monster to continue!");
+                return;
+            }
             this.backButton.setDepth(-1);
 
             this.tweens.add({
@@ -361,6 +594,11 @@ export class BattleScene extends Phaser.Scene {
                         ease: 'Power2',
                         onComplete: () => {
                             this.destroyOverlay();
+                            this.allowOptions();
+                            if (this.teamContainer) {
+                                this.teamContainer.destroy();
+                                this.teamContainer = null;
+                            }
                         }
                     });
                 }
@@ -382,6 +620,7 @@ export class BattleScene extends Phaser.Scene {
                 if (result.success) {
                     console.log(this.world);
                     console.log("successful");
+                    this.saveBattleMonstersToState();
                     this.scene.stop();
 
                     this.scene.start("MapScene", { map: this.world });
@@ -390,12 +629,113 @@ export class BattleScene extends Phaser.Scene {
                 }
             });
         });
+    }
 
-        this.lastPlayerHp = this.battleState.playerMonster.hp;
-        this.lastEnemyHp = this.battleState.enemyMonster.hp;
+    showTeam() {
+        if (this.teamContainer) {
+            this.teamContainer.destroy();
+            this.teamContainer = null;
+        }
+        let y_pos = this.backButton.y - 2 * this.backButton.displayHeight - 10;
+        this.teamContainer = this.add.container(10, y_pos).setDepth(105);
 
-        this.preventOptions();
+        this.selectedMonsters.forEach((monster, index) => {
+            const battleMonster = this.battleState.playerMonsters.find(m => m.instanceId === monster.instanceId) || monster;
+            const pane = this.add.image(0, 0, "pane_thumb_" + monster.element).setOrigin(0);
+            const targetWidth = pane.displayWidth / 1.5;
+            const targetHeight = pane.displayHeight / 1.5;
+            pane.setDisplaySize(targetWidth, targetHeight);
+            pane.setInteractive({ useHandCursor: true });
 
+            const yOffset = -(index * (targetHeight + 10));
+            const monsterContainer = this.add.container(0, yOffset);
+
+            const icon = this.add.image(pane.x + 10, pane.y + 10, "icon_" + monster.id).setOrigin(0);
+            icon.setDisplaySize(icon.displayWidth / 1.5, icon.displayHeight / 1.5);
+
+            let titleWidth = 0;
+            const letters = [];
+            Array.from(monster.title, chr => chr.charCodeAt(0)).forEach(token => {
+                const letter = this.add.image(pane.x + titleWidth, pane.y + 10, `c${token}`).setOrigin(0);
+                letter.setDisplaySize(letter.displayWidth / 2, letter.displayHeight / 2);
+                titleWidth += letter.displayWidth;
+                letters.push(letter);
+            });
+
+            const lv = this.add.image(icon.x + icon.displayWidth + 10, pane.y + 30, "ch35").setOrigin(0);
+            let lastCharWidth = 0;
+            const levArray = [];
+            Array.from(String(monster.level), chr => chr.charCodeAt(0)).forEach(code => {
+                const lev = this.add.image(lv.x + lv.displayWidth + lastCharWidth, lv.y, `ch${code}`).setOrigin(0);
+                lastCharWidth += lev.displayWidth;
+                levArray.push(lev);
+            });
+
+            const hp = this.add.image(icon.x + 5, icon.y + 50, "hpbar_small_bg").setOrigin(0)
+            hp.setDisplaySize(hp.displayWidth / 1.5, hp.displayHeight / 1.5);
+
+            const currentHp = typeof battleMonster.hp === 'number' ? battleMonster.hp : monster.hp;
+            const maxHp = battleMonster.maxHP || monster.maxHP || battleMonster.maxhp || monster.maxhp || 100;
+
+            const hpfill = this.add.image(icon.x + 5, icon.y + 50, "hpbar_small_fill").setOrigin(0)
+            hpfill.setDisplaySize(hpfill.displayWidth / 1.5 * Math.max(0, Math.min(1, currentHp / maxHp)), hpfill.displayHeight / 1.5);
+
+            if (this.player.instanceId === monster.instanceId) {
+                monsterContainer.setAlpha(0.5);
+            }
+
+            monsterContainer.add([pane, icon, hp, hpfill, ...letters, lv, ...levArray]);
+            this.teamContainer.add(monsterContainer);
+
+            pane.on("pointerup", (pointer) => {
+                if (this.player.instanceId === monster.instanceId) return;
+
+                if (currentHp <= 0) {
+                    showNotification(this, "Cannot switch to a fainted monster!");
+                    return;
+                }
+
+                this.player = battleMonster;
+                this.playerState = this.battleState.playerStates.find(state => state.instanceId === this.player.instanceId);
+
+                // Reset player status flags/effects on visual switch
+                this.stateFlags.playerSick = false;
+                this.stateFlags.playerHypno = false;
+                this.stateFlags.playerRage = false;
+                if (this.playerRage) {
+                    if (this.playerRage.fx_front) this.playerRage.fx_front.destroy();
+                    if (this.playerRage.fx_back) this.playerRage.fx_back.destroy();
+                    this.playerRage = null;
+                }
+                if (this.playerHypno) {
+                    this.playerHypno.destroy();
+                    this.playerHypno = null;
+                }
+                if (this.playerSick) {
+                    this.playerSick.destroy();
+                    this.playerSick = null;
+                }
+
+                this.initalizeBg();
+                updatePlayerState(this);
+                this.renderActiveSkills();
+                this.tweens.add({
+                    targets: this.teamContainer,
+                    x: - 300,
+                    duration: 200,
+                    ease: 'Power2',
+                    onComplete: () => {
+                        if (this.teamContainer) {
+                            this.teamContainer.destroy();
+                            this.teamContainer = null;
+                        }
+                    }
+                });
+
+                this.backButton.emit("pointerup");
+            });
+
+        });
     }
 
 
@@ -438,9 +778,9 @@ export class BattleScene extends Phaser.Scene {
 
         this.time.delayedCall(1000, () => {
 
-            this.attackerAtk = this.battleState.playerState.atk;
-            this.attackerDef = this.battleState.playerState.def;
-            this.attackerAim = this.battleState.playerState.aim;
+            this.attackerAtk = this.playerState.atk;
+            this.attackerDef = this.playerState.def;
+            this.attackerAim = this.playerState.aim;
 
 
             const atkFullWidth = atkStat.width;
@@ -480,9 +820,13 @@ export class BattleScene extends Phaser.Scene {
                     if (animation.key === "anim_catch_start") {
                         fx.anims.play("anim_catch_status", true);
 
-                        api.CatchMonster(this.battleState.battleId).then(result => {
+                        api.CatchMonster(this.battleState.battleId, this.player.instanceId).then(result => {
                             if (result.success) {
                                 this.battleState = result.battleState;
+                                this.player = this.battleState.playerMonsters.find(m => m.instanceId === this.player.instanceId) || this.player;
+                                this.enemy = this.battleState.enemyMonsters.find(m => m.instanceId === this.enemy.instanceId) || this.enemy;
+                                this.playerState = this.battleState.playerStates.find(x => x.instanceId === this.playerState.instanceId);
+                                this.enemyState = this.battleState.enemyStates.find(x => x.instanceId === this.enemyState.instanceId);
                                 this.rewards = result.rewards;
                                 if (result.capture) {
                                     fx.anims.stop();
@@ -547,7 +891,7 @@ export class BattleScene extends Phaser.Scene {
         }
         this.skillCards = [];
 
-        const skillsCount = this.battleState.playerActiveSkills.length;
+        const skillsCount = this.playerState.activeSkills.length;
 
         if (skillsCount > 3) {
             this.itemsButton.setAlpha(0);
@@ -560,14 +904,14 @@ export class BattleScene extends Phaser.Scene {
         let skill_posX = (skillsCount > 3) ? 360 : 290;
         const spacing = 69;
 
-        this.battleState.playerActiveSkills.forEach((skill, index) => {
+        this.playerState.activeSkills.forEach((skill, index) => {
             const cardBack = this.add.image(50, 0, "cardback");
             cardBack.setScale(0.66).setOrigin(0.5, 1);
             this.skillContainer.add(cardBack);
             this.skillCards.push(cardBack);
 
             const targetX = skill_posX - index * spacing - 10;
-            const isCooldown = this.battleState.playerCooldownSkill === skill;
+            const isCooldown = this.playerState.cooldownSkill === skill;
 
             if (animateShuffle) {
                 this.tweens.add({
@@ -594,7 +938,7 @@ export class BattleScene extends Phaser.Scene {
                                     duration: 200,
                                     ease: 'Quad.easeOut',
                                     onComplete: () => {
-                                        if (isInitial && this.battleState.playerActiveSkills.length - 1 == index) {
+                                        if (isInitial && this.playerState.activeSkills.length - 1 == index) {
                                             if (this.cardDeck) {
                                                 this.cardDeck.destroy();
                                                 this.cardDeck = null;
@@ -690,24 +1034,28 @@ export class BattleScene extends Phaser.Scene {
 
     setupCardInteraction(cardBack, index) {
         cardBack.on("pointerup", () => {
-            const skill = this.battleState.playerActiveSkills[index];
+            const skill = this.playerState.activeSkills[index];
             if (!skill) return;
 
-            if (this.battleState.playerCooldownSkill === skill) {
+            if (this.playerState.cooldownSkill === skill) {
                 showNotification(this, "This skill is on cooldown!");
                 return;
             }
 
             this.preventOptions();
 
-            api.Attack(this.battleState.battleId, skill).then(result => {
+            api.Attack(this.battleState.battleId, skill, this.player.instanceId).then(result => {
                 if (result.success) {
                     const isConsumable = skill.split("-")[1] === "consumable";
 
                     this.battleState = result.battleState;
+                    this.player = this.battleState.playerMonsters.find(m => m.instanceId === this.player.instanceId) || this.player;
+                    this.enemy = this.battleState.enemyMonsters.find(m => m.instanceId === this.enemy.instanceId) || this.enemy;
                     this.playerAttack = result.playerAttack;
                     this.enemyAttack = result.enemyAttack;
                     this.rewards = result.rewards;
+                    this.playerState = this.battleState.playerStates.find(x => x.instanceId === this.playerState.instanceId);
+                    this.enemyState = this.battleState.enemyStates.find(x => x.instanceId === this.enemyState.instanceId);
 
                     this.tweens.add({
                         targets: cardBack,
@@ -729,7 +1077,7 @@ export class BattleScene extends Phaser.Scene {
                                     cardBack.destroy();
                                     this.skillCards = this.skillCards.filter(c => c !== cardBack);
 
-                                    const skillsCount = this.battleState.playerActiveSkills.length;
+                                    const skillsCount = this.playerState.activeSkills.length;
                                     let skill_posX = (skillsCount > 3) ? 360 : 290;
                                     const spacing = 69;
 
@@ -767,7 +1115,7 @@ export class BattleScene extends Phaser.Scene {
                                                 duration: 200,
                                                 ease: 'Quad.easeIn',
                                                 onComplete: () => {
-                                                    const currentSkill = this.battleState.playerActiveSkills[index];
+                                                    const currentSkill = this.playerState.activeSkills[index];
                                                     cardBack.setTexture(`icon_${currentSkill.split("-")[0]}`);
                                                     cardBack.scaleY = 0.66;
                                                     cardBack.scaleX = 0;
@@ -817,7 +1165,7 @@ export class BattleScene extends Phaser.Scene {
         }
         if (this.itemsButton) {
             this.itemsButton.disableInteractive();
-            const skillsCount = this.battleState.playerActiveSkills.length;
+            const skillsCount = this.playerState.activeSkills.length;
             if (skillsCount <= 3) {
                 this.itemsButton.setAlpha(0.5);
             } else {
@@ -826,6 +1174,11 @@ export class BattleScene extends Phaser.Scene {
         }
     }
     allowOptions() {
+        if (this.player.hp <= 0) {
+            this.moreButton.emit("pointerup");
+            showNotification(this, "Your monster fainted! Select another team monster.");
+            return;
+        }
         this.uiShield.disableInteractive();
         this.uiShield.setAlpha(0);
         if (this.turnIndicator) {
@@ -836,8 +1189,8 @@ export class BattleScene extends Phaser.Scene {
         if (this.skillCards) {
             this.skillCards.forEach((card, index) => {
                 if (card && card.scene) {
-                    const skill = this.battleState.playerActiveSkills[index];
-                    if (this.battleState.playerCooldownSkill === skill) {
+                    const skill = this.playerState.activeSkills[index];
+                    if (this.playerState.cooldownSkill === skill) {
                         card.setAlpha(0.4);
                         card.setTint(0x555555);
                         card.disableInteractive();
@@ -854,7 +1207,7 @@ export class BattleScene extends Phaser.Scene {
             this.moreButton.setInteractive();
         }
         if (this.itemsButton) {
-            const skillsCount = this.battleState.playerActiveSkills.length;
+            const skillsCount = this.playerState.activeSkills.length;
             if (skillsCount <= 3) {
                 this.itemsButton.setAlpha(1.0);
                 this.itemsButton.setInteractive();
@@ -905,8 +1258,8 @@ export class BattleScene extends Phaser.Scene {
     updatePlayerHp() {
         let hpbar = this.attackerContainer.getByName("hpbar_fill_green");
         if (hpbar) {
-            const newHp = this.battleState.playerMonster.hp;
-            this.updateHpTween(hpbar, newHp, this.battleState.playerMonster.maxHP);
+            const newHp = this.player.hp;
+            this.updateHpTween(hpbar, newHp, this.player.maxHP);
             if (newHp < this.lastPlayerHp) {
                 this.flashSprite(this.attacker);
             }
@@ -917,8 +1270,8 @@ export class BattleScene extends Phaser.Scene {
     updateEnemyHp() {
         let hpbar = this.defenderContainer.getByName("hpbar_fill_green");
         if (hpbar) {
-            const newHp = this.battleState.enemyMonster.hp;
-            this.updateHpTween(hpbar, newHp, this.battleState.enemyMonster.maxHP);
+            const newHp = this.enemy.hp;
+            this.updateHpTween(hpbar, newHp, this.enemy.maxHP);
             if (newHp < this.lastEnemyHp) {
                 this.flashSprite(this.defender);
             }
@@ -926,12 +1279,22 @@ export class BattleScene extends Phaser.Scene {
         }
     }
 
+    saveBattleMonstersToState() {
+        if (this.battleState && this.battleState.playerMonsters) {
+            state.selectedMonsters = state.selectedMonsters.map(selectedMon => {
+                const updatedMon = this.battleState.playerMonsters.find(m => m.instanceId === selectedMon.instanceId);
+                return updatedMon ? updatedMon : selectedMon;
+            });
+            localStorage.setItem("selectedMonsters", JSON.stringify(state.selectedMonsters));
+        }
+    }
+
 
 
     playerSkillEffect() {
-        const skillId = this.battleState.playerLastEffect;
-        this.playerState = this.battleState.playerState;
-        this.enemyState = this.battleState.enemyState;
+        const skillId = this.playerState.lastEffect;
+        this.playerState = this.battleState.playerStates.find(x => x.instanceId === this.playerState.instanceId);
+        this.enemyState = this.battleState.enemyStates.find(x => x.instanceId === this.enemyState.instanceId);
 
         if (skillId !== "rage" && skillId !== "rage_fire_ring") {
             if (this.stateFlags.playerRage) {
@@ -948,7 +1311,11 @@ export class BattleScene extends Phaser.Scene {
         let targetSelf = isOwn ? !this.playerAttack.backfired : this.playerAttack.backfired;
 
         let animTarget = targetSelf ? this.attacker : this.defender;
-        let updateHpCallback = targetSelf ? () => this.updatePlayerHp() : () => this.updateEnemyHp();
+        let originalHpCallback = targetSelf ? () => this.updatePlayerHp() : () => this.updateEnemyHp();
+        let updateHpCallback = () => {
+            originalHpCallback();
+            this.showBattleReport(true);
+        };
 
         if (skillId && !specialSkills.includes(skillId) && !cloudEffects.includes(skillId) && !strikeEffects.includes(skillId) && skillId !== "suck_life" && !this.anims.exists(`anim_${skillId}`)) {
             console.warn(`Animation for skill ${skillId} not found. Skipping.`);
@@ -1054,6 +1421,7 @@ export class BattleScene extends Phaser.Scene {
             suckLifeAnim(this, animTarget, () => {
                 this.updateEnemyHp();
                 this.updatePlayerHp();
+                this.showBattleReport(true);
                 this.time.delayedCall(1500, () => {
                     this.enemySkillEffect();
                 });
@@ -1086,7 +1454,7 @@ export class BattleScene extends Phaser.Scene {
             });
         }
 
-        if (this.battleState.playerState.atk - this.attackerAtk > 0 || this.battleState.playerState.def - this.attackerDef > 0 || this.battleState.playerState.aim - this.attackerAim > 0) {
+        if (this.playerState.atk - this.attackerAtk > 0 || this.playerState.def - this.attackerDef > 0 || this.playerState.aim - this.attackerAim > 0) {
             this.showPlayerStats();
         }
         //checks for states
@@ -1125,7 +1493,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     executeEnemySkill() {
-        const skillId = this.battleState.enemyLastEffect;
+        const skillId = this.enemyState.lastEffect;
 
         if (skillId !== "rage" && skillId !== "rage_fire_ring") {
             if (this.stateFlags.enemyRage) {
@@ -1142,7 +1510,11 @@ export class BattleScene extends Phaser.Scene {
         let targetSelf = isOwn ? !this.enemyAttack.backfired : this.enemyAttack.backfired;
 
         let animTarget = targetSelf ? this.defender : this.attacker;
-        let updateHpCallback = targetSelf ? () => this.updateEnemyHp() : () => this.updatePlayerHp();
+        let originalHpCallback = targetSelf ? () => this.updateEnemyHp() : () => this.updatePlayerHp();
+        let updateHpCallback = () => {
+            originalHpCallback();
+            this.showBattleReport(false);
+        };
 
         const onEnemyAnimComplete = () => {
             updateHpCallback();
@@ -1321,7 +1693,7 @@ export class BattleScene extends Phaser.Scene {
                             superlative.destroy();
                             youWin.destroy();
 
-                            MonsterUpgradeScreen(this, this.battleState.playerMonster, () => {
+                            MonsterUpgradeScreen(this, this.player, () => {
                                 const rewardsContainer = this.add.container(0, 0).setDepth(101).setAlpha(0);
 
                                 const rewardsBg = this.add.image(65, 450, "rewards_modal")
@@ -1393,6 +1765,7 @@ export class BattleScene extends Phaser.Scene {
                                     .setInteractive({ useHandCursor: true });
 
                                 okBtn.on("pointerup", (pointer) => {
+                                     this.saveBattleMonstersToState();
                                     if (!checkClick(pointer)) return;
 
                                     this.cameras.main.fadeOut(500, 0, 0, 0);
@@ -1448,7 +1821,8 @@ export class BattleScene extends Phaser.Scene {
                         onComplete: () => {
                             defeatBanner.destroy();
 
-                            MonsterUpgradeScreen(this, this.battleState.playerMonster, () => {
+                            MonsterUpgradeScreen(this, this.player, () => {
+                                 this.saveBattleMonstersToState();
                                 this.cameras.main.fadeOut(500, 0, 0, 0);
                                 this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
                                     this.scene.start("MapScene", { map: this.world });
@@ -1659,7 +2033,7 @@ function cloudEffectAnim(scene, targetX, targetY, animKey, callback) {
 }
 
 function strikeAnim(scene, targetX, targetY, skillId, callback) {
-
+    let completedCount = 0;
     for (let i = 0; i < 15; i++) {
 
         const obj = scene.add.image(
@@ -1682,7 +2056,10 @@ function strikeAnim(scene, targetX, targetY, skillId, callback) {
             onComplete: () => {
                 scene.time.delayedCall(0, () => {
                     obj.destroy();
-                    callback();
+                    completedCount++;
+                    if (completedCount === 15) {
+                        callback();
+                    }
                 });
             }
         });
@@ -1730,8 +2107,12 @@ function playAnimScratch(scene, x, y, callback) {
 
 
 function updatePlayerState(scene) {
-    scene.playerState = scene.battleState.playerState;
-    scene.enemyState = scene.battleState.enemyState;
+    if (scene.battleState && scene.player) {
+        scene.playerState = scene.battleState.playerStates.find(x => x.instanceId === scene.player.instanceId) || scene.playerState;
+    }
+    if (scene.battleState && scene.enemy) {
+        scene.enemyState = scene.battleState.enemyStates.find(x => x.instanceId === scene.enemy.instanceId) || scene.enemyState;
+    }
 
     // Manage Rage status
     if (scene.playerState.rage && !scene.stateFlags.playerRage) {
@@ -1759,18 +2140,16 @@ function updatePlayerState(scene) {
     }
 
     if (scene.playerState.hypno && !scene.stateFlags.playerHypno) {
-        if (scene.playerAttack && scene.playerAttack.backfired) {
-            scene.stateFlags.playerHypno = true;
-            scene.playerHypno = scene.add.sprite(scene.attacker.x - 10, scene.attacker.y - scene.attacker.displayHeight, "hypno_fx").setDepth(105);
-            scene.playerHypno.setDisplaySize(scene.playerHypno.displayWidth / 1.5, scene.playerHypno.displayHeight / 1.5);
-            scene.tweens.add({
-                targets: scene.playerHypno,
-                angle: 360,
-                duration: 2000,
-                repeat: -1,
-                ease: 'Linear'
-            });
-        }
+        scene.stateFlags.playerHypno = true;
+        scene.playerHypno = scene.add.sprite(scene.attacker.x - 10, scene.attacker.y - scene.attacker.displayHeight, "hypno_fx").setDepth(105);
+        scene.playerHypno.setDisplaySize(scene.playerHypno.displayWidth / 1.5, scene.playerHypno.displayHeight / 1.5);
+        scene.tweens.add({
+            targets: scene.playerHypno,
+            angle: 360,
+            duration: 2000,
+            repeat: -1,
+            ease: 'Linear'
+        });
     }
     else if (!scene.playerState.hypno && scene.stateFlags.playerHypno) {
         scene.stateFlags.playerHypno = false;
@@ -1781,18 +2160,16 @@ function updatePlayerState(scene) {
     }
 
     if (scene.enemyState.hypno && !scene.stateFlags.enemyHypno) {
-        if (scene.playerAttack && !scene.playerAttack.backfired) {
-            scene.stateFlags.enemyHypno = true;
-            scene.enemyHypno = scene.add.sprite(scene.defender.x - 10, scene.defender.y - scene.defender.displayHeight, "hypno_fx").setDepth(105);
-            scene.enemyHypno.setDisplaySize(scene.enemyHypno.displayWidth / 1.5, scene.enemyHypno.displayHeight / 1.5);
-            scene.tweens.add({
-                targets: scene.enemyHypno,
-                angle: 360,
-                duration: 2000,
-                repeat: -1,
-                ease: 'Linear'
-            });
-        }
+        scene.stateFlags.enemyHypno = true;
+        scene.enemyHypno = scene.add.sprite(scene.defender.x - 10, scene.defender.y - scene.defender.displayHeight, "hypno_fx").setDepth(105);
+        scene.enemyHypno.setDisplaySize(scene.enemyHypno.displayWidth / 1.5, scene.enemyHypno.displayHeight / 1.5);
+        scene.tweens.add({
+            targets: scene.enemyHypno,
+            angle: 360,
+            duration: 2000,
+            repeat: -1,
+            ease: 'Linear'
+        });
     }
     else if (!scene.enemyState.hypno && scene.stateFlags.enemyHypno) {
         scene.stateFlags.enemyHypno = false;
@@ -1803,12 +2180,10 @@ function updatePlayerState(scene) {
     }
 
     if (scene.playerState.sick && !scene.stateFlags.playerSick) {
-        if (scene.playerAttack && scene.playerAttack.backfired) {
-            scene.stateFlags.playerSick = true;
-            scene.playerSick = scene.add.sprite(scene.attacker.x + 20, scene.attacker.y - scene.attacker.displayHeight, "anim_sick_fx").setDepth(105);
-            scene.playerSick.setDisplaySize(scene.playerSick.displayWidth / 1.5, scene.playerSick.displayHeight / 1.5);
-            scene.playerSick.anims.play("anim_sick_fx");
-        }
+        scene.stateFlags.playerSick = true;
+        scene.playerSick = scene.add.sprite(scene.attacker.x + 20, scene.attacker.y - scene.attacker.displayHeight, "anim_sick_fx").setDepth(105);
+        scene.playerSick.setDisplaySize(scene.playerSick.displayWidth / 1.5, scene.playerSick.displayHeight / 1.5);
+        scene.playerSick.anims.play("anim_sick_fx");
     }
     else if (!scene.playerState.sick && scene.stateFlags.playerSick) {
         scene.stateFlags.playerSick = false;
@@ -1819,12 +2194,10 @@ function updatePlayerState(scene) {
     }
 
     if (scene.enemyState.sick && !scene.stateFlags.enemySick) {
-        if (scene.playerAttack && !scene.playerAttack.backfired) {
-            scene.stateFlags.enemySick = true;
-            scene.enemySick = scene.add.sprite(scene.defender.x + 20, scene.defender.y - scene.defender.displayHeight, "anim_sick_fx").setDepth(105);
-            scene.enemySick.setDisplaySize(scene.enemySick.displayWidth / 1.5, scene.enemySick.displayHeight / 1.5);
-            scene.enemySick.anims.play("anim_sick_fx");
-        }
+        scene.stateFlags.enemySick = true;
+        scene.enemySick = scene.add.sprite(scene.defender.x + 20, scene.defender.y - scene.defender.displayHeight, "anim_sick_fx").setDepth(105);
+        scene.enemySick.setDisplaySize(scene.enemySick.displayWidth / 1.5, scene.enemySick.displayHeight / 1.5);
+        scene.enemySick.anims.play("anim_sick_fx");
     }
     else if (!scene.enemyState.sick && scene.stateFlags.enemySick) {
         scene.stateFlags.enemySick = false;
@@ -1833,6 +2206,7 @@ function updatePlayerState(scene) {
             scene.enemySick = null;
         }
     }
+    scene.updateStatusPositions();
 }
 
 function rageAnim(scene, monster) {
@@ -1865,107 +2239,5 @@ function confuseAttack(scene, monster, callback) {
 }
 
 function updateEnemyState(scene) {
-    scene.playerState = scene.battleState.playerState;
-    scene.enemyState = scene.battleState.enemyState;
-
-    // Manage Rage status
-    if (scene.playerState.rage && !scene.stateFlags.playerRage) {
-        scene.stateFlags.playerRage = true;
-        scene.playerRage = rageAnim(scene, scene.attacker);
-    } else if (!scene.playerState.rage && scene.stateFlags.playerRage) {
-        scene.stateFlags.playerRage = false;
-        if (scene.playerRage) {
-            if (scene.playerRage.fx_front) scene.playerRage.fx_front.destroy();
-            if (scene.playerRage.fx_back) scene.playerRage.fx_back.destroy();
-            scene.playerRage = null;
-        }
-    }
-
-    if (scene.enemyState.rage && !scene.stateFlags.enemyRage) {
-        scene.stateFlags.enemyRage = true;
-        scene.enemyRage = rageAnim(scene, scene.defender);
-    } else if (!scene.enemyState.rage && scene.stateFlags.enemyRage) {
-        scene.stateFlags.enemyRage = false;
-        if (scene.enemyRage) {
-            if (scene.enemyRage.fx_front) scene.enemyRage.fx_front.destroy();
-            if (scene.enemyRage.fx_back) scene.enemyRage.fx_back.destroy();
-            scene.enemyRage = null;
-        }
-    }
-
-    if (scene.playerState.hypno && !scene.stateFlags.playerHypno) {
-        if (scene.enemyAttack && !scene.enemyAttack.backfired) {
-            scene.stateFlags.playerHypno = true;
-            scene.playerHypno = scene.add.sprite(scene.attacker.x - 10, scene.attacker.y - scene.attacker.displayHeight, "hypno_fx").setDepth(105);
-            scene.playerHypno.setDisplaySize(scene.playerHypno.displayWidth / 1.5, scene.playerHypno.displayHeight / 1.5);
-            scene.tweens.add({
-                targets: scene.playerHypno,
-                angle: 360,
-                duration: 2000,
-                repeat: -1,
-                ease: 'Linear'
-            });
-        }
-    }
-    else if (!scene.playerState.hypno && scene.stateFlags.playerHypno) {
-        scene.stateFlags.playerHypno = false;
-        if (scene.playerHypno) {
-            scene.playerHypno.destroy();
-            scene.playerHypno = null;
-        }
-    }
-
-    if (scene.enemyState.hypno && !scene.stateFlags.enemyHypno) {
-        if (scene.enemyAttack && scene.enemyAttack.backfired) {
-            scene.stateFlags.enemyHypno = true;
-            scene.enemyHypno = scene.add.sprite(scene.defender.x - 10, scene.defender.y - scene.defender.displayHeight, "hypno_fx").setDepth(105);
-            scene.enemyHypno.setDisplaySize(scene.enemyHypno.displayWidth / 1.5, scene.enemyHypno.displayHeight / 1.5);
-            scene.tweens.add({
-                targets: scene.enemyHypno,
-                angle: 360,
-                duration: 2000,
-                repeat: -1,
-                ease: 'Linear'
-            });
-        }
-    }
-    else if (!scene.enemyState.hypno && scene.stateFlags.enemyHypno) {
-        scene.stateFlags.enemyHypno = false;
-        if (scene.enemyHypno) {
-            scene.enemyHypno.destroy();
-            scene.enemyHypno = null;
-        }
-    }
-
-    if (scene.playerState.sick && !scene.stateFlags.playerSick) {
-        if (scene.enemyAttack && !scene.enemyAttack.backfired) {
-            scene.stateFlags.playerSick = true;
-            scene.playerSick = scene.add.sprite(scene.attacker.x + 20, scene.attacker.y - scene.attacker.displayHeight, "anim_sick_fx").setDepth(105);
-            scene.playerSick.setDisplaySize(scene.playerSick.displayWidth / 1.5, scene.playerSick.displayHeight / 1.5);
-            scene.playerSick.anims.play("anim_sick_fx", true);
-        }
-    }
-    else if (!scene.playerState.sick && scene.stateFlags.playerSick) {
-        scene.stateFlags.playerSick = false;
-        if (scene.playerSick) {
-            scene.playerSick.destroy();
-            scene.playerSick = null;
-        }
-    }
-
-    if (scene.enemyState.sick && !scene.stateFlags.enemySick) {
-        if (scene.enemyAttack && scene.enemyAttack.backfired) {
-            scene.stateFlags.enemySick = true;
-            scene.enemySick = scene.add.sprite(scene.defender.x + 20, scene.defender.y - scene.defender.displayHeight, "anim_sick_fx").setDepth(105);
-            scene.enemySick.setDisplaySize(scene.enemySick.displayWidth / 1.5, scene.enemySick.displayHeight / 1.5);
-            scene.enemySick.anims.play("anim_sick_fx", true);
-        }
-    }
-    else if (!scene.enemyState.sick && scene.stateFlags.enemySick) {
-        scene.enemyState.sick = false;
-        if (scene.enemySick) {
-            scene.enemySick.destroy();
-            scene.enemySick = null;
-        }
-    }
+    updatePlayerState(scene);
 }

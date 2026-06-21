@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using monster_world.DBContext;
@@ -12,9 +13,11 @@ using monster_world.DBContext;
 namespace monster_world.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260620054130_FixEnemyStates")]
+    partial class FixEnemyStates
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -244,9 +247,6 @@ namespace monster_world.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<bool>("IsFighting")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsRegenerating")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime>("LastHpRegenAt")

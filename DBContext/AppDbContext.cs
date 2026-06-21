@@ -27,6 +27,49 @@ namespace monster_world.DBContext
         {
         }
 
+        public override Task<int> SaveChangesAsync(System.Threading.CancellationToken cancellationToken = default)
+        {
+            var entries = ChangeTracker.Entries<Monster>();
+            foreach (var entry in entries)
+            {
+                if (entry.State == EntityState.Modified)
+                {
+                    var hpChanged = entry.Property(m => m.HP).IsModified;
+                    var isFightingChanged = entry.Property(m => m.IsFighting).IsModified;
+                    var regenChanged = entry.Property(m => m.LastHpRegenAt).IsModified;
+
+                    if (entry.Entity.IsFighting)
+                    {
+                        entry.Entity.IsRegenerating = false;
+                    }
+                    else
+                    {
+                        if (entry.Entity.HP <= 0)
+                        {
+                            entry.Entity.IsRegenerating = true;
+                        }
+                        else if (entry.Entity.HP >= entry.Entity.MaxHP)
+                        {
+                            entry.Entity.IsRegenerating = false;
+                        }
+                    }
+
+                    if ((hpChanged || isFightingChanged) && !regenChanged)
+                    {
+                        entry.Entity.LastHpRegenAt = DateTime.UtcNow;
+                    }
+                }
+                else if (entry.State == EntityState.Added)
+                {
+                    if (entry.Entity.HP <= 0 && !entry.Entity.IsFighting)
+                    {
+                        entry.Entity.IsRegenerating = true;
+                    }
+                }
+            }
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -35,8 +78,8 @@ namespace monster_world.DBContext
             modelBuilder.Entity<WorldSpawns>().OwnsMany(ws => ws.Spawns, a => a.ToJson());
             
             modelBuilder.Entity<BattleState>().HasKey(bs => bs.BattleId);
-            modelBuilder.Entity<BattleState>().OwnsOne(b => b.PlayerState);
-            modelBuilder.Entity<BattleState>().OwnsOne(b => b.EnemyState);
+            modelBuilder.Entity<BattleState>().OwnsMany(b => b.PlayerStates);
+            modelBuilder.Entity<BattleState>().OwnsMany(b => b.EnemyStates);
             
             // Configure MapBase collections as JSON
             modelBuilder.Entity<MapBase>().HasKey(m => m.MapId);

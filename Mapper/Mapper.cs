@@ -20,6 +20,7 @@ namespace monster_world.Mapper
                 TON = user.Balance.TON,
                 GOLD = user.Balance.GOLD,
                 UnlockedWorlds = user.UnlockedWorlds,
+                UnlockedSlots = user.UnlockedSlots,
                 CRYSTAL = user.Balance.CRYSTAL,
                 EGGS = user.Balance.EGGS,
                 Bonus = user.Bonus,

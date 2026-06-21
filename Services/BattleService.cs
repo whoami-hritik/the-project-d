@@ -9,21 +9,15 @@ namespace monster_world.Services
         [Key]
         public Guid BattleId { get; set; }
         public long PlayerId { get; set; }
-        public Monster PlayerMonster { get; set; }
-        public Monster EnemyMonster { get; set; }
-        public MonsterState PlayerState { get; set; }
-        public MonsterState EnemyState { get; set; }
+        public List<Monster> PlayerMonsters { get; set; } = new();
+        public List<Monster> EnemyMonsters { get; set; } = new();
+        public List<MonsterState> PlayerStates { get; set; } = new();
+        public List<MonsterState> EnemyStates { get; set; } = new();
         public BattleStatus Status { get; set; }
         public bool BossBattle { get; set; }
         public string Map { get; set; }
         public DateTime StartedAt { get; set; }
         public int TurnCount { get; set; }
-        public List<string> PlayerActiveSkills { get; set; } = new();
-        public List<string> EnemyActiveSkills { get; set; } = new();
-        public string? PlayerLastEffect { get; set; } = null;
-        public string? EnemyLastEffect { get; set; } = null;
-        public string? PlayerCooldownSkill { get; set; } = null;
-        public string? EnemyCooldownSkill { get; set; } = null;
         public bool RewardProcessed { get; set; } = false;
         public bool Victory { get; set; } = false;
         public Items BattleConusmable = new();
@@ -32,7 +26,8 @@ namespace monster_world.Services
 
     public class MonsterState
     {
-        public int Energy { get; set; }
+        public string InstanceId { get; set; }
+        public int    Energy { get; set; }
         public bool   Rage       { get; set; }
         public bool   Sick       { get; set; }
         public bool   Hypno      { get; set; }
@@ -41,22 +36,17 @@ namespace monster_world.Services
         public int    Def   { get; set; }
         public int    Aim   { get; set; }
         public int    PendingHeal{ get; set; }
-
-        public MonsterState()
+        public List<string> ActiveSkills { get; set; } = new();
+        public string LastEffect { get; set; }
+        public string CooldownSkill { get; set; }
+ 
+        private MonsterState()
         {
-            Energy = 100;
-            Rage = false;
-            Sick = false;
-            Hypno = false;
-            JustMissed = false;
-            Atk = 0;
-            Def = 0;
-            Aim = 100;
-            PendingHeal = 0;
         }
 
         public MonsterState(Monster monster)
         {
+            InstanceId = monster.InstanceId;
             Energy = 100;
             Rage = false;
             Sick = false;
@@ -66,6 +56,9 @@ namespace monster_world.Services
             Def = monster.DEF;
             Aim = 100;
             PendingHeal = 0;
+            LastEffect = null;
+            CooldownSkill = null;
+
         }
     }
 
@@ -120,20 +113,38 @@ namespace monster_world.Services
 
         
      
-        public BattleState CreateBattle(Monster playerMonster, Monster enemyMonster)
+        public BattleState CreateBattle(List<Monster> playerMonsters, List<Monster> enemyMonsters, string mapid)
         {
+            List<MonsterState> PlayerStates = new();
+            List<MonsterState> EnemyStates = new();
+            foreach ( var m in playerMonsters)
+            {
+                m.IsFighting = true;
+                MonsterState state = new MonsterState(m);
+                state.ActiveSkills = GetActiveSkills(m);
+                PlayerStates.Add(state);
+            }
+
+            foreach ( var m in enemyMonsters)
+            {
+                m.IsFighting = true;
+                MonsterState state = new MonsterState(m);
+                state.ActiveSkills = GetActiveSkills(m);
+                EnemyStates.Add(state);
+            }
+
+
             BattleState battle = new()
             {
-                PlayerMonster = playerMonster,
-                EnemyMonster = enemyMonster,
-                PlayerState = new MonsterState(playerMonster),
-                EnemyState = new MonsterState(enemyMonster),
+                PlayerId = playerMonsters.First().OwnerID,
+                PlayerMonsters = playerMonsters,
+                EnemyMonsters = enemyMonsters,
+                PlayerStates = PlayerStates,
+                EnemyStates = EnemyStates,
                 Status = BattleStatus.Active,
+                Map = mapid,
                 TurnCount = 0,
-                PlayerActiveSkills = new List<string>(),
-                EnemyActiveSkills = new List<string>(),
-                PlayerLastEffect = null,
-                EnemyLastEffect = null,
+                StartedAt = DateTime.UtcNow,
             };
             return battle;
         }
@@ -141,6 +152,7 @@ namespace monster_world.Services
         
         public List<string> GetActiveSkills(Monster Monster)
         {
+
             var def = _gameplayService.GetMonsDef(Monster.Id);
             var skills = def.Abilities
                 .Where(a => a.GetsAt <= Monster.Level)
@@ -246,21 +258,23 @@ namespace monster_world.Services
 
         
 
-        public AttackResult PlayerAttack(
-            ref BattleState battle,
+        public AttackResult MonsterAttack(
+            BattleState battle,
             string skillId,
-            ref MonsterState attackerState, 
-            ref MonsterState defenderState )
+            Monster AttackingMonster,
+            Monster DefendingMonster,
+            MonsterState attackerState, 
+            MonsterState defenderState )
         {
             string lastSkillId = skillId.Split('-', 2)[0];
             SkillDef lastSkill = _gameplayService.GetSkillDef(lastSkillId);
             if (lastSkill == null)
             {
-                Console.WriteLine($"[Alert] PlayerAttack: unknown skill '{lastSkillId}'");
+                Console.WriteLine($"[Alert] Attacker: unknown skill '{lastSkillId}'");
                 return AttackResult.NoEffect();
             }
 
-            var newSkillId = PickSkill(battle.PlayerMonster);
+            var newSkillId = PickSkill(AttackingMonster);
             if (newSkillId == null) 
             {
                 Console.WriteLine("[Alert] New Skill Id is NULL");
@@ -271,7 +285,7 @@ namespace monster_world.Services
             if (newSkill == null)
             {
                 // fallback: try to reuse any currently active skill with a valid definition
-                newSkillId = battle.PlayerActiveSkills?
+                newSkillId = attackerState.ActiveSkills?
                     .Select(s => s.Split('-', 2)[0])
                     .FirstOrDefault(id => _gameplayService.GetSkillDef(id) != null);
 
@@ -295,30 +309,30 @@ namespace monster_world.Services
 
             if (lastSkill.Cooldown > 0 && newSkill.Cooldown > 0 && lastSkill.Id == newSkill.Id)
             {
-                battle.PlayerCooldownSkill = newSkillId;
+                attackerState.CooldownSkill = newSkillId;
             }
             else
             {
-                battle.PlayerCooldownSkill = null;
+                attackerState.CooldownSkill = null;
             }
 
-            int index = battle.PlayerActiveSkills.IndexOf(skillId);
+            int index = attackerState.ActiveSkills.IndexOf(skillId);
 
             if (index != -1)
             {
-                if (skillId.EndsWith("-consumable") || battle.PlayerActiveSkills.Count > 3)
+                if (skillId.EndsWith("-consumable") || attackerState.ActiveSkills.Count > 3)
                 {
                     //do not replace skill
-                    battle.PlayerActiveSkills.Remove(skillId);
+                    attackerState.ActiveSkills.Remove(skillId);
                 }
                 else
                 {
-                    battle.PlayerActiveSkills[index] = newSkillId;
+                    attackerState.ActiveSkills[index] = newSkillId;
                 }
             }
     
-            AttackResult attackRes = ResolveAttack(battle.PlayerMonster, battle.EnemyMonster, lastSkill, attackerState, defenderState, lastSkill);
-            battle.PlayerLastEffect = lastSkillId;
+            AttackResult attackRes = ResolveAttack(AttackingMonster, DefendingMonster, lastSkill, attackerState, defenderState, lastSkill);
+            attackerState.LastEffect = lastSkillId;
 
             // FIX 3: track JustMissed for mercy mechanic next turn
             attackerState.JustMissed = attackRes.Missed;
@@ -329,105 +343,105 @@ namespace monster_world.Services
             }
             else if (attackRes.Backfired)
             {
-                battle.PlayerMonster.HP -= attackRes.Damage;
+                AttackingMonster.HP -= attackRes.Damage;
             }
             else
             {
-                battle.EnemyMonster.HP -= attackRes.Damage;
-                // FIX 4: apply SICK damage to defender each turn
+                DefendingMonster.HP -= attackRes.Damage;
+                // apply SICK damage to defender each turn
                 if (defenderState.Sick)
-                    battle.EnemyMonster.HP -= _gameplayService.GetBattleData().SickDamage;
+                    DefendingMonster.HP -= _gameplayService.GetBattleData().SickDamage;
             }
 
             // Apply pending heal to attacker (from skills like enflame, revive)
-            battle.PlayerMonster.HP += attackerState.PendingHeal;
+            AttackingMonster.HP += attackerState.PendingHeal;
             attackerState.PendingHeal = 0; // reset after applying
             return attackRes;
 
         }
 
-        public AttackResult EnemyAttack(
-            ref BattleState battle,
-            ref MonsterState attackerState, 
-            ref MonsterState defenderState )
-        {
-            if (battle == null || battle.EnemyMonster == null || battle.PlayerMonster == null)
-                return AttackResult.NoEffect();
+        // public AttackResult EnemyAttack(
+        //     ref BattleState battle,
+        //     ref MonsterState attackerState, 
+        //     ref MonsterState defenderState )
+        // {
+        //     if (battle == null || battle.EnemyMonster == null || battle.PlayerMonster == null)
+        //         return AttackResult.NoEffect();
 
-            var enemyActiveSkills = battle.EnemyActiveSkills;
-            string enemyCooldownSkill = battle.EnemyCooldownSkill;
-            var availableSkills = enemyActiveSkills?
-                .Where(s => s != enemyCooldownSkill)
-                .ToList();
+            // var enemyActiveSkills = battle.EnemyActiveSkills;
+            // string enemyCooldownSkill = battle.EnemyCooldownSkill;
+            // var availableSkills = enemyActiveSkills?
+            //     .Where(s => s != enemyCooldownSkill)
+            //     .ToList();
 
-            if (availableSkills == null || !availableSkills.Any())
-                return AttackResult.NoEffect();
+            // if (availableSkills == null || !availableSkills.Any())
+            //     return AttackResult.NoEffect();
 
-            Random rnd = new Random();
-            string skillId = availableSkills[rnd.Next(availableSkills.Count)];
+            // Random rnd = new Random();
+            // string skillId = availableSkills[rnd.Next(availableSkills.Count)];
 
-            if (string.IsNullOrEmpty(skillId))
-                return AttackResult.NoEffect();
+        //     if (string.IsNullOrEmpty(skillId))
+        //         return AttackResult.NoEffect();
 
-            string lastSkillId = skillId.Split('-', 2)[0];
-            SkillDef lastSkill = _gameplayService.GetSkillDef(lastSkillId);
-            if (lastSkill == null)
-                return AttackResult.NoEffect();
+        //     string lastSkillId = skillId.Split('-', 2)[0];
+        //     SkillDef lastSkill = _gameplayService.GetSkillDef(lastSkillId);
+        //     if (lastSkill == null)
+        //         return AttackResult.NoEffect();
 
-            var newSkillId = PickOpponentSkill(battle.EnemyMonster, battle.EnemyCooldownSkill);
-            if (string.IsNullOrEmpty(newSkillId))
-                return AttackResult.NoEffect();
+        //     var newSkillId = PickOpponentSkill(battle.EnemyMonster, battle.EnemyCooldownSkill);
+        //     if (string.IsNullOrEmpty(newSkillId))
+        //         return AttackResult.NoEffect();
 
-            SkillDef newSkill = _gameplayService.GetSkillDef(newSkillId);
-            if (newSkill == null)
-                return AttackResult.NoEffect();
+        //     SkillDef newSkill = _gameplayService.GetSkillDef(newSkillId);
+        //     if (newSkill == null)
+        //         return AttackResult.NoEffect();
 
-            newSkillId = newSkill.Id + "-" + Random.Shared.Next(00000, 99999);
+        //     newSkillId = newSkill.Id + "-" + Random.Shared.Next(00000, 99999);
 
-            if (lastSkill.Cooldown > 0 && newSkill.Cooldown > 0 && lastSkill.Id == newSkill.Id)
-            {
-                battle.EnemyCooldownSkill = newSkillId;
-            }
-            else
-            {
-                battle.EnemyCooldownSkill = null;
-            }
+        //     if (lastSkill.Cooldown > 0 && newSkill.Cooldown > 0 && lastSkill.Id == newSkill.Id)
+        //     {
+        //         battle.EnemyCooldownSkill = newSkillId;
+        //     }
+        //     else
+        //     {
+        //         battle.EnemyCooldownSkill = null;
+        //     }
 
-            int index = battle.EnemyActiveSkills.IndexOf(skillId);
+        //     int index = battle.EnemyActiveSkills.IndexOf(skillId);
 
-            if (index != -1)
-            {
-                battle.EnemyActiveSkills[index] = newSkillId;
-            }
+        //     if (index != -1)
+        //     {
+        //         battle.EnemyActiveSkills[index] = newSkillId;
+        //     }
 
-            AttackResult attackRes = ResolveAttack(battle.EnemyMonster, battle.PlayerMonster, lastSkill, attackerState, defenderState, lastSkill);
-            battle.EnemyLastEffect = lastSkillId;
+        //     AttackResult attackRes = ResolveAttack(battle.EnemyMonster, battle.PlayerMonster, lastSkill, attackerState, defenderState, lastSkill);
+        //     battle.EnemyLastEffect = lastSkillId;
 
-            // FIX 3: track JustMissed for mercy mechanic next turn
-            attackerState.JustMissed = attackRes.Missed;
+        //     // FIX 3: track JustMissed for mercy mechanic next turn
+        //     attackerState.JustMissed = attackRes.Missed;
 
-            if (attackRes.Missed)
-            {
-                // no HP change on miss
-            }
-            else if (attackRes.Backfired)
-            {
-                battle.EnemyMonster.HP -= attackRes.Damage;
-            }
-            else
-            {
-                battle.PlayerMonster.HP -= attackRes.Damage;
-                // FIX 4: apply SICK damage to defender each turn
-                if (defenderState.Sick)
-                    battle.PlayerMonster.HP -= _gameplayService.GetBattleData().SickDamage;
-            }
+        //     if (attackRes.Missed)
+        //     {
+        //         // no HP change on miss
+        //     }
+        //     else if (attackRes.Backfired)
+        //     {
+        //         battle.EnemyMonster.HP -= attackRes.Damage;
+        //     }
+        //     else
+        //     {
+        //         battle.PlayerMonster.HP -= attackRes.Damage;
+        //         // FIX 4: apply SICK damage to defender each turn
+        //         if (defenderState.Sick)
+        //             battle.PlayerMonster.HP -= _gameplayService.GetBattleData().SickDamage;
+        //     }
 
-            // FIX 5: enemy heals ITSELF (attackerState), not the player (defenderState)
-            battle.EnemyMonster.HP += attackerState.PendingHeal;
-            attackerState.PendingHeal = 0; // reset after applying
+        //     // FIX 5: enemy heals ITSELF (attackerState), not the player (defenderState)
+        //     battle.EnemyMonster.HP += attackerState.PendingHeal;
+        //     attackerState.PendingHeal = 0; // reset after applying
 
-            return attackRes;
-        }
+        //     return attackRes;
+        // }
 
         private static Random random = new();
         public AttackResult ResolveAttack(
@@ -490,13 +504,13 @@ namespace monster_world.Services
 
             if (backfired)
             {
-                ApplyEffects(lastSkill, defender, attacker, ref defenderState, ref attackerState);
+                ApplyEffects(lastSkill, defender, attacker, defenderState, attackerState);
                 int backfireDmg = (int)((skill.Effects.AttackMultiplier ?? 0.0) * bd.BackfireDamageFactor);
                 return AttackResult.Backfire(Math.Max(1, backfireDmg));
             }
             else
             {
-                ApplyEffects(lastSkill, attacker, defender, ref attackerState, ref defenderState);
+                ApplyEffects(lastSkill, attacker, defender, attackerState, defenderState);
             }
 
             // --- STEP 3: Compute base damage ---
@@ -546,7 +560,7 @@ namespace monster_world.Services
             return AttackResult.NoEffect();
         }
 
-        public void ApplyEffects(SkillDef skill, Monster attacker, Monster defender, ref MonsterState attackerState, ref MonsterState defenderState)
+        public void ApplyEffects(SkillDef skill, Monster attacker, Monster defender, MonsterState attackerState, MonsterState defenderState)
         {
             var fx = skill.Effects;  //all effects for the skill
 

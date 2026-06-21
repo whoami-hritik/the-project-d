@@ -251,7 +251,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("pane_big_fire", "images/general/hud/pane_big_fire.png");
         this.load.image("pane_big_water", "images/general/hud/pane_big_water.png");
         this.load.image("pane_big_earth", "images/general/hud/pane_big_earth.png");
-        this.load.image("pane_big_elec", "images/general/hud/pane_big_elec.png");
+        this.load.image("pane_big_electric", "images/general/hud/pane_big_elec.png");
         this.load.image("pane_big_dark", "images/general/hud/pane_big_dark.png");
         this.load.image("pane_mini_dark", "images/general/hud/pane_mini_dark.png");
         this.load.image("pane_mini_electric", "images/general/hud/pane_mini_elec.png");
@@ -384,7 +384,18 @@ export class PreloadScene extends Phaser.Scene {
         this.load.spritesheet("levelup_blast", "images/general/levelup_blast.png", { frameWidth: 240, frameHeight: 660 });
 
 
+        //battle report
+        this.load.image("report_backfire", "images/battle/report_backfire.png");
+        this.load.image("report_critical", "images/battle/report_critical.png");
+        this.load.image("report_rage", "images/battle/report_rage.png");
+        this.load.image("report_weak", "images/battle/report_weak.png");
+        this.load.image("report_strong", "images/battle/report_strong.png");
+        this.load.image("report_sick", "images/battle/report_sick.png");
 
+
+
+        //collector
+        this.load.image("collector_icon", "images/collector/collector_icon.png");
 
 
 
@@ -412,11 +423,11 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("item_lavaSpell", "images/items/icons/can_hellfire.png");
         this.load.image("item_avalancheSpell", "images/items/icons/can_avalanche.png");
         this.load.image("item_windSpell", "images/items/icons/can_tornado.png");
-        this.load.image("item_thunderSpell", "images/items/icons/can_thunderstrom.png");
+        this.load.image("item_thunderSpell", "images/items/icons/can_thunderstorm.png");
         this.load.image("item_waterFallSpell", "images/items/icons/can_water_blast.png");
         this.load.image("item_rainbow", "images/items/icons/can_rainbow.png");
         this.load.image("item_hallucinogen", "images/items/icons/can_poison.png");
-        this.load.image("item_shield", "images/items/icons/antidot.png");
+        this.load.image("item_shield", "images/items/icons/antidote.png");
         this.load.image("item_ragePotion", "images/items/icons/rage_root.png");
 
 

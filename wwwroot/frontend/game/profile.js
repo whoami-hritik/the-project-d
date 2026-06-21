@@ -333,7 +333,7 @@ export class ProfileScene extends Phaser.Scene {
         }
 
         // EXP Bar using graphics and gradients
-        const activeMonster = state.selectedMonster || {};
+        const activeMonster = state.selectedMonsters && state.selectedMonsters[0] || {};
         const monsterLvl = activeMonster.level || this.USER.level || 1;
         const currentXP = activeMonster.xp || 0;
         const maxXP = activeMonster.maxXP || 500;
@@ -894,30 +894,60 @@ export class ProfileScene extends Phaser.Scene {
             if (!checkClick(pointer)) return;
 
             createloadingOverlay(this);
-            const initialTon = this.USER.ton || 0;
+            showNotification(this, "Watching for deposit... Please wait up to 5 minutes.");
+
+            let attempts = 0;
+            const maxAttempts = 20; // 20 * 15 seconds = 300 seconds (5 minutes)
             let verified = false;
+            let pollingInterval;
 
-            try {
-                await api.loadUser();
-                this.USER = state.user || {};
-                if (this.USER.ton > initialTon) {
-                    verified = true;
+            const performPoll = async () => {
+                attempts++;
+                try {
+                    const res = await api.pollDeposits();
+                    if (res && res.success && res.credited) {
+                        verified = true;
+                        this.USER = state.user || {};
+                        clearInterval(pollingInterval);
+                        destroyloadingOverlay(this);
+                        
+                        showNotification(this, t("deposit_success"));
+                        if (this.depositModal) {
+                            this.depositModal.destroy();
+                            this.depositModal = null;
+                        }
+                        this.scene.restart();
+                        return;
+                    }
+                } catch (err) {
+                    console.error("Error checking user balance via polling:", err);
                 }
-            } catch (err) {
-                console.error("Error checking user balance:", err);
-            }
 
-            destroyloadingOverlay(this);
+                if (attempts >= maxAttempts) {
+                    clearInterval(pollingInterval);
+                    destroyloadingOverlay(this);
+                    showNotification(this, t("deposit_not_detected"));
+                }
+            };
 
-            if (verified) {
-                showNotification(this, t("deposit_success"));
+            // Run first poll immediately
+            await performPoll();
+
+            if (!verified) {
+                pollingInterval = setInterval(performPoll, 15000);
+
+                // Clean up interval on scene shutdown or destroy
+                this.events.once("shutdown", () => clearInterval(pollingInterval));
+                this.events.once("destroy", () => clearInterval(pollingInterval));
+
+                // Also clean up if the deposit modal itself is destroyed
                 if (this.depositModal) {
-                    this.depositModal.destroy();
-                    this.depositModal = null;
+                    const originalDestroy = this.depositModal.destroy;
+                    this.depositModal.destroy = (...args) => {
+                        clearInterval(pollingInterval);
+                        originalDestroy.apply(this.depositModal, args);
+                    };
                 }
-                this.scene.restart();
-            } else {
-                showNotification(this, t("deposit_not_detected"));
             }
         });
     }

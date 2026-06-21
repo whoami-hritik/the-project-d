@@ -210,6 +210,11 @@ namespace monster_world.Controller
                     m.Level,
                     m.XP,
                     m.MaxXP,
+                    m.HP,
+                    m.MaxHP,
+                    m.ATK,
+                    m.DEF,
+                    m.SPD,
                     m.Rarity,
                     m.Element,
                     m.IsFighting
@@ -273,6 +278,87 @@ namespace monster_world.Controller
                 TotalEggsCombined = totalEggsCombined,
                 TotalGoldCirculation = totalGoldCirculation
             });
+        }
+
+        public class UpdateUserPayload
+        {
+            public long ID { get; set; }
+            public int Level { get; set; }
+            public double TON { get; set; }
+            public double GOLD { get; set; }
+            public double CRYSTAL { get; set; }
+            public double EGGS { get; set; }
+        }
+
+        [HttpPost("update-user")]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserPayload payload)
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == payload.ID);
+            if (user == null)
+            {
+                return NotFound(new { message = "User not found" });
+            }
+
+            user.Level = payload.Level;
+            user.Balance = new Balance
+            {
+                TON = payload.TON,
+                GOLD = payload.GOLD,
+                CRYSTAL = payload.CRYSTAL,
+                EGGS = payload.EGGS
+            };
+
+            _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true });
+        }
+
+        public class UpdateMonsterPayload
+        {
+            public string InstanceId { get; set; }
+            public int Level { get; set; }
+            public int HP { get; set; }
+            public int MaxHP { get; set; }
+            public int XP { get; set; }
+            public int MaxXP { get; set; }
+            public int ATK { get; set; }
+            public int DEF { get; set; }
+            public int SPD { get; set; }
+        }
+
+        [HttpPost("update-monster")]
+        public async Task<IActionResult> UpdateMonster([FromBody] UpdateMonsterPayload payload)
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            var monster = await _context.Monsters.FirstOrDefaultAsync(m => m.InstanceId == payload.InstanceId);
+            if (monster == null)
+            {
+                return NotFound(new { message = "Monster not found" });
+            }
+
+            monster.Level = payload.Level;
+            monster.HP = payload.HP;
+            monster.MaxHP = payload.MaxHP;
+            monster.XP = payload.XP;
+            monster.MaxXP = payload.MaxXP;
+            monster.ATK = payload.ATK;
+            monster.DEF = payload.DEF;
+            monster.SPD = payload.SPD;
+
+            _context.Monsters.Update(monster);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true });
         }
     }
 }

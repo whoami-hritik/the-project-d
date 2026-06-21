@@ -69,13 +69,13 @@ namespace monster_world.Services
             var map = _gameplay.Maps.FirstOrDefault(x => x.Map == mapId);
             double mapMultiplier = map?.GoldMultiplier > 0 ? map.GoldMultiplier : 1.0;
             double rarityMultiplier = 1.0;
-            if (!string.IsNullOrEmpty(battleState.EnemyMonster?.Rarity) && _gameplay.RarityMultiplier != null && _gameplay.RarityMultiplier.TryGetValue(battleState.EnemyMonster.Rarity, out var rarityMult))
+            if (!string.IsNullOrEmpty(battleState.EnemyMonsters.First().Rarity) && _gameplay.RarityMultiplier != null && _gameplay.RarityMultiplier.TryGetValue(battleState.EnemyMonsters.First().Rarity, out var rarityMult))
             {
                 rarityMultiplier = rarityMult;
             }
 
-            double level = Math.Max(1, battleState.EnemyMonster?.Level ?? 1);
-            double captureMultiplier = battleState.EnemyMonster?.IsCaptured == true ? 1.2 : 1.0;
+            double level = Math.Max(1, battleState.EnemyMonsters.First()?.Level ?? 1);
+            double captureMultiplier = battleState.EnemyMonsters.First()?.IsCaptured == true ? 1.2 : 1.0;
             double bossMultiplier = battleState.BossBattle ? 4.0 : 1.0;
             double victoryMultiplier = battleState.Victory ? 1.0 : new Random().Next(3, 5) / 10.0;
 
@@ -104,7 +104,7 @@ namespace monster_world.Services
                         // Notify admin
                         try
                         {
-                            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == battleState.PlayerMonster.OwnerID);
+                            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == battleState.PlayerMonsters.First().OwnerID);
                             if (user != null)
                             {
                                 string userNameInfo = string.IsNullOrEmpty(user.Username) ? "N/A" : $"@{user.Username}";
@@ -117,7 +117,7 @@ namespace monster_world.Services
                         }
                     }
                 }
-                else if (battleState.EnemyMonster?.IsCaptured == true)
+                else if (battleState.EnemyMonsters.First()?.IsCaptured == true)
                 {
                     if (rnd.NextDouble() < 0.01)
                     {
@@ -132,7 +132,7 @@ namespace monster_world.Services
                             // Notify admin
                             try
                             {
-                                var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == battleState.PlayerMonster.OwnerID);
+                                var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == battleState.PlayerMonsters.First().OwnerID);
                                 if (user != null)
                                 {
                                     string userNameInfo = string.IsNullOrEmpty(user.Username) ? "N/A" : $"@{user.Username}";

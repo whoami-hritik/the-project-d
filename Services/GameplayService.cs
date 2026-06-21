@@ -214,6 +214,11 @@ namespace monster_world.Services
         }
 
 
+        public Team GetTeamData()
+        {
+            return _gameplay.TeamData;
+        }
+
 
         public SkillDef GetSkillDef(string id)
         {

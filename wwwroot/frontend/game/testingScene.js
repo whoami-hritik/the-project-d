@@ -1,7 +1,6 @@
 // TestingScene.js - Interactive Phaser Text Style & Font Showcase
 // Demonstrates various text rendering techniques in Phaser 3, focusing on Google Web Fonts.
-
-// Translation dictionary for testing
+// // Translation dictionary for testing
 const translations = {
     en: {
         "lab_title": "PHASER FONT LABORATORY",
@@ -77,6 +76,91 @@ export class TestingScene extends Phaser.Scene {
 
         // 4. Create Background Selector (Bottom UI)
         this.createBackgroundSelector(width, height);
+
+        this.displayMonsters()
+    }
+
+
+    displayMonsters() {
+        // const monsters = JSON.parse(localStorage.getItem("selectedMonsters"));
+        const monsters = ["brasko", "chompy", "grunko"]
+        monsters.forEach((monster, i) => {
+
+            const x = 140 + i * 180;
+            const y = 500;
+
+            // Monster
+            const monsterSprite = this.add.image(
+                x,
+                y,
+                `front_brasko`
+            );
+
+            monsterSprite
+                .setOrigin(0.5, 1)
+                .setScale(0.7);
+
+            // Floating panel above monster
+            const panel = this.add.container(
+                x,
+                y - monsterSprite.displayHeight - 20
+            );
+
+            const bg = this.add.image(
+                0,
+                0,
+                `pane_tooltip_fire`
+            );
+
+            bg.setOrigin(0.5);
+
+            const nameText = this.add.text(
+                0,
+                -10,
+                monster.toUpperCase(),
+                {
+                    fontSize: "18px",
+                    color: "#ffffff",
+                    fontStyle: "bold"
+                }
+            ).setOrigin(0.5);
+
+            const levelText = this.add.text(
+                -50,
+                -35,
+                `LV ${i}`,
+                {
+                    fontSize: "14px",
+                    color: "#ffffff"
+                }
+            );
+
+            // HP bar background
+            const hpBg = this.add.rectangle(
+                0,
+                20,
+                100,
+                12,
+                0x222222
+            ).setOrigin(0.5);
+
+            // HP fill
+            const hpFill = this.add.rectangle(
+                -50,
+                20,
+                100 * (100 / 100),
+                12,
+                0x00ff00
+            ).setOrigin(0, 0.5);
+
+            panel.add([
+                bg,
+                nameText,
+                levelText,
+                hpBg,
+                hpFill
+            ]);
+        });
     }
 
     createBackgroundSystem(width, height) {
@@ -707,7 +791,7 @@ export function startGame() {
             mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH
         },
-        scene: [TestingScene],
+        scene: [TestingScene, PreloadScene],
         render: {
             pixelArt: false,
             roundPixels: true

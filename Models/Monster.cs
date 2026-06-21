@@ -20,6 +20,7 @@ namespace monster_world.Models
         public int MaxHP { get; set; }
         public int HP { get; set; }
         public DateTime LastHpRegenAt { get; set; } = DateTime.UtcNow;
+        public bool IsRegenerating { get; set; } = false;
         public int ATK { get; set; }
         public int DEF { get; set; }
         public int SPD { get; set; }
@@ -39,19 +40,42 @@ namespace monster_world.Models
 
         public bool ApplyPassiveRegen()
         {
+            if (IsFighting)
+            {
+                if (IsRegenerating)
+                {
+                    IsRegenerating = false;
+                    return true;
+                }
+                return false;
+            }
+
+            if (!IsRegenerating)
+            {
+                if (HP <= 0)
+                {
+                    IsRegenerating = true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (HP >= MaxHP)
+            {
+                IsRegenerating = false;
+                return false;
+            }
+
             var now = DateTime.UtcNow;
             var regenStart = LastHpRegenAt == default(DateTime)
                 ? (CaptureAt == default(DateTime) ? now : CaptureAt)
                 : LastHpRegenAt;
 
-            if (HP >= MaxHP)
+            if (HP < 0)
             {
-                if (LastHpRegenAt != now)
-                {
-                    LastHpRegenAt = now;
-                    return true;
-                }
-                return false;
+                HP = 0;
             }
 
             int ticks = (int)(now.Subtract(regenStart).TotalMinutes / 10.0);
@@ -68,6 +92,12 @@ namespace monster_world.Models
 
             HP = Math.Min(HP + healAmount, MaxHP);
             LastHpRegenAt = regenStart.AddMinutes(ticks * 10);
+
+            if (HP >= MaxHP)
+            {
+                IsRegenerating = false;
+            }
+
             Log(InstanceId, Level, "passive_heal");
             return true;
         }

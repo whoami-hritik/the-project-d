@@ -393,7 +393,9 @@ export class MissionScene extends Phaser.Scene {
             const barY = yPos + 30;
 
             const isClicked = localStorage.getItem("mission_clicked_" + mission.missionId) === "true";
-            const progress = mission.completed ? (mission.target || 1) : (mission.verificationType === "telegram_join" ? (isClicked ? 1 : 0) : (mission.progress || 0));
+            const progress = (mission.verificationType === "daily_login_streak")
+                ? (mission.progress || 0)
+                : (mission.completed ? (mission.target || 1) : (mission.verificationType === "telegram_join" ? (isClicked ? 1 : 0) : (mission.progress || 0)));
             const target = mission.target || 1;
             const fillRatio = Math.min(1, progress / target);
 
@@ -513,7 +515,9 @@ export class MissionScene extends Phaser.Scene {
         btnContainer.add(btnBg);
 
         const isClicked = localStorage.getItem("mission_clicked_" + mission.missionId) === "true";
-        const progress = mission.completed ? (mission.target || 1) : (mission.verificationType === "telegram_join" ? (isClicked ? 1 : 0) : (mission.progress || 0));
+        const progress = (mission.verificationType === "daily_login_streak")
+            ? (mission.progress || 0)
+            : (mission.completed ? (mission.target || 1) : (mission.verificationType === "telegram_join" ? (isClicked ? 1 : 0) : (mission.progress || 0)));
         const target = mission.target || 1;
         const canClaim = progress >= target;
 

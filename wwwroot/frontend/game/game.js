@@ -271,7 +271,7 @@ export class WorldScene extends Phaser.Scene {
     }
 
     initiateBonus() {
-        const bonusMonsters = ["grunko", "blubbo", "brasko"]
+        const bonusMonsters = ["grunko", "blubbo", "blazik"]
 
         const container = this.add.container(0, -1000).setDepth(100).setScrollFactor(0);
 
@@ -295,8 +295,7 @@ export class WorldScene extends Phaser.Scene {
                         console.log("bonus received");
                         container.destroy();
                         const selectedMons = this.add.image(80, this.height / 3, "front_" + m).setDisplaySize(120, 125).setOrigin(0).setDepth(100).setScrollFactor(0);
-                        localStorage.setItem("selectedMonster", JSON.stringify(data.monster));
-                        state.selectedMonster = data.monster;
+
                         this.tweens.add({
                             targets: selectedMons,
                             scale: 1,
@@ -342,6 +341,88 @@ export class WorldScene extends Phaser.Scene {
         const scale = (this.height + 100) / bg.height;
         bg.setScale(scale);
 
+        // Collector Icon Container (x: 110, y: 310 centers a 120x120 icon in the 50-170 / 250-370 box)
+        const collectorContainer = this.add.container(110, 310);
+
+        const collector = this.add.image(0, 0, "collector_icon").setOrigin(0.5);
+        collector.setDisplaySize(120, 120);
+
+        // Ornate "COLLECTOR" title text with gold-to-orange gradient
+        const collectorTitle = this.add.text(0, 68, "COLLECTOR", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "18px",
+            stroke: "#000000",
+            strokeThickness: 5,
+            align: "center"
+        }).setOrigin(0.5);
+
+        // Apply linear gradient fill
+        const titleGrad = collectorTitle.context.createLinearGradient(0, 0, 0, collectorTitle.height);
+        titleGrad.addColorStop(0, '#ffe066'); // Light gold
+        titleGrad.addColorStop(1, '#f5a623'); // Gold-orange
+        collectorTitle.setFill(titleGrad);
+
+
+        // Translucent dark capsule background with a gold stroke
+        const timerBg = this.add.graphics();
+        timerBg.fillStyle(0x000000, 0.65);
+        timerBg.fillRoundedRect(-65, -87, 130, 24, 6);
+        timerBg.lineStyle(1.5, 0xffd700, 0.8);
+        timerBg.strokeRoundedRect(-65, -87, 130, 24, 6);
+
+        // Neon yellow/gold stylized countdown timer
+        const timerText = this.add.text(0, -75, "3d 00h 00m 00s", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "15px",
+            color: "#ffd700",
+            stroke: "#000000",
+            strokeThickness: 4,
+            align: "center"
+        }).setOrigin(0.5);
+
+        collectorContainer.add([collector, collectorTitle, timerBg, timerText]);
+
+        // Smooth pulse tween scaling the entire container
+        this.tweens.add({
+            targets: collectorContainer,
+            scaleX: 1.06,
+            scaleY: 1.06,
+            duration: 1200,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // 24 June 1:00 PM IST = 24 June 07:30 AM UTC (Month index 5 = June)
+        const targetTime = Date.UTC(2026, 5, 24, 7, 30, 0);
+
+        const updateTimer = () => {
+            const now = Date.now();
+            const diffMs = targetTime - now;
+
+            if (diffMs > 0) {
+                const totalSeconds = Math.floor(diffMs / 1000);
+                const days = Math.floor(totalSeconds / 86400);
+                const hours = Math.floor((totalSeconds % 86400) / 3600);
+                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                const seconds = totalSeconds % 60;
+
+                const pad = (num) => String(num).padStart(2, '0');
+                timerText.setText(`${days}d ${pad(hours)}h ${pad(minutes)}m ${pad(seconds)}s`);
+            } else {
+                timerText.setText("EXPIRED");
+            }
+        };
+
+        // Run immediately and start the ticker
+        updateTimer();
+        this.time.addEvent({
+            delay: 1000,
+            callback: updateTimer,
+            loop: true
+        });
+
+
         const worldWidth = bg.displayWidth;
         const worldHeight = bg.displayHeight;
 
@@ -368,6 +449,7 @@ export class WorldScene extends Phaser.Scene {
             // { name: "gold_city", x: 1131, y: 429 },
             // { name: "fire_temple", x:135, y: 380 },
             // { name: "powerplant", x: 408, y: 453 }
+
         ];
 
         const showConfirmModal = (mapName, cost, onConfirm) => {

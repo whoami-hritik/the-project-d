@@ -632,6 +632,50 @@
             color: var(--text-primary);
             background-color: rgba(234, 179, 8, 0.05);
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background-color: var(--bg-surface);
+            padding: 2rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg);
+            width: 450px;
+            max-width: 90%;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            position: relative;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .close-btn {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            transition: var(--transition-smooth);
+        }
+        
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
     </style>
 </head>
 <body>
@@ -726,6 +770,11 @@
                                 <div id="details-username" class="user-username">@johndoe</div>
                                 <div id="details-uid" class="uid-tag">UID: 1234567</div>
                                 <span class="badge" id="details-role" style="display: inline-block; margin-left: 0.5rem; vertical-align: middle;">USER</span>
+                                <div>
+                                    <button class="tab-btn" style="margin-top: 0.5rem; display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem;" onclick="openEditUserModal()">
+                                        ✏️ Edit Profile & Balances
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         
@@ -806,6 +855,7 @@
                                         <th>Rarity</th>
                                         <th>Element</th>
                                         <th>Team Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="monsters-table-body">
@@ -902,10 +952,105 @@
         </div>
     </div>
 
+    <!-- EDIT USER MODAL -->
+    <div id="edit-user-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeEditUserModal()">&times;</span>
+            <h2 style="font-weight: 700; color: var(--text-primary); margin: 0;">Edit User Profile</h2>
+            <form id="edit-user-form" onsubmit="saveUserProfile(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="hidden" id="edit-user-id">
+                <div class="form-group">
+                    <label class="form-label">User Level</label>
+                    <input class="form-input" type="number" id="edit-user-level" required min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">TON Balance</label>
+                    <input class="form-input" type="number" step="any" id="edit-user-ton" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">GOLD Balance</label>
+                    <input class="form-input" type="number" step="any" id="edit-user-gold" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">EGGS Balance</label>
+                    <input class="form-input" type="number" step="any" id="edit-user-eggs" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">CRYSTAL Balance</label>
+                    <input class="form-input" type="number" step="any" id="edit-user-crystal" required>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 0.5rem; background-color: var(--accent-primary); color: var(--bg-base); border: none; font-weight: bold; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- EDIT MONSTER MODAL -->
+    <div id="edit-monster-modal" class="modal">
+        <div class="modal-content" style="width: 500px;">
+            <span class="close-btn" onclick="closeEditMonsterModal()">&times;</span>
+            <h2 style="font-weight: 700; color: var(--text-primary); margin: 0;" id="edit-monster-title-header">Edit Monster</h2>
+            <form id="edit-monster-form" onsubmit="saveMonsterData(event)" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="hidden" id="edit-monster-instanceid">
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Level</label>
+                        <input class="form-input" type="number" id="edit-monster-level" required min="1">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Element</label>
+                        <input class="form-input" type="text" id="edit-monster-element" disabled style="opacity: 0.7;">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Current HP</label>
+                        <input class="form-input" type="number" id="edit-monster-hp" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max HP</label>
+                        <input class="form-input" type="number" id="edit-monster-maxhp" required min="1">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">Current XP</label>
+                        <input class="form-input" type="number" id="edit-monster-xp" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Max XP</label>
+                        <input class="form-input" type="number" id="edit-monster-maxxp" required min="1">
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
+                    <div class="form-group">
+                        <label class="form-label">ATK</label>
+                        <input class="form-input" type="number" id="edit-monster-atk" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">DEF</label>
+                        <input class="form-input" type="number" id="edit-monster-def" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">SPD</label>
+                        <input class="form-input" type="number" id="edit-monster-spd" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn" style="margin-top: 0.5rem; background-color: var(--accent-primary); color: var(--bg-base); border: none; font-weight: bold; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer;">Save Changes</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '/api/admin';
         let activeUserId = null;
         let allTransactions = [];
+        let currentUserDetails = null;
+        let currentUserMonsters = [];
 
         // --- Lifecycle hook ---
         window.addEventListener('DOMContentLoaded', () => {
@@ -1152,8 +1297,12 @@
             const monstersTableBody = document.getElementById('monsters-table-body');
             document.getElementById('monsters-count').innerText = data.monsters ? data.monsters.length : 0;
             monstersTableBody.innerHTML = '';
+            
+            currentUserDetails = data.user;
+            currentUserMonsters = data.monsters || [];
+
             if (!data.monsters || data.monsters.length === 0) {
-                monstersTableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted)">No Dynamons in inventory</td></tr>';
+                monstersTableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted)">No Dynamons in inventory</td></tr>';
             } else {
                 data.monsters.forEach(m => {
                     const tr = document.createElement('tr');
@@ -1176,6 +1325,11 @@
                         <td style="color: ${rarityColor}; text-transform: capitalize; font-weight: 600;">${m.rarity}</td>
                         <td style="text-transform: capitalize;">${m.element || 'Normal'}</td>
                         <td class="${statusClass}">${statusText}</td>
+                        <td>
+                            <button class="tab-btn" onclick="openEditMonsterModal('${m.instanceId}')" style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                ✏️ Edit
+                            </button>
+                        </td>
                     `;
                     monstersTableBody.appendChild(tr);
                 });
@@ -1276,6 +1430,110 @@
                 case 2: return 'TESTER';
                 case 1: return 'MODERATOR';
                 default: return 'USER';
+            }
+        }
+
+        // --- User / Monster Edit Modals ---
+        function openEditUserModal() {
+            if (!currentUserDetails) return;
+            document.getElementById('edit-user-id').value = currentUserDetails.id;
+            document.getElementById('edit-user-level').value = currentUserDetails.level || 1;
+            document.getElementById('edit-user-ton').value = currentUserDetails.balance.ton || 0;
+            document.getElementById('edit-user-gold').value = currentUserDetails.balance.gold || 0;
+            document.getElementById('edit-user-eggs').value = currentUserDetails.balance.eggs || 0;
+            document.getElementById('edit-user-crystal').value = currentUserDetails.balance.crystal || 0;
+            
+            document.getElementById('edit-user-modal').style.display = 'flex';
+        }
+
+        function closeEditUserModal() {
+            document.getElementById('edit-user-modal').style.display = 'none';
+        }
+
+        async function saveUserProfile(e) {
+            e.preventDefault();
+            const id = parseInt(document.getElementById('edit-user-id').value);
+            const level = parseInt(document.getElementById('edit-user-level').value);
+            const ton = parseFloat(document.getElementById('edit-user-ton').value);
+            const gold = parseFloat(document.getElementById('edit-user-gold').value);
+            const eggs = parseFloat(document.getElementById('edit-user-eggs').value);
+            const crystal = parseFloat(document.getElementById('edit-user-crystal').value);
+
+            try {
+                const response = await fetch(`${API_BASE}/update-user`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ id, level, ton, gold, eggs, crystal })
+                });
+
+                if (response.ok) {
+                    closeEditUserModal();
+                    await selectUser(id);
+                    await loadUsersList();
+                    alert("User profile updated successfully!");
+                } else {
+                    alert("Failed to update user profile.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred while saving user profile.");
+            }
+        }
+
+        function openEditMonsterModal(instanceId) {
+            const m = currentUserMonsters.find(x => x.instanceId === instanceId);
+            if (!m) return;
+
+            document.getElementById('edit-monster-instanceid').value = m.instanceId;
+            document.getElementById('edit-monster-title-header').innerText = `Edit Dynamon: ${m.title || m.id}`;
+            document.getElementById('edit-monster-level').value = m.level || 1;
+            document.getElementById('edit-monster-element').value = m.element || 'Normal';
+            document.getElementById('edit-monster-hp').value = m.hp !== undefined ? m.hp : 100;
+            document.getElementById('edit-monster-maxhp').value = m.maxHP || 100;
+            document.getElementById('edit-monster-xp').value = m.xp || 0;
+            document.getElementById('edit-monster-maxxp').value = m.maxXP || 100;
+            document.getElementById('edit-monster-atk').value = m.atk || 10;
+            document.getElementById('edit-monster-def').value = m.def || 10;
+            document.getElementById('edit-monster-spd').value = m.spd || 10;
+
+            document.getElementById('edit-monster-modal').style.display = 'flex';
+        }
+
+        function closeEditMonsterModal() {
+            document.getElementById('edit-monster-modal').style.display = 'none';
+        }
+
+        async function saveMonsterData(e) {
+            e.preventDefault();
+            const instanceId = document.getElementById('edit-monster-instanceid').value;
+            const level = parseInt(document.getElementById('edit-monster-level').value);
+            const hp = parseInt(document.getElementById('edit-monster-hp').value);
+            const maxHP = parseInt(document.getElementById('edit-monster-maxhp').value);
+            const xp = parseInt(document.getElementById('edit-monster-xp').value);
+            const maxXP = parseInt(document.getElementById('edit-monster-maxxp').value);
+            const atk = parseInt(document.getElementById('edit-monster-atk').value);
+            const def = parseInt(document.getElementById('edit-monster-def').value);
+            const spd = parseInt(document.getElementById('edit-monster-spd').value);
+
+            try {
+                const response = await fetch(`${API_BASE}/update-monster`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ instanceId, level, hp, maxHP, xp, maxXP, atk, def, spd })
+                });
+
+                if (response.ok) {
+                    closeEditMonsterModal();
+                    if (activeUserId) {
+                        await selectUser(activeUserId);
+                    }
+                    alert("Monster updated successfully!");
+                } else {
+                    alert("Failed to update monster.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("An error occurred while saving monster data.");
             }
         }
     </script>

@@ -334,10 +334,17 @@ export class MapScene extends Phaser.Scene {
                             moveNext(index + 1); // Trigger the next segment
                             //start battle if active
                             if (player.position == l.name && l.active) {
-                                api.StartBattle(this.world, l.name, state.selectedMonster.instanceId).then(result => {
+                                const attackerIds = (state.selectedMonsters && state.selectedMonsters.length > 0)
+                                    ? state.selectedMonsters.filter(m => m.hp > 0).map(m => m.instanceId)
+                                    : [];
+                                if (attackerIds.length === 0) {
+                                    showNotification(this, "No healthy monsters selected for battle. Please heal them first!");
+                                    return;
+                                }
+                                api.StartBattle(this.world, l.name, attackerIds).then(result => {
                                     if (result.success) {
                                         l.active = false;
-                                        this.scene.start("BattleScene", { map: this.world, node: l, battleState: result.battleState })
+                                        this.scene.start("BattleScene", { map: this.world, node: l, battleState: result.battleState, selectedMonsters: state.selectedMonsters })
                                     }
                                     else {
                                         showNotification(this, result.reason);

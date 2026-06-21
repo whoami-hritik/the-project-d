@@ -133,6 +133,22 @@ export class MapScene extends Phaser.Scene {
         api.loadUser().then(result => {
             this.USER = state.user;
             this.createProfile();
+
+            if (this.world === "bootcamp" && localStorage.getItem("map_tutorial_done") !== "true") {
+                this.scene.launch("TutorialScene", { mode: "map" });
+                this.scene.pause();
+
+                const tutorialScene = this.scene.get("TutorialScene");
+                if (tutorialScene) {
+                    tutorialScene.events.once("shutdown", () => {
+                        this.scene.resume();
+                        api.loadUser().then(res => {
+                            this.USER = state.user;
+                            this.createProfile();
+                        });
+                    });
+                }
+            }
         });
 
         utility.createloadingOverlay(this);
@@ -169,7 +185,10 @@ export class MapScene extends Phaser.Scene {
                 if (scenes[i] === "WorldScene") {
                     this.scene.start(scenes[i]);
                 } else {
-                    this.scene.launch(scenes[i]);
+                    if (scenes[i] === "ShopScene") {
+                        this.scene.stop("ShopScene");
+                    }
+                    this.scene.launch(scenes[i], { onlyItems: false });
                     this.scene.pause();
                     const sub = this.scene.get(scenes[i]);
                     sub.events.once("shutdown", () => {

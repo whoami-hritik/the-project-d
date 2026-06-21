@@ -46,6 +46,7 @@ export class BattleScene extends Phaser.Scene {
         this.world = data.map;
         this.node = data.node;
         this.battleState = data.battleState;
+        this.isMockBattle = data.isMockBattle || false;
 
         // Sync our local selectedMonsters with the fresh data from the server's battleState
         if (data.selectedMonsters && data.battleState && data.battleState.playerMonsters) {
@@ -116,6 +117,10 @@ export class BattleScene extends Phaser.Scene {
             enemyHypno: false,
             playerRage: false,
             enemyRage: false
+        };
+
+        if (this.isMockBattle) {
+            this.initBattleTutorial();
         }
     }
 
@@ -321,7 +326,8 @@ export class BattleScene extends Phaser.Scene {
     initalizeBg() {
 
         if (!this.bgImage) {
-            this.bgImage = this.add.image(0, 0, this.node.bgs).setOrigin(0);
+            const bgKey = (this.node && this.node.bgs) ? this.node.bgs : "bgs_camp";
+            this.bgImage = this.add.image(0, 0, bgKey).setOrigin(0);
             this.bgImage.setDisplaySize(this.width, this.height);
             this.bgImage.setDepth(0);
         }
@@ -537,6 +543,7 @@ export class BattleScene extends Phaser.Scene {
 
 
         this.moreButton.on("pointerup", () => {
+            if (this.isMockBattle && this.battleTutStep !== 4 && this.battleTutStep !== 7) return;
             this.createOverlay();
 
             this.backButton.setDepth(101);
@@ -554,24 +561,44 @@ export class BattleScene extends Phaser.Scene {
                         targets: this.moreOptions,
                         y: OPTIONS_POS_Y,
                         duration: 200,
-                        ease: 'Power2'
+                        ease: 'Power2',
+                        onComplete: () => {
+                            if (this.isMockBattle) {
+                                if (this.battleTutStep === 4) {
+                                    this.battleTutStep = 5;
+                                    this.nextBattleTutStep();
+                                } else if (this.battleTutStep === 7) {
+                                    this.battleTutStep = 8;
+                                    this.nextBattleTutStep();
+                                }
+                            }
+                        }
                     });
                 }
             });
-
         });
 
         this.itemsButton.on("pointerup", () => {
+            if (this.isMockBattle) {
+                showNotification(this, "Items are locked during training!");
+                return;
+            }
             this.scene.launch("ItemScene", { inBattle: true });
         });
 
         this.catchButton.on("pointerup", () => {
+            if (this.isMockBattle && this.battleTutStep !== 5) return;
             this.backButton.emit('pointerup');
             this.captureMonster();
         });
 
         this.shopButton.on("pointerup", () => {
-            this.scene.launch("ShopScene", { activeTab: "Items", onlyItems: true });
+            if (this.isMockBattle) {
+                showNotification(this, "Shop is unavailable during training!");
+                return;
+            }
+             this.scene.stop("ShopScene");
+             this.scene.launch("ShopScene", { activeTab: "Items", onlyItems: true });
         });
         this.backButton.on("pointerup", () => {
             if (this.player.hp <= 0) {
@@ -615,6 +642,13 @@ export class BattleScene extends Phaser.Scene {
 
         this.escapeButton.on("pointerup", (pointer) => {
             if (!checkClick(pointer)) return;
+
+            if (this.isMockBattle) {
+                if (this.battleTutStep === 8) {
+                    this.executeMockEscape();
+                }
+                return;
+            }
 
             api.EscapeBattle(this.battleState.battleId).then(result => {
                 if (result.success) {
@@ -807,6 +841,10 @@ export class BattleScene extends Phaser.Scene {
 
 
     captureMonster() {
+        if (this.enemy && (this.enemy.isBoss || this.enemy.IsBoss)) {
+            showNotification(this, t("cannot_catch_boss"));
+            return;
+        }
         this.preventOptions();
         const fx = this.add.sprite(-100, 350, "catch_use");
         fx.setDisplaySize(fx.displayWidth / 2, fx.displayHeight / 2).setOrigin(0);
@@ -819,6 +857,11 @@ export class BattleScene extends Phaser.Scene {
                 fx.once("animationcomplete", (animation) => {
                     if (animation.key === "anim_catch_start") {
                         fx.anims.play("anim_catch_status", true);
+
+                        if (this.isMockBattle) {
+                            this.executeMockCapture(fx);
+                            return;
+                        }
 
                         api.CatchMonster(this.battleState.battleId, this.player.instanceId).then(result => {
                             if (result.success) {
@@ -1039,6 +1082,15 @@ export class BattleScene extends Phaser.Scene {
 
             if (this.playerState.cooldownSkill === skill) {
                 showNotification(this, "This skill is on cooldown!");
+                return;
+            }
+
+            if (this.isMockBattle) {
+                if (this.battleTutStep === 2) {
+                    this.executeMockAttack(skill, cardBack);
+                } else {
+                    this.allowOptions();
+                }
                 return;
             }
 
@@ -1493,6 +1545,13 @@ export class BattleScene extends Phaser.Scene {
     }
 
     executeEnemySkill() {
+        if (!this.enemyAttack) {
+            console.warn("No enemy attack to execute.");
+            updateEnemyState(this);
+            this.allowOptions();
+            return;
+        }
+
         const skillId = this.enemyState.lastEffect;
 
         if (skillId !== "rage" && skillId !== "rage_fire_ring") {
@@ -1835,6 +1894,276 @@ export class BattleScene extends Phaser.Scene {
         });
     }
 
+    initBattleTutorial() {
+        this.battleTutStep = 0;
+        this.preventOptions();
+
+        this.battleTutOverlay = this.add.graphics().setDepth(190);
+        this.battleTutCard = null;
+
+        this.nextBattleTutStep();
+    }
+
+    nextBattleTutStep() {
+        if (this.battleTutCard) {
+            this.battleTutCard.destroy();
+            this.battleTutCard = null;
+        }
+
+        this.battleTutOverlay.clear();
+        this.battleTutOverlay.fillStyle(0x020617, 0.65); // Slate 950 overlay
+
+        let titleKey = "";
+        let descKey = "";
+        let highlights = null;
+        let showNextBtn = true;
+
+        switch (this.battleTutStep) {
+            case 0:
+                titleKey = "bat_tut_intro";
+                descKey = "bat_tut_intro_desc";
+                highlights = null;
+                showNextBtn = true;
+                break;
+            case 1:
+                titleKey = "bat_tut_hp";
+                descKey = "bat_tut_hp_desc";
+                highlights = [
+                    { x: PLAYER_PANE.x + 120, y: PLAYER_PANE.y + 40, w: 250, h: 100 },
+                    { x: ENEMY_PANE.x + 120, y: ENEMY_PANE.y + 40, w: 250, h: 100 }
+                ];
+                showNextBtn = true;
+                break;
+            case 2:
+                titleKey = "bat_tut_skills";
+                descKey = "bat_tut_skills_desc";
+                highlights = [
+                    { x: 210, y: OPTIONS_POS_Y - 40, w: 200, h: 100 }
+                ];
+                showNextBtn = false;
+                this.allowOptions();
+                break;
+            case 3:
+                titleKey = "bat_tut_hit";
+                descKey = "bat_tut_hit_desc";
+                highlights = null;
+                showNextBtn = true;
+                break;
+            case 4:
+                titleKey = "bat_tut_catch";
+                descKey = "bat_tut_catch_desc";
+                highlights = [
+                    { x: 40, y: OPTIONS_POS_Y - 40, w: 80, h: 80 }
+                ];
+                showNextBtn = false;
+                this.allowOptions();
+                break;
+            case 5:
+                titleKey = "bat_tut_catch";
+                descKey = "bat_tut_catch_desc";
+                highlights = [
+                    { x: 395 - 40, y: OPTIONS_POS_Y - 40, w: 80, h: 80 }
+                ];
+                showNextBtn = false;
+                this.allowOptions();
+                break;
+            case 6:
+                titleKey = "bat_tut_fail";
+                descKey = "bat_tut_fail_desc";
+                highlights = null;
+                showNextBtn = true;
+                break;
+            case 7:
+                titleKey = "bat_tut_more";
+                descKey = "bat_tut_more_desc";
+                highlights = [
+                    { x: 40, y: OPTIONS_POS_Y - 40, w: 80, h: 80 }
+                ];
+                showNextBtn = false;
+                this.allowOptions();
+                break;
+            case 8:
+                titleKey = "bat_tut_escape";
+                descKey = "bat_tut_escape_desc";
+                highlights = [
+                    { x: 395 - 40 - 80, y: OPTIONS_POS_Y - 40, w: 80, h: 80 }
+                ];
+                showNextBtn = false;
+                this.allowOptions();
+                break;
+        }
+
+        if (highlights) {
+            this.battleTutOverlay.fillRect(0, 0, this.width, this.height);
+            this.battleTutOverlay.lineStyle(3, 0xf59e0b, 1);
+            highlights.forEach(h => {
+                this.battleTutOverlay.strokeRect(h.x - h.w / 2, h.y - h.h / 2, h.w, h.h);
+            });
+        } else {
+            this.battleTutOverlay.fillRect(0, 0, this.width, this.height);
+        }
+
+        // Dynamically position the battle tutorial card to avoid blocking highlights
+        let cardY = 260;
+        if (highlights && highlights.length > 0) {
+            const firstHighlight = highlights[0];
+            if (firstHighlight.y > this.height / 2) {
+                // Highlight is on bottom half of the screen; place dialog at top
+                cardY = 40;
+            } else {
+                // Highlight is on top half of the screen; place dialog at bottom
+                cardY = this.height - 280;
+            }
+        }
+
+        this.battleTutCard = this.add.container(20, cardY).setDepth(200);
+
+        const cardBg = this.add.graphics();
+        cardBg.fillStyle(0x0f172a, 0.96);
+        cardBg.lineStyle(3, 0xf59e0b, 1);
+        cardBg.fillRoundedRect(0, 0, this.width - 40, 220, 16);
+        cardBg.strokeRoundedRect(0, 0, this.width - 40, 220, 16);
+        this.battleTutCard.add(cardBg);
+
+        const avatar = this.add.text(45, 45, "🧙‍♂️", { fontSize: "48px" }).setOrigin(0.5);
+        this.battleTutCard.add(avatar);
+        this.tweens.add({
+            targets: avatar,
+            y: 52,
+            duration: 900,
+            yoyo: true,
+            repeat: -1,
+            ease: "Sine.easeInOut"
+        });
+
+        const title = this.add.text(90, 25, t(titleKey), {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "20px",
+            color: "#f59e0b"
+        }).setStroke("#000000", 3);
+        this.battleTutCard.add(title);
+
+        const desc = this.add.text(25, 95, t(descKey), {
+            fontFamily: "Nunito, Arial, sans-serif",
+            fontSize: "14px",
+            color: "#ffffff",
+            wordWrap: { width: this.width - 90, useAdvancedWrap: true },
+            lineSpacing: 4
+        });
+        this.battleTutCard.add(desc);
+
+        const skip = this.add.text(this.width - 40 - 25, 25, t("skip_btn") + " ⏭️", {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "12px",
+            color: "#ef4444"
+        }).setOrigin(1, 0).setInteractive({ useHandCursor: true }).setStroke("#000000", 2);
+        this.battleTutCard.add(skip);
+        skip.on("pointerup", (p) => {
+            if (!checkClick(p)) return;
+            this.executeMockEscape();
+        });
+
+        if (showNextBtn) {
+            const btnNext = this.add.image(this.width - 40 - 75, 180, "btn_blank")
+                .setDisplaySize(110, 32)
+                .setInteractive({ useHandCursor: true });
+            btnNext.setTint(0xf59e0b);
+            this.battleTutCard.add(btnNext);
+
+            const btnText = this.add.text(this.width - 40 - 75, 180, t("next_btn"), {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+                fontSize: "13px",
+                color: "#0f172a"
+            }).setOrigin(0.5);
+            this.battleTutCard.add(btnText);
+
+            btnNext.on("pointerup", (p) => {
+                if (!checkClick(p)) return;
+                this.battleTutStep++;
+                this.nextBattleTutStep();
+            });
+        }
+    }
+
+    executeMockAttack(skill, cardBack) {
+        this.preventOptions();
+        
+        this.tweens.add({
+            targets: cardBack,
+            y: OPTIONS_POS_Y - 80,
+            duration: 400,
+            ease: 'Power2',
+            onComplete: () => {
+                const fx = this.add.sprite(cardBack.x, cardBack.y, "anim_card_use");
+                fx.setDisplaySize(fx.displayWidth / 1.5, fx.displayHeight / 1.5).setOrigin(0.5, 1);
+                fx.anims.play("anim_card_use");
+                cardBack.y = 1000;
+
+                fx.on("animationcomplete", () => {
+                    fx.destroy();
+                    
+                    playAnimScratch(this, this.defenderContainer.x + 100, this.defenderContainer.y + 100, () => {
+                        this.enemy.hp = 5;
+                        this.updateEnemyHp();
+
+                        this.time.delayedCall(1000, () => {
+                            playAnimScratch(this, this.attackerContainer.x + 100, this.attackerContainer.y + 100, () => {
+                                this.player.hp = 35;
+                                this.updatePlayerHp();
+
+                                this.time.delayedCall(800, () => {
+                                    this.battleTutStep = 3;
+                                    this.nextBattleTutStep();
+                                });
+                            });
+                        });
+                    });
+                });
+            }
+        });
+    }
+
+    executeMockCapture(fx) {
+        this.preventOptions();
+        this.time.delayedCall(1500, () => {
+            fx.anims.play("anim_catch_failed", true);
+            fx.once("animationcomplete", (anim) => {
+                if (anim.key === "anim_catch_failed") {
+                    fx.destroy();
+                    this.time.delayedCall(800, () => {
+                        this.battleTutStep = 6;
+                        this.nextBattleTutStep();
+                    });
+                }
+            });
+        });
+    }
+
+    async executeMockEscape() {
+        this.preventOptions();
+        if (this.battleTutCard) {
+            this.battleTutCard.destroy();
+        }
+        if (this.battleTutOverlay) {
+            this.battleTutOverlay.destroy();
+        }
+
+        try {
+            await api.completeTutorial();
+            state.user.tutorial = true;
+        } catch (err) {
+            console.error("Failed to complete tutorial:", err);
+        }
+
+        localStorage.setItem("map_tutorial_done", "true");
+        localStorage.setItem("battle_tutorial_done", "true");
+
+        this.cameras.main.fadeOut(500, 0, 0, 0);
+        this.cameras.main.once("camerafadeoutcomplete", () => {
+            this.scene.stop();
+            this.scene.start("MapScene", { map: "bootcamp" });
+        });
+    }
 
 }
 
@@ -2064,7 +2393,6 @@ function strikeAnim(scene, targetX, targetY, skillId, callback) {
             }
         });
     }
-
 }
 
 function playAnimScratch(scene, x, y, callback) {

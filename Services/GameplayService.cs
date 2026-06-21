@@ -470,7 +470,7 @@ namespace monster_world.Services
             return value >= value1 && value <= value2;
         }
 
-        public double GetOddRange(Monster monster)
+        public double GetOddRange(Monster defendingMonster, Monster attackingMonster)
         {
             if (_gameplay.CatchOdds == null || !_gameplay.CatchOdds.Any())
             {
@@ -478,31 +478,42 @@ namespace monster_world.Services
             }
 
             var catchRange = _gameplay.CatchOdds.FirstOrDefault(x =>
-                string.Equals(x.Rarity?.Trim(), monster.Rarity?.Trim(), StringComparison.OrdinalIgnoreCase));
+                string.Equals(x.Rarity?.Trim(), defendingMonster.Rarity?.Trim(), StringComparison.OrdinalIgnoreCase));
 
             if (catchRange == null)
             {
-                throw new InvalidOperationException($"Catch odds not configured for rarity '{monster.Rarity ?? "<null>"}'.");
+                throw new InvalidOperationException($"Catch odds not configured for rarity '{defendingMonster.Rarity ?? "<null>"}'.");
             }
 
             int hpPercent = 0;
-            if (monster.MaxHP > 0)
+            if (defendingMonster.MaxHP > 0)
             {
-                hpPercent = (int)Math.Round((double)monster.HP / monster.MaxHP * 100);
+                hpPercent = (int)Math.Round((double)defendingMonster.HP / defendingMonster.MaxHP * 100);
                 hpPercent = Math.Clamp(hpPercent, 0, 100);
             }
             else
             {
-                hpPercent = Math.Clamp(monster.HP, 0, 100);
+                hpPercent = Math.Clamp(defendingMonster.HP, 0, 100);
             }
 
             var oddRange = catchRange.OddRanges.FirstOrDefault(y => CheckBetween(hpPercent, y.HpWhen));
             if (oddRange == null)
             {
-                throw new InvalidOperationException($"No catch odds range found for HP% {hpPercent} (raw HP {monster.HP}, max HP {monster.MaxHP}) in rarity '{catchRange.Rarity}'.");
+                throw new InvalidOperationException($"No catch odds range found for HP% {hpPercent} (raw HP {defendingMonster.HP}, max HP {defendingMonster.MaxHP}) in rarity '{catchRange.Rarity}'.");
             }
 
-            return oddRange.Chance;
+            double baseChance = oddRange.Chance;
+            if (attackingMonster == null)
+            {
+                return baseChance;
+            }
+
+            int levelDifference = attackingMonster.Level - defendingMonster.Level;
+            double scalingFactor = 0.02; // 2% per level difference
+            double levelModifier = 1.0 + (levelDifference * scalingFactor);
+            levelModifier = Math.Clamp(levelModifier, 0.25, 2.0);
+
+            return Math.Clamp(baseChance * levelModifier, 0.01, 0.99);
         }
 
 

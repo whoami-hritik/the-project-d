@@ -55,7 +55,19 @@ export class WorldScene extends Phaser.Scene {
             this.createProfile();
             this.renderWorldIcons();
 
-            if (this.USER && !this.USER.streakClaimed) {
+            if (this.USER && !this.USER.tutorial) {
+                this.scene.launch("TutorialScene");
+                this.scene.pause();
+                
+                const tutorialScene = this.scene.get("TutorialScene");
+                if (tutorialScene) {
+                    tutorialScene.events.once("shutdown", () => {
+                        if (this.USER && !this.USER.streakClaimed) {
+                            this.scene.launch("StreakScene");
+                        }
+                    });
+                }
+            } else if (this.USER && !this.USER.streakClaimed) {
                 this.scene.launch("StreakScene");
             }
 
@@ -251,7 +263,10 @@ export class WorldScene extends Phaser.Scene {
                 if (scenes[i] === "") {
 
                 } else {
-                    this.scene.launch(scenes[i]);
+                    if (scenes[i] === "ShopScene") {
+                        this.scene.stop("ShopScene");
+                    }
+                    this.scene.launch(scenes[i], { onlyItems: false });
                     this.scene.pause();
                     const sub = this.scene.get(scenes[i]);
                     sub.events.once("shutdown", () => {

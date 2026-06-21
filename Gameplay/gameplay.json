@@ -629,8 +629,12 @@
             "bossLevel": "16:18"
         },
         {
-            "playerLevel": "16:50",
+            "playerLevel": "16:20",
             "bossLevel": "19:25"
+        },
+        {
+            "playerLevel": "21:25",
+            "bossLevel": "25:30"
         }
     ],
     "mapMonsters": [

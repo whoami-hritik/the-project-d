@@ -740,13 +740,18 @@
         </div>
 
         <div class="workspace">
-            <!-- Sidebar: User list -->
+            <!-- Sidebar: User/Monster list -->
             <div class="sidebar">
+                <div style="display: flex; border-bottom: 1px solid var(--border-color);">
+                    <button id="tab-search-users" style="flex: 1; border: none; background: var(--bg-base); color: var(--accent-primary); border-bottom: 2px solid var(--accent-primary); padding: 0.75rem; font-size: 0.9rem; font-weight: 700; cursor: pointer;" onclick="setSearchMode('users')">Search Users</button>
+                    <button id="tab-search-monsters" style="flex: 1; border: none; background: var(--bg-surface); color: var(--text-secondary); padding: 0.75rem; font-size: 0.9rem; font-weight: 500; cursor: pointer;" onclick="setSearchMode('monsters')">Search Monsters</button>
+                </div>
                 <div class="search-box">
                     <input type="text" class="form-input" id="user-search-input" placeholder="Search by UID, Username..." oninput="handleSearch()">
+                    <input type="text" class="form-input" id="monster-search-input" placeholder="Search by Monster ID or Type..." oninput="handleMonsterSearch()" style="display: none;">
                 </div>
                 <div class="users-list" id="users-list-container">
-                    <!-- Dynamic user cards -->
+                    <!-- Dynamic cards -->
                 </div>
             </div>
 
@@ -1045,6 +1050,84 @@
         </div>
     </div>
 
+    <!-- INSPECT MONSTER MODAL -->
+    <div id="inspect-monster-modal" class="modal">
+        <div class="modal-content" style="width: 700px; max-width: 90%; max-height: 85vh; overflow-y: auto;">
+            <span class="close-btn" onclick="closeInspectMonsterModal()">&times;</span>
+            <h2 style="font-weight: 700; color: var(--text-primary); margin: 0 0 1.5rem 0;" id="inspect-monster-title-header">Monster Details</h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; background: var(--bg-surface); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Instance ID</div>
+                    <div style="font-family: monospace; font-size: 0.85rem;" id="inspect-monster-instanceid"></div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Global ID</div>
+                    <div style="font-family: monospace; font-size: 0.85rem;" id="inspect-monster-globalid"></div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Rarity / Element</div>
+                    <div style="font-weight: 600;" id="inspect-monster-rarity-element"></div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Status</div>
+                    <div style="font-weight: 600;" id="inspect-monster-status"></div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Captured At</div>
+                    <div style="font-size: 0.85rem;" id="inspect-monster-capturedat"></div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Regen Status</div>
+                    <div style="font-size: 0.85rem;" id="inspect-monster-regen"></div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                <div style="background: var(--bg-surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Level</div>
+                    <div style="font-size: 1.25rem; font-weight: 700;" id="inspect-monster-level"></div>
+                </div>
+                <div style="background: var(--bg-surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">HP</div>
+                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-success);" id="inspect-monster-hp"></div>
+                </div>
+                <div style="background: var(--bg-surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">XP</div>
+                    <div style="font-size: 1.25rem; font-weight: 700; color: var(--accent-primary);" id="inspect-monster-xp"></div>
+                </div>
+                <div style="background: var(--bg-surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">ATK</div>
+                    <div style="font-size: 1.1rem; font-weight: 700;" id="inspect-monster-atk"></div>
+                </div>
+                <div style="background: var(--bg-surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">DEF</div>
+                    <div style="font-size: 1.1rem; font-weight: 700;" id="inspect-monster-def"></div>
+                </div>
+                <div style="background: var(--bg-surface); padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">SPD</div>
+                    <div style="font-size: 1.1rem; font-weight: 700;" id="inspect-monster-spd"></div>
+                </div>
+            </div>
+
+            <h3 style="font-weight: 700; color: var(--text-primary); margin: 0 0 0.75rem 0;">Logs & Activity History</h3>
+            <div style="max-height: 250px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                <table class="table" style="margin: 0; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th style="padding: 0.5rem; background: var(--bg-surface);">Time</th>
+                            <th style="padding: 0.5rem; background: var(--bg-surface);">Level</th>
+                            <th style="padding: 0.5rem; background: var(--bg-surface);">Action / Event</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inspect-monster-logs-body">
+                        <!-- Dynamic logs -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '/api/admin';
         let activeUserId = null;
@@ -1088,7 +1171,7 @@
         function showDashboard() {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('dashboard-screen').style.display = 'flex';
-            loadUsersList();
+            setSearchMode('users');
             loadOverviewStats();
         }
 
@@ -1131,6 +1214,148 @@
                 'Authorization': `Bearer ${localStorage.getItem('adminToken')}`,
                 'Content-Type': 'application/json'
             };
+        }
+
+        let searchMode = 'users';
+
+        function setSearchMode(mode) {
+            searchMode = mode;
+            const usersTab = document.getElementById('tab-search-users');
+            const monstersTab = document.getElementById('tab-search-monsters');
+            const userSearchInput = document.getElementById('user-search-input');
+            const monsterSearchInput = document.getElementById('monster-search-input');
+            const container = document.getElementById('users-list-container');
+
+            container.innerHTML = '';
+
+            if (mode === 'users') {
+                usersTab.style.background = 'var(--bg-base)';
+                usersTab.style.color = 'var(--accent-primary)';
+                usersTab.style.borderBottom = '2px solid var(--accent-primary)';
+                usersTab.style.fontWeight = '700';
+
+                monstersTab.style.background = 'var(--bg-surface)';
+                monstersTab.style.color = 'var(--text-secondary)';
+                monstersTab.style.borderBottom = 'none';
+                monstersTab.style.fontWeight = '500';
+
+                userSearchInput.style.display = 'block';
+                monsterSearchInput.style.display = 'none';
+                loadUsersList();
+            } else {
+                monstersTab.style.background = 'var(--bg-base)';
+                monstersTab.style.color = 'var(--accent-primary)';
+                monstersTab.style.borderBottom = '2px solid var(--accent-primary)';
+                monstersTab.style.fontWeight = '700';
+
+                usersTab.style.background = 'var(--bg-surface)';
+                usersTab.style.color = 'var(--text-secondary)';
+                usersTab.style.borderBottom = 'none';
+                usersTab.style.fontWeight = '500';
+
+                userSearchInput.style.display = 'none';
+                monsterSearchInput.style.display = 'block';
+                loadMonstersList();
+            }
+        }
+
+        let monsterSearchTimeout;
+        function handleMonsterSearch() {
+            clearTimeout(monsterSearchTimeout);
+            monsterSearchTimeout = setTimeout(loadMonstersList, 300);
+        }
+
+        async function loadMonstersList() {
+            const query = document.getElementById('monster-search-input').value;
+            const container = document.getElementById('users-list-container');
+            if (!query.trim()) {
+                container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Type monster ID or type to search...</div>';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/search-monster?query=${encodeURIComponent(query)}`, {
+                    headers: getHeaders()
+                });
+
+                if (response.status === 401) {
+                    handleLogout();
+                    return;
+                }
+
+                const data = await response.json();
+                container.innerHTML = '';
+
+                if (!data.success) {
+                    container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 2rem 0;">Error: ${data.message || 'failed'}</div>`;
+                    return;
+                }
+
+                let monstersList = [];
+                if (data.exactMatch) {
+                    monstersList = [data.monster];
+                } else {
+                    monstersList = data.monsters || [];
+                }
+
+                if (monstersList.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 2rem 0;">No Dynamons found</div>';
+                    return;
+                }
+
+                monstersList.forEach(m => {
+                    let rarityColor = 'var(--text-muted)';
+                    if (m.rarity === 'legendary') rarityColor = '#f59e0b';
+                    else if (m.rarity === 'epic') rarityColor = '#a855f7';
+                    else if (m.rarity === 'rare') rarityColor = '#3b82f6';
+
+                    const card = document.createElement('div');
+                    card.className = `user-card`;
+                    card.onclick = () => selectMonster(m.instanceId, m.ownerID);
+                    card.innerHTML = `
+                        <div class="user-avatar" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); font-size: 1.5rem;">🦖</div>
+                        <div class="user-info">
+                            <div class="user-name" style="color: ${rarityColor};">${m.title || m.id}</div>
+                            <div class="user-username">Lvl ${m.level} • ${m.element || 'Normal'}</div>
+                            <div class="user-meta" style="margin-top: 0.25rem;">
+                                <span class="text-mono" style="font-size: 0.75rem; color: var(--text-muted);">Owner: ${m.ownerID}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function selectMonster(instanceId, ownerId) {
+            await selectUser(ownerId);
+            setTimeout(() => {
+                highlightMonsterRow(instanceId);
+            }, 200);
+        }
+
+        function highlightMonsterRow(instanceId) {
+            const rows = document.querySelectorAll('#monsters-table-body tr');
+            let found = false;
+            rows.forEach(row => {
+                row.style.outline = '';
+                row.style.background = '';
+                const firstCell = row.querySelector('td');
+                if (firstCell && firstCell.innerText.trim() === instanceId) {
+                    found = true;
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    row.style.outline = '2px solid var(--accent-primary)';
+                    row.style.background = 'rgba(234, 179, 8, 0.2)';
+                    
+                    setTimeout(() => {
+                        row.style.transition = 'background 1.5s ease, outline 1.5s ease';
+                        row.style.background = '';
+                        row.style.outline = '';
+                    }, 3000);
+                }
+            });
         }
 
         // --- Fetch & Render Users ---
@@ -1326,9 +1551,14 @@
                         <td style="text-transform: capitalize;">${m.element || 'Normal'}</td>
                         <td class="${statusClass}">${statusText}</td>
                         <td>
-                            <button class="tab-btn" onclick="openEditMonsterModal('${m.instanceId}')" style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
-                                ✏️ Edit
-                            </button>
+                            <div style="display: flex; gap: 0.25rem;">
+                                <button class="tab-btn" onclick="openInspectMonsterModal('${m.instanceId}')" style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                    🔍 Inspect
+                                </button>
+                                <button class="tab-btn" onclick="openEditMonsterModal('${m.instanceId}')" style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                                    ✏️ Edit
+                                </button>
+                            </div>
                         </td>
                     `;
                     monstersTableBody.appendChild(tr);
@@ -1501,6 +1731,65 @@
 
         function closeEditMonsterModal() {
             document.getElementById('edit-monster-modal').style.display = 'none';
+        }
+
+        function openInspectMonsterModal(instanceId) {
+            const m = currentUserMonsters.find(x => x.instanceId === instanceId);
+            if (!m) return;
+
+            document.getElementById('inspect-monster-title-header').innerText = `Dynamon Details: ${m.title || m.id}`;
+            document.getElementById('inspect-monster-instanceid').innerText = m.instanceId || 'N/A';
+            document.getElementById('inspect-monster-globalid').innerText = m.globalID || 'N/A';
+            
+            let rarityColor = 'var(--text-muted)';
+            if (m.rarity === 'legendary') rarityColor = '#f59e0b';
+            else if (m.rarity === 'epic') rarityColor = '#a855f7';
+            else if (m.rarity === 'rare') rarityColor = '#3b82f6';
+            document.getElementById('inspect-monster-rarity-element').innerHTML = `<span style="color: ${rarityColor}; text-transform: uppercase; font-weight: bold;">${m.rarity || 'Common'}</span> • <span style="text-transform: capitalize;">${m.element || 'Normal'}</span>`;
+            
+            const statusText = m.isFighting ? '⚔️ In Battle Team' : '💤 Idle';
+            const statusClass = m.isFighting ? 'text-success' : 'text-muted';
+            document.getElementById('inspect-monster-status').innerHTML = `<span class="${statusClass}">${statusText}</span>`;
+            
+            document.getElementById('inspect-monster-capturedat').innerText = m.captureAt ? new Date(m.captureAt).toLocaleString() : 'N/A';
+            document.getElementById('inspect-monster-regen').innerText = m.isRegenerating ? `Regenerating (Last Regen: ${new Date(m.lastHpRegenAt).toLocaleTimeString()})` : 'Fully Rested / Fighting';
+            
+            document.getElementById('inspect-monster-level').innerText = m.level || 1;
+            document.getElementById('inspect-monster-hp').innerText = `${m.hp !== undefined ? m.hp : 100} / ${m.maxHP || 100}`;
+            document.getElementById('inspect-monster-xp').innerText = `${m.xp || 0} / ${m.maxXP || 100}`;
+            
+            document.getElementById('inspect-monster-atk').innerText = m.atk || 10;
+            document.getElementById('inspect-monster-def').innerText = m.def || 10;
+            document.getElementById('inspect-monster-spd').innerText = m.spd || 10;
+
+            const logsBody = document.getElementById('inspect-monster-logs-body');
+            logsBody.innerHTML = '';
+
+            if (!m.logs || m.logs.length === 0) {
+                logsBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--text-muted); padding: 1rem;">No activity logs recorded</td></tr>';
+            } else {
+                const reversedLogs = [...m.logs].reverse();
+                reversedLogs.forEach(log => {
+                    const parts = log.split('|');
+                    const time = parts[0] ? new Date(parts[0]).toLocaleString() : 'N/A';
+                    const lvl = parts[2] || 'N/A';
+                    const action = parts[3] || 'N/A';
+                    
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="padding: 0.5rem; font-size: 0.8rem;" class="text-mono">${time}</td>
+                        <td style="padding: 0.5rem; font-size: 0.8rem; font-weight: bold;">Lvl ${lvl}</td>
+                        <td style="padding: 0.5rem; font-size: 0.8rem; font-family: monospace; white-space: pre-wrap;">${action}</td>
+                    `;
+                    logsBody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('inspect-monster-modal').style.display = 'flex';
+        }
+
+        function closeInspectMonsterModal() {
+            document.getElementById('inspect-monster-modal').style.display = 'none';
         }
 
         async function saveMonsterData(e) {

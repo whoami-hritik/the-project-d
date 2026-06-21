@@ -952,6 +952,20 @@ namespace monster_world.Controller
             return Ok( new { success = true, User = MapTo.UserBaseDto(User)});
         }
 
+        [HttpPost("tutorial/complete")]
+        public async Task<IActionResult> CompleteTutorial()
+        {
+            HttpContext.Items.TryGetValue("User", out var userVal);
+            if (userVal == null) return Unauthorized();
+
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
+            User.Tutorial = true;
+            _context.Users.Update(User);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, user = MapTo.UserBaseDto(User) });
+        }
+
         [HttpPost("battle/start")]
         public async Task<IActionResult> FightBattle()
         {
@@ -1242,6 +1256,14 @@ namespace monster_world.Controller
                 
             }
             
+            var activeMonsterState = battleState.PlayerStates.FirstOrDefault(x => x.InstanceId == form.MonsterId);
+            var activeMonster = battleState.PlayerMonsters.FirstOrDefault(x => x.InstanceId == form.MonsterId);
+
+            if (activeMonsterState == null || activeMonster == null)
+            {
+                return Ok(new { success = false, reason = "monster is not active in this battle" });
+            }
+
             string consumable = form.Consumable;
 
             if (consumable == "MonstaBall")
@@ -1420,7 +1442,7 @@ namespace monster_world.Controller
 
                     await _context.SaveChangesAsync();
 
-                    return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards });
+                    return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards, User = Mapper.MapTo.UserBaseDto(User) });
                 }
             }
 
@@ -1444,7 +1466,7 @@ namespace monster_world.Controller
 
                 await _context.SaveChangesAsync();
 
-                return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards });
+                return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards, User = Mapper.MapTo.UserBaseDto(User) });
             }
 
 
@@ -1491,7 +1513,7 @@ namespace monster_world.Controller
 
                 await _context.SaveChangesAsync();
 
-                return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards});
+                return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards, User = Mapper.MapTo.UserBaseDto(User) });
 
                 
             }
@@ -1516,7 +1538,7 @@ namespace monster_world.Controller
 
             await _context.SaveChangesAsync();
 
-            return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards }); 
+            return Ok( new { success = true, battleState, playerAttack, enemyAttack, rewards, User = Mapper.MapTo.UserBaseDto(User) }); 
         }
 
 
@@ -1573,6 +1595,11 @@ namespace monster_world.Controller
                 return Ok(new { success = true, reason = "unknowm monster id or monster state"});
             }
 
+            if (DefendingMonster.IsBoss)
+            {
+                return Ok(new { success = false, reason = "Boss monsters cannot be captured!" });
+            }
+
 
             // battleState.PlayerActiveSkills ??= _battleService.GetActiveSkills(battleState.PlayerMonster);
             defenderState.ActiveSkills ??= _battleService.GetActiveSkills(DefendingMonster);
@@ -1585,7 +1612,7 @@ namespace monster_world.Controller
             double catchChance;
             try
             {
-                catchChance = _gameplayService.GetOddRange(DefendingMonster);
+                catchChance = _gameplayService.GetOddRange(DefendingMonster, AttackingMonster);
             }
             catch (Exception ex)
             {
@@ -1613,9 +1640,27 @@ namespace monster_world.Controller
             if (random.NextDouble() <= catchChance)
             {
                 DefendingMonster.OwnerID = User.ID;
+                DefendingMonster.Log(DefendingMonster.InstanceId, DefendingMonster.Level, $"captured_in_map={battleState.Map}");
                 User.Monsters.Add(DefendingMonster.InstanceId);
                 User.TotalVictory += 1;
                 User.DailyVictory += 1;
+
+                // Recalculate and update user level
+                int maxMonsterLevel = await _context.Monsters
+                    .Where(m => m.OwnerID == User.ID)
+                    .Select(m => (int?)m.Level)
+                    .MaxAsync() ?? 1;
+                if (DefendingMonster.Level > maxMonsterLevel)
+                {
+                    maxMonsterLevel = DefendingMonster.Level;
+                }
+
+                if (maxMonsterLevel > User.Level)
+                {
+                    User.Level = maxMonsterLevel;
+                    _context.Users.Update(User);
+                }
+
                 battleState.Victory = true;
                 battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
                 DefendingMonster.CaptureAt = DateTime.UtcNow;
@@ -1631,7 +1676,7 @@ namespace monster_world.Controller
 
                 await _context.SaveChangesAsync();
 
-                return Ok( new { success = true, capture = true, battleState, playerAttack, enemyAttack, rewards });
+                return Ok( new { success = true, capture = true, battleState, playerAttack, enemyAttack, rewards, User = Mapper.MapTo.UserBaseDto(User) });
                 
             }
 
@@ -1681,11 +1726,11 @@ namespace monster_world.Controller
 
                 await _context.SaveChangesAsync();
 
-                return Ok( new { success = true, capture = false, battleState, playerAttack, enemyAttack, rewards });
+                return Ok( new { success = true, capture = false, battleState, playerAttack, enemyAttack, rewards, User = Mapper.MapTo.UserBaseDto(User) });
 
-                
 
-                
+
+
             }
 
             //player lose
@@ -1708,7 +1753,7 @@ namespace monster_world.Controller
 
             await _context.SaveChangesAsync();
 
-            return Ok( new { success = true, capture = false, battleState, playerAttack, enemyAttack, rewards });            
+            return Ok( new { success = true, capture = false, battleState, playerAttack, enemyAttack, rewards, User = Mapper.MapTo.UserBaseDto(User) });            
         }
 
         [HttpPost("battle/escape")]
@@ -1739,7 +1784,7 @@ namespace monster_world.Controller
 
             await _context.SaveChangesAsync();
 
-            return Ok( new { success = true, battleState });
+            return Ok( new { success = true, battleState, User = Mapper.MapTo.UserBaseDto(User) });
         }
 
         [HttpPost("items")]
@@ -1834,13 +1879,39 @@ namespace monster_world.Controller
                 return _cachedTonPrice;
             }
 
+            if (_cachedTonPrice == 0)
+            {
+                // Cold-start initialization
+                await UpdateTonPriceAsync();
+            }
+            else
+            {
+                // Asynchronous background update to prevent blocking current request
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await UpdateTonPriceAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Background price update failed: {ex.Message}");
+                    }
+                });
+            }
+
+            return _cachedTonPrice > 0 ? _cachedTonPrice : 1.69;
+        }
+
+        private async Task UpdateTonPriceAsync()
+        {
             await PriceCacheLock.WaitAsync();
             try
             {
-                // Double check after acquiring lock
+                // Double check expiration under lock
                 if (DateTime.UtcNow < _priceCacheExpiration && _cachedTonPrice > 0)
                 {
-                    return _cachedTonPrice;
+                    return;
                 }
 
                 if (!_httpClient.DefaultRequestHeaders.Contains("User-Agent"))
@@ -1849,57 +1920,77 @@ namespace monster_world.Controller
                 }
 
                 // Primary API: Gate.io (fast, free, very high rate limit)
-                string url = System.Environment.GetEnvironmentVariable("TON_PRICE_API_URL")
-                    ?? "https://api.gateio.ws/api/v4/spot/tickers?currency_pair=TON_USDT";
-                var response = await _httpClient.GetAsync(url);
-                if (response.IsSuccessStatusCode)
+                try
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    using var doc = JsonDocument.Parse(json);
-                    
-                    if (doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
+                    string url = System.Environment.GetEnvironmentVariable("TON_PRICE_API_URL")
+                        ?? "https://api.gateio.ws/api/v4/spot/tickers?currency_pair=GRAM_USDT";
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                    var response = await _httpClient.GetAsync(url, cts.Token);
+                    if (!response.IsSuccessStatusCode && url.Contains("TON_USDT"))
                     {
-                        var lastStr = doc.RootElement[0].GetProperty("last").GetString();
-                        if (double.TryParse(lastStr, System.Globalization.CultureInfo.InvariantCulture, out double parsedPrice) && parsedPrice > 0)
+                        string gramUrl = url.Replace("TON_USDT", "GRAM_USDT");
+                        using var ctsGram = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                        response = await _httpClient.GetAsync(gramUrl, ctsGram.Token);
+                    }
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(json);
+                        
+                        if (doc.RootElement.ValueKind == JsonValueKind.Array && doc.RootElement.GetArrayLength() > 0)
                         {
-                            _cachedTonPrice = parsedPrice;
-                            _priceCacheExpiration = DateTime.UtcNow.AddSeconds(30);
-                            return _cachedTonPrice;
+                            var lastStr = doc.RootElement[0].GetProperty("last").GetString();
+                            if (double.TryParse(lastStr, System.Globalization.CultureInfo.InvariantCulture, out double parsedPrice) && parsedPrice > 0)
+                            {
+                                _cachedTonPrice = parsedPrice;
+                                _priceCacheExpiration = DateTime.UtcNow.AddMinutes(5);
+                                return;
+                            }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Primary TON price API failed: {ex.Message}");
+                }
 
                 // Fallback API: CoinGecko (slower, low rate limit)
-                string fallbackUrl = System.Environment.GetEnvironmentVariable("TON_PRICE_FALLBACK_API_URL")
-                    ?? "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currency=usd";
-                var fallbackResponse = await _httpClient.GetAsync(fallbackUrl);
-                if (fallbackResponse.IsSuccessStatusCode)
+                try
                 {
-                    var json = await fallbackResponse.Content.ReadAsStringAsync();
-                    using var doc = JsonDocument.Parse(json);
-                    double parsedPrice = (double)doc.RootElement
-                        .GetProperty("the-open-network")
-                        .GetProperty("usd")
-                        .GetDecimal();
-                    if (parsedPrice > 0)
+                    string fallbackUrl = System.Environment.GetEnvironmentVariable("TON_PRICE_FALLBACK_API_URL")
+                        ?? "https://api.coingecko.com/api/v3/simple/price?ids=the-open-network&vs_currencies=usd";
+                    using var ctsFallback = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                    var fallbackResponse = await _httpClient.GetAsync(fallbackUrl, ctsFallback.Token);
+                    if (fallbackResponse.IsSuccessStatusCode)
                     {
-                        _cachedTonPrice = parsedPrice;
-                        _priceCacheExpiration = DateTime.UtcNow.AddSeconds(30);
-                        return _cachedTonPrice;
+                        var json = await fallbackResponse.Content.ReadAsStringAsync();
+                        using var doc = JsonDocument.Parse(json);
+                        double parsedPrice = (double)doc.RootElement
+                            .GetProperty("the-open-network")
+                            .GetProperty("usd")
+                            .GetDecimal();
+                        if (parsedPrice > 0)
+                        {
+                            _cachedTonPrice = parsedPrice;
+                            _priceCacheExpiration = DateTime.UtcNow.AddMinutes(5);
+                            return;
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Fallback TON price API failed: {ex.Message}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching TON price: {ex.Message}");
+                Console.WriteLine($"Error updating TON price: {ex.Message}");
             }
             finally
             {
                 PriceCacheLock.Release();
             }
-
-            // Return last successfully cached price, or 5.0 as a safe fallback if never loaded
-            return _cachedTonPrice > 0 ? _cachedTonPrice : 5.0;
         }
 
         // private readonly List<string> ExchangePairs = new() { "TON:GOLD", "EGGS:TON"};
@@ -2416,7 +2507,7 @@ namespace monster_world.Controller
             _context.Users.Update(User);
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Mission verified and reward credited.", balance = User.Balance });
+            return Ok(new { success = true, message = "Mission verified and reward credited.", balance = User.Balance, User = Mapper.MapTo.UserBaseDto(User) });
         }
 
         [HttpPost("chest/open")]
@@ -2459,7 +2550,8 @@ namespace monster_world.Controller
                 message = "Chest opened!",
                 rewards = itemsReward,
                 balance = User.Balance,
-                dailyChestsOpened = User.DailyChestsOpened
+                dailyChestsOpened = User.DailyChestsOpened,
+                User = Mapper.MapTo.UserBaseDto(User)
             });
         }
 
@@ -2556,7 +2648,7 @@ namespace monster_world.Controller
                 }
             }
             
-            return Ok(new { success = true, User.Balance, User.Items, pool });
+            return Ok(new { success = true, User.Balance, User.Items, pool, User = Mapper.MapTo.UserBaseDto(User) });
         }
 
 
@@ -2723,14 +2815,14 @@ namespace monster_world.Controller
             if (User.Balance.GOLD < goldCost)
                 return Ok(new { success = false, reason = $"not enough GOLD, need {goldCost} GOLD" });
 
-            User.Balance.GOLD -= goldCost;
+            User.Credit("GOLD", -goldCost, "heal_monster_gold=" + monster.InstanceId);
             monster.HP = monster.MaxHP;
             User.DailyHealedHP += missingHP;
 
             _context.Users.Update(User);
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, monster, goldLeft = User.Balance.GOLD });
+            return Ok(new { success = true, monster, User = Mapper.MapTo.UserBaseDto(User) });
         }
 
         private async Task<bool> TryApplyPassiveRegen(Monster monster)
@@ -2935,7 +3027,7 @@ namespace monster_world.Controller
 
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, monster });
+            return Ok(new { success = true, monster, User = Mapper.MapTo.UserBaseDto(User) });
         }
 
         private async Task CheckAndRewardReferrer(UserBase user)
@@ -3041,7 +3133,9 @@ namespace monster_world.Controller
             double itemCost = Listed[Item].PurchaseCost[form.Currency];
             double finalCost = itemCost * Quantity;
 
-            if (User.Balance.GOLD >= finalCost)
+            double userBalance = form.Currency == "TON" ? User.Balance.TON : User.Balance.GOLD;
+
+            if (userBalance >= finalCost)
             {
                 User.Credit(form.Currency, -finalCost, form.Payload);
                 User.AddItems(Item, Quantity, form.Payload);
@@ -3082,7 +3176,7 @@ namespace monster_world.Controller
                 User.AddItems("HealSpell", 5, "buy_pack_reward_" + form.PackId);
 
                 await _context.SaveChangesAsync();
-                return Ok(new { success = true, Balance = User.Balance, Items = User.Items });
+                return Ok(new { success = true, Balance = User.Balance, Items = User.Items, User = Mapper.MapTo.UserBaseDto(User) });
             }
 
             return Ok(new { success = false, reason = "insufficient TON balance" });

@@ -30,6 +30,9 @@ async function post(endpoint, options) {
         } catch {
             json = decodeResponse(text);
         }
+        if (json && (json.User || json.user)) {
+            state.user = json.User || json.user;
+        }
         return json;
     }
 
@@ -93,6 +96,23 @@ export async function pollDeposits() {
         }
     };
     const result = await post("verify-deposit", options);
+    if (result) {
+        if (result.success && result.user) {
+            state.user = result.user;
+        }
+        return result;
+    }
+}
+
+export async function completeTutorial() {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        }
+    };
+    const result = await post("tutorial/complete", options);
     if (result) {
         if (result.success && result.user) {
             state.user = result.user;

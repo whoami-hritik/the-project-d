@@ -360,5 +360,51 @@ namespace monster_world.Controller
 
             return Ok(new { success = true });
         }
+
+        [HttpGet("search-monster")]
+        public async Task<IActionResult> SearchMonster([FromQuery] string query)
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            if (string.IsNullOrWhiteSpace(query))
+            {
+                return BadRequest(new { message = "Query is required" });
+            }
+
+            string searchLower = query.Trim().ToLower();
+
+            // Try exact match on InstanceId first
+            var monster = await _context.Monsters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.InstanceId == query);
+
+            if (monster != null)
+            {
+                return Ok(new
+                {
+                    success = true,
+                    exactMatch = true,
+                    Monster = monster,
+                    OwnerId = monster.OwnerID
+                });
+            }
+
+            // Otherwise, search for monsters by their general ID (e.g. "malakite") or Title
+            var monsters = await _context.Monsters
+                .AsNoTracking()
+                .Where(m => m.Id.ToLower() == searchLower || (m.Title != null && m.Title.ToLower().Contains(searchLower)))
+                .Take(50)
+                .ToListAsync();
+
+            return Ok(new
+            {
+                success = true,
+                exactMatch = false,
+                Monsters = monsters
+            });
+        }
     }
 }

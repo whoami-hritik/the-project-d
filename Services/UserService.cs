@@ -189,6 +189,17 @@ namespace monster_world.Services
                     {
                         user.Level = 1;
                     }
+
+                    // Synchronize user level with the maximum monster level owned
+                    int maxMonsterLevel = await _dbContext.Monsters
+                        .Where(m => m.OwnerID == user.ID)
+                        .Select(m => (int?)m.Level)
+                        .MaxAsync() ?? 1;
+                    if (maxMonsterLevel > user.Level)
+                    {
+                        user.Level = maxMonsterLevel;
+                    }
+
                     var today = DateTime.UtcNow.Date;
                     if (user.LastLoginDate == null)
                     {

@@ -16,7 +16,7 @@ export const translations = {
         "deposit_ton": "DEPOSIT TON",
         "withdraw": "WITHDRAW",
         "deposit_instruction": "SEND ANY AMOUNT OF TON TO",
-        
+
         // Deposit Dialog
         "wallet_address": "WALLET ADDRESS",
         "copy_address": "COPY ADDRESS",
@@ -24,7 +24,7 @@ export const translations = {
         "copy_comment": "COPY COMMENT",
         "open_wallet": "OPEN WALLET",
         "verify": "VERIFY",
-        
+
         // Notifications & Prompts
         "ton_unavailable": "TON Connect is currently unavailable.",
         "failed_connect": "Failed to connect wallet.",
@@ -190,6 +190,53 @@ export const translations = {
         "error_loading_link": "Error loading link",
         "anonymous": "Anonymous",
         "reward_referred_friend": "+5 GOLD +1 BALL",
+        "cannot_catch_boss": "Boss monsters cannot be captured!",
+
+        // Tutorial Scene
+        "tut_title_welcome": "Welcome, Trainer!",
+        "tut_desc_welcome": "Welcome to Monster World! 🗺️\nI am Prof. Oak, your guide. Let's show you around so you can start your journey to become a master trainer!",
+        "tut_title_team": "Your Team",
+        "tut_desc_team": "Your Team! ⚔\nTap this tab to view your Dynamons, customize stats, and build your team slot (up to 3 monsters can join a battle!).",
+        "tut_title_missions": "Daily Missions",
+        "tut_desc_missions": "Missions & Quests! 🏆\nComplete tasks here daily to claim free GOLD coins, items, and rare EGGS.",
+        "tut_title_shop": "The Shop",
+        "tut_desc_shop": "The Shop Exchange! 🪙\nSwap currencies and purchase items like Heal Spells and Monsta Balls to aid your adventures.",
+        "tut_title_explore": "Start Exploring",
+        "tut_desc_explore": "Enter World Maps! 🌲\nTap a map node (like Bootcamp) to explore. Tap on-screen nodes to move, battle wild monsters, and capture them!",
+        "tut_title_ready": "Ready to Go!",
+        "tut_desc_ready": "You're all set! Remember, if your monsters faint, they regen HP passively or can be healed in the Lab.\n\nGo catch 'em all!",
+        "next_btn": "NEXT",
+        "start_btn": "START",
+
+        // Map and Battle Tutorial Scene
+        "map_tut_welcome": "Bootcamp Map! 🗺️",
+        "map_tut_welcome_desc": "Welcome to the Bootcamp map! Let's learn how to navigate the world and find battles.",
+        "map_tut_nodes": "Location Nodes",
+        "map_tut_nodes_desc": "These circular nodes are your path. Tap a connected node to move your character step-by-step.",
+        "map_tut_battles": "Battle Markers",
+        "map_tut_battles_desc": "Nodes with red sword flags have wild monsters waiting! Moving onto them starts a combat encounter.",
+        "map_tut_boss": "Boss Castle",
+        "map_tut_boss_desc": "The BOSS at the end hosts the Area Boss! Defeat them to get more rewards.",
+        "map_tut_prompt": "Start Training!",
+        "map_tut_prompt_desc": "We have set up a special training node for you. Click on the glowing red marker to start your training battle!",
+
+        "bat_tut_intro": "Battle Scene!",
+        "bat_tut_intro_desc": "This is the combat arena! Your active Dynamon stands on the left, and the wild opponent on the right.",
+        "bat_tut_hp": "Health Bars",
+        "bat_tut_hp_desc": "Keep an eye on these HP bars. If your HP drops to 0, your monster faints. Reduce the opponent's HP to 0 to defeat them!",
+        "bat_tut_skills": "Skills & Attacks",
+        "bat_tut_skills_desc": "These cards at the bottom represent your monster's attacks. Tap the card to deal damage!",
+        "bat_tut_hit": "Awesome Attack!",
+        "bat_tut_hit_desc": "Excellent job! The wild monster's HP is now very low. Low HP makes monsters much easier to capture!",
+        "bat_tut_catch": "Monsta Balls",
+        "bat_tut_catch_desc": "Open the Items tab (More options) and select Catch to throw a Monsta Ball. Let's try capturing it now!",
+        "bat_tut_fail": "Capture Failed!",
+        "bat_tut_fail_desc": "Oh no! The monster broke free. Catching is based on chance, so you might need to try again or buy more balls in the shop.",
+        "bat_tut_more": "More Options",
+        "bat_tut_more_desc": "Tap the More button again to see other combat options like escaping.",
+        "bat_tut_escape": "Escape Combat",
+        "bat_tut_escape_desc": "If your team is weak or you run out of items, you can use the Escape option to safely flee. Tap Escape now to complete your training!",
+        "skip_btn": "SKIP",
     },
     ru: {
         // Profile Labels
@@ -206,7 +253,7 @@ export const translations = {
         "deposit_ton": "ДЕПОЗИТ TON",
         "withdraw": "ВЫВОД",
         "deposit_instruction": "ОТПРАВЬТЕ ЛЮБУЮ СУММУ TON НА",
-        
+
         // Deposit Dialog
         "wallet_address": "АДРЕС КОШЕЛЬКА",
         "copy_address": "КОПИРОВАТЬ АДРЕС",
@@ -214,7 +261,7 @@ export const translations = {
         "copy_comment": "КОПИРОВАТЬ КОММЕНТ",
         "open_wallet": "ОТКРЫТЬ КОШЕЛЕК",
         "verify": "ПРОВЕРИТЬ",
-        
+
         // Notifications & Prompts
         "ton_unavailable": "TON Connect в данный момент недоступен.",
         "failed_connect": "Не удалось подключить кошелек.",
@@ -380,6 +427,53 @@ export const translations = {
         "error_loading_link": "Ошибка загрузки ссылки",
         "anonymous": "Аноним",
         "reward_referred_friend": "+5 ЗОЛОТА +1 ШАР",
+        "cannot_catch_boss": "Боссов нельзя поймать!",
+
+        // Tutorial Scene
+        "tut_title_welcome": "Добро пожаловать, Тренер!",
+        "tut_desc_welcome": "Добро пожаловать в Мир Монстров! 🗺️\nЯ проф. Оук, ваш проводник. Давай покажу тебе все вокруг, чтобы ты мог начать свой путь мастера-тренера!",
+        "tut_title_team": "Ваша Команда",
+        "tut_desc_team": "Ваша Команда! ⚔\nНажмите здесь, чтобы просмотреть своих Динамонов, улучшить их характеристики и составить боевую команду (до 3 монстров в бою!).",
+        "tut_title_missions": "Ежедневные Миссии",
+        "tut_desc_missions": "Миссии и Задания! 🏆\nВыполняйте задания каждый день, чтобы забирать бесплатное ЗОЛОТО, предметы и редкие ЯЙЦА.",
+        "tut_title_shop": "Магазин",
+        "tut_desc_shop": "Обменный Магазин! 🪙\nОбменивайте валюты и покупайте предметы вроде Зелий Лечения и МонстаБолов.",
+        "tut_title_explore": "Начало Приключений",
+        "tut_desc_explore": "Исследуйте Миры! 🌲\nНажмите на карту (например, Лагерь), чтобы войти. Нажимайте на точки на экране для перемещения, сражения и поимки диких монстров!",
+        "tut_title_ready": "В Путь!",
+        "tut_desc_ready": "Вы готовы! Помните: если ваши монстры потеряют сознание, они со временем восстановят здоровье пассивно или их можно вылечить в Лаборатории.\n\nВперед, поймайте их всех!",
+        "next_btn": "ДАЛЕЕ",
+        "start_btn": "СТАРТ",
+
+        // Map and Battle Tutorial Scene
+        "map_tut_welcome": "Карта Лагеря! 🗺️",
+        "map_tut_welcome_desc": "Добро пожаловать на карту Лагеря! Давай научимся перемещаться по миру и находить сражения.",
+        "map_tut_nodes": "Точки перемещения",
+        "map_tut_nodes_desc": "Эти круглые точки — ваш путь. Нажимайте на соседние точки, чтобы перемещать вашего персонажа.",
+        "map_tut_battles": "Метки Сражений",
+        "map_tut_battles_desc": "Точки с красными мечами означают диких монстров! Переход на них начинает битву.",
+        "map_tut_boss": "Замок Босса",
+        "map_tut_boss_desc": "В БОЛЬШОМ ХРАМЕ в конце пути находится Босс локации! Победите его, чтобы получить больше наград.",
+        "map_tut_prompt": "Начало Обучения!",
+        "map_tut_prompt_desc": "Мы подготовили для вас тренировочную точку. Нажмите на светящийся красный маркер, чтобы начать тренировочный бой!",
+
+        "bat_tut_intro": "Режим Боя!",
+        "bat_tut_intro_desc": "Это арена сражения! Ваш Динамон слева, а дикий противник — справа.",
+        "bat_tut_hp": "Шкала Здоровья",
+        "bat_tut_hp_desc": "Следите за здоровьем. Если HP упадет до 0, монстр упадет в обморок. Снизьте HP врага до 0 для победы!",
+        "bat_tut_skills": "Умения и Атаки",
+        "bat_tut_skills_desc": "Карточки снизу — это умения вашего монстра. Нажмите на карточку для атаки!",
+        "bat_tut_hit": "Отличный удар!",
+        "bat_tut_hit_desc": "Отличная работа! У дикого монстра осталось мало HP. Чем ниже здоровье, тем легче поймать монстра!",
+        "bat_tut_catch": "МонстаБолы",
+        "bat_tut_catch_desc": "Откройте вкладку предметов (кнопка Ещё) и выберите Поимку, чтобы бросить МонстаБол. Попробуем поймать его!",
+        "bat_tut_fail": "Не удалось поймать!",
+        "bat_tut_fail_desc": "О нет! Монстр вырвался. Поимка зависит от шанса, возможно придется попробовать снова или купить шары в магазине.",
+        "bat_tut_more": "Кнопка Ещё",
+        "bat_tut_more_desc": "Нажмите кнопку Ещё снова, чтобы открыть другие действия, такие как побег.",
+        "bat_tut_escape": "Побег из боя",
+        "bat_tut_escape_desc": "Если ваша команда слаба или закончились шары, вы можете использовать Побег. Нажмите Побег сейчас, чтобы завершить обучение!",
+        "skip_btn": "ПРОПУСТИТЬ",
     }
 };
 

@@ -38,7 +38,8 @@ string botToken = System.Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN"
     ?? "8859812843:AAEqhO8R6Q41uK3Qy8lJcQ_k3eS12j4T7pE";
 
 builder.Services.AddSingleton<ITelegramBotClient>( sp => {
-        return new TelegramBotClient(botToken);
+    var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+    return new TelegramBotClient(botToken, httpClient);
 });
 
 builder.Services.AddScoped<UserService>();

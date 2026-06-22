@@ -2,7 +2,7 @@
     "team": {
         "maxSlots": 3,
         "costofSlot": {
-            "GOLD": 100
+            "GOLD": 150
         }
     },
     "eggEmission": [

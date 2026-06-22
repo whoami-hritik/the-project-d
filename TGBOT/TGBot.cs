@@ -51,14 +51,28 @@ namespace TGBOT
         
         public async Task Notify(long chatId, string message)
         {
-            await _bot.SendMessage(chatId, message);
+            try
+            {
+                await _bot.SendMessage(chatId, message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TELEGRAM_BOT] Failed to send message to {chatId}: {ex.Message}");
+            }
         }
 
         public async Task NotifyAdmin(string message)
         {
-            // Sends the message to all admins at the same time
-            var tasks = ADMINS.Select(adminId => _bot.SendMessage(adminId, message));
-            await Task.WhenAll(tasks);
+            try
+            {
+                // Sends the message to all admins at the same time
+                var tasks = ADMINS.Select(adminId => _bot.SendMessage(adminId, message));
+                await Task.WhenAll(tasks);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TELEGRAM_BOT] Failed to notify admins: {ex.Message}");
+            }
         }
 
         public async Task OnMessage(Update update)

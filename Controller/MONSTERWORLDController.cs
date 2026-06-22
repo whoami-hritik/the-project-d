@@ -546,6 +546,9 @@ namespace monster_world.Controller
 
             UserBase currentUser = await _userService.GetOrCreateUser((TelegramUser)userVal);
 
+            // Notify admin that the user clicked verify
+            await _tgbot.NotifyAdmin($"🔍 User {currentUser.FirstName} {currentUser.LastName} (ID: {currentUser.ID}) clicked Verify Deposit.");
+
             // Global rate limit check: Only allow one actual TON API call/process globally every 5 minutes
             bool shouldPoll = false;
             lock (_pollLock)
@@ -559,6 +562,9 @@ namespace monster_world.Controller
 
             if (!shouldPoll)
             {
+                // Notify admin that verification check was bypassed due to global rate limit
+                await _tgbot.NotifyAdmin($"ℹ️ Verify Deposit check for User {currentUser.FirstName} {currentUser.LastName} (ID: {currentUser.ID}): Rate-limited globally (no new polling).");
+
                 // Rate limited globally - return successfully with the current user state to avoid breaking polling clients.
                 return Ok(new 
                 { 
@@ -575,120 +581,259 @@ namespace monster_world.Controller
             {
                 string depositAddress = System.Environment.GetEnvironmentVariable("DEPOSIT_ADDRESS")
                     ?? "UQADl5J3n3LHZqoZQ0HkvHLVXiZYS2t0l6GQ938qy8t3aQKf";
-                string tonApiBaseUrl = System.Environment.GetEnvironmentVariable("TONAPI_URL") ?? "https://tonapi.io/v2";
-
-                var url = $"{tonApiBaseUrl}/blockchain/accounts/{depositAddress}/transactions?limit=30";
 
                 bool credited = false;
                 double creditedAmount = 0;
 
-                var response = await _httpClient.GetAsync(url);
-                if (response.IsSuccessStatusCode)
+                // Try Toncenter first (it's the most reliable public endpoint)
+                string toncenterUrl = $"https://toncenter.com/api/v2/getTransactions?address={depositAddress}&limit=30";
+                
+                using (var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10)))
                 {
-                    var json = await response.Content.ReadAsStringAsync();
-                    if (!string.IsNullOrEmpty(json) && json.TrimStart().StartsWith('{'))
+                    try
                     {
-                        var txList = JsonConvert.DeserializeObject<TonTransactionsList>(json);
-                        if (txList != null && txList.Transactions != null)
+                        var response = await _httpClient.GetAsync(toncenterUrl, cts.Token);
+                        if (response.IsSuccessStatusCode)
                         {
-                            // Process transactions from oldest to newest (reverse order)
-                            var reversedTx = txList.Transactions.AsEnumerable().Reverse().ToList();
-                            foreach (var tx in reversedTx)
+                            var json = await response.Content.ReadAsStringAsync();
+                            if (!string.IsNullOrEmpty(json) && json.TrimStart().StartsWith('{'))
                             {
-                                if (string.IsNullOrEmpty(tx.Hash)) continue;
-
-                                // Double check if this transaction was already processed
-                                bool exists = await _context.Deposits.AnyAsync(d => d.Hash == tx.Hash);
-                                if (exists) continue;
-
-                                if (!tx.Success) continue;
-
-                                var outMsg = tx.OutMsgs?.FirstOrDefault();
-                                string comment = outMsg?.DecodedBody?.Text ?? tx.InMsg?.DecodedBody?.Text;
-
-                                if (string.IsNullOrEmpty(comment) || !long.TryParse(comment, out long userId))
-                                    continue;
-
-                                // Find user matching transaction comment/payload
-                                UserBase txUser = await _context.Users.FirstOrDefaultAsync(u => u.ID == userId);
-                                if (txUser == null) continue;
-
-                                // Process deposit
-                                long valueNano = outMsg?.Value > 0 ? outMsg.Value : (tx.InMsg?.Value ?? 0);
-                                double tonAmount = valueNano / 1_000_000_000.0;
-
-                                txUser.Credit("TON", tonAmount, "deposit=" + tx.Hash);
-                                _context.Users.Update(txUser);
-
-                                UserAnalytics analytics = await _context.Analytics.FirstOrDefaultAsync(a => a.ID == txUser.ID);
-                                if (analytics == null)
+                                var resultObj = JsonConvert.DeserializeObject<ToncenterResult>(json);
+                                if (resultObj != null && resultObj.Ok && resultObj.Result != null)
                                 {
-                                    analytics = new UserAnalytics { ID = txUser.ID };
-                                    await _context.Analytics.AddAsync(analytics);
-                                }
-                                double USDTConversion = await GetTonPrice() * tonAmount;
-                                analytics.TotalDeposit += USDTConversion;
-
-                                // Referral bonus
-                                if (txUser.ReferrerID > 0)
-                                {
-                                    var referrer = await _context.Users.FirstOrDefaultAsync(r => r.ID == txUser.ReferrerID);
-                                    if (referrer != null)
+                                    var reversedTx = resultObj.Result.AsEnumerable().Reverse().ToList();
+                                    foreach (var tx in reversedTx)
                                     {
-                                        double goldBonus = tonAmount * 0.05;
-                                        referrer.Credit("GOLD", goldBonus, $"referral_deposit_bonus={txUser.ID}");
-                                        _context.Users.Update(referrer);
+                                        if (tx.TransactionId == null || string.IsNullOrEmpty(tx.TransactionId.Hash)) continue;
 
+                                        // Convert base64 hash to hex string to match original database representation
+                                        string hexHash = string.Empty;
                                         try
                                         {
-                                            string friendName = string.IsNullOrEmpty(txUser.Username) 
-                                                ? $"{txUser.FirstName} {txUser.LastName}".Trim() 
-                                                : $"@{txUser.Username}";
-
-                                            string msg = $"💸 You received a referral deposit bonus!\n\n" +
-                                                         $"👤 Friend: {friendName}\n" +
-                                                         $"💰 Deposit: {tonAmount:F2} TON\n" +
-                                                         $"🎁 Your 5% Bonus: +{goldBonus:F4} GOLD";
-
-                                            _ = _botClient.SendMessage(txUser.ReferrerID, msg);
+                                            byte[] bytes = Convert.FromBase64String(tx.TransactionId.Hash);
+                                            hexHash = BitConverter.ToString(bytes).Replace("-", "").ToLower();
                                         }
-                                        catch (Exception ex)
+                                        catch
                                         {
-                                            Console.WriteLine($"[REFERRAL] Failed: {ex.Message}");
+                                            hexHash = tx.TransactionId.Hash.ToLower();
+                                        }
+
+                                        // Double check if this transaction was already processed
+                                        bool exists = await _context.Deposits.AnyAsync(d => d.Hash == hexHash);
+                                        if (exists) continue;
+
+                                        if (tx.InMsg == null) continue;
+
+                                        string comment = tx.InMsg.Message;
+                                        if (string.IsNullOrEmpty(comment) || !long.TryParse(comment, out long userId))
+                                            continue;
+
+                                        // Find user matching transaction comment/payload
+                                        UserBase txUser = await _context.Users.FirstOrDefaultAsync(u => u.ID == userId);
+                                        if (txUser == null) continue;
+
+                                        // Process deposit
+                                        if (!double.TryParse(tx.InMsg.Value, out double valNano) || valNano <= 0)
+                                            continue;
+                                            
+                                        double tonAmount = valNano / 1_000_000_000.0;
+
+                                        txUser.Credit("TON", tonAmount, "deposit=" + hexHash);
+                                        _context.Users.Update(txUser);
+
+                                        UserAnalytics analytics = await _context.Analytics.FirstOrDefaultAsync(a => a.ID == txUser.ID);
+                                        if (analytics == null)
+                                        {
+                                            analytics = new UserAnalytics { ID = txUser.ID };
+                                            await _context.Analytics.AddAsync(analytics);
+                                        }
+                                        double USDTConversion = await GetTonPrice() * tonAmount;
+                                        analytics.TotalDeposit += USDTConversion;
+
+                                        // Referral bonus
+                                        if (txUser.ReferrerID > 0)
+                                        {
+                                            var referrer = await _context.Users.FirstOrDefaultAsync(r => r.ID == txUser.ReferrerID);
+                                            if (referrer != null)
+                                            {
+                                                double goldBonus = tonAmount * 0.05;
+                                                referrer.Credit("GOLD", goldBonus, $"referral_deposit_bonus={txUser.ID}");
+                                                _context.Users.Update(referrer);
+
+                                                try
+                                                {
+                                                    string friendName = string.IsNullOrEmpty(txUser.Username) 
+                                                        ? $"{txUser.FirstName} {txUser.LastName}".Trim() 
+                                                        : $"@{txUser.Username}";
+
+                                                    string msg = $"💸 You received a referral deposit bonus!\n\n" +
+                                                                 $"👤 Friend: {friendName}\n" +
+                                                                 $"💰 Deposit: {tonAmount:F2} TON\n" +
+                                                                 $"🎁 Your 5% Bonus: +{goldBonus:F4} GOLD";
+
+                                                    _ = _botClient.SendMessage(txUser.ReferrerID, msg);
+                                                }
+                                                catch (Exception ex)
+                                                {
+                                                    Console.WriteLine($"[REFERRAL] Failed: {ex.Message}");
+                                                }
+                                            }
+                                        }
+
+                                        // Create deposit record
+                                        Deposit deposit = new()
+                                        {
+                                            UserID = txUser.ID,
+                                            Amount = tonAmount,
+                                            Balance = new Balance { TON = txUser.Balance.TON, GOLD = txUser.Balance.GOLD, CRYSTAL = 0 },
+                                            Successful = true,
+                                            Completed = true,
+                                            Hash = hexHash,
+                                            Time = DateTimeOffset.FromUnixTimeSeconds(tx.Utime).UtcDateTime,
+                                            SuccessfulAt = DateTime.UtcNow
+                                        };
+
+                                        await _context.Deposits.AddAsync(deposit);
+                                        await _context.SaveChangesAsync();
+
+                                        // Notify user and admin
+                                        string AdminMsg = $"Deposit Done via Toncenter Polling!\n\n ID: {txUser.ID}\nDeposit Amt: {tonAmount:F2} TON\nHash: {hexHash}\nTON Bal: {txUser.Balance.TON}\nGOLD Bal: {txUser.Balance.GOLD}";
+                                        await _tgbot.Notify(txUser.ID, $"Deposit confirmed! {tonAmount:F2} TON added to your balance.");
+                                        await _tgbot.NotifyAdmin(AdminMsg);
+
+                                        if (txUser.ID == currentUser.ID)
+                                        {
+                                            credited = true;
+                                            creditedAmount = tonAmount;
+                                            currentUser = txUser;
                                         }
                                     }
                                 }
-
-                                // Create deposit record
-                                Deposit deposit = new()
+                            }
+                        }
+                        else
+                        {
+                            throw new Exception($"Toncenter responded with status {response.StatusCode}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Toncenter polling failed/timed out: {ex.Message}");
+                        
+                        // Fallback to original TonAPI.io (under short timeout)
+                        string tonApiBaseUrl = System.Environment.GetEnvironmentVariable("TONAPI_URL") ?? "https://tonapi.io/v2";
+                        var tonApiUrl = $"{tonApiBaseUrl}/blockchain/accounts/{depositAddress}/transactions?limit=30";
+                        
+                        using (var ctsFallback = new System.Threading.CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                        {
+                            var response = await _httpClient.GetAsync(tonApiUrl, ctsFallback.Token);
+                            if (response.IsSuccessStatusCode)
+                            {
+                                var json = await response.Content.ReadAsStringAsync();
+                                if (!string.IsNullOrEmpty(json) && json.TrimStart().StartsWith('{'))
                                 {
-                                    UserID = txUser.ID,
-                                    Amount = tonAmount,
-                                    Balance = new Balance { TON = txUser.Balance.TON, GOLD = txUser.Balance.GOLD, CRYSTAL = 0 },
-                                    Successful = true,
-                                    Completed = true,
-                                    Hash = tx.Hash,
-                                    Time = DateTimeOffset.FromUnixTimeSeconds(tx.Utime).UtcDateTime,
-                                    SuccessfulAt = DateTime.UtcNow
-                                };
+                                    var txList = JsonConvert.DeserializeObject<TonTransactionsList>(json);
+                                    if (txList != null && txList.Transactions != null)
+                                      {
+                                        var reversedTx = txList.Transactions.AsEnumerable().Reverse().ToList();
+                                        foreach (var tx in reversedTx)
+                                        {
+                                            if (string.IsNullOrEmpty(tx.Hash)) continue;
 
-                                await _context.Deposits.AddAsync(deposit);
-                                await _context.SaveChangesAsync();
+                                            bool exists = await _context.Deposits.AnyAsync(d => d.Hash == tx.Hash);
+                                            if (exists) continue;
 
-                                // Notify user and admin
-                                string AdminMsg = $"Deposit Done via Polling!\n\n ID: {txUser.ID}\nDeposit Amt: {tonAmount:F2} TON\nHash: {tx.Hash}\nTON Bal: {txUser.Balance.TON}\nGOLD Bal: {txUser.Balance.GOLD}";
-                                await _tgbot.Notify(txUser.ID, $"Deposit confirmed! {tonAmount:F2} TON added to your balance.");
-                                await _tgbot.NotifyAdmin(AdminMsg);
+                                            if (!tx.Success) continue;
 
-                                if (txUser.ID == currentUser.ID)
-                                {
-                                    credited = true;
-                                    creditedAmount = tonAmount;
-                                    currentUser = txUser;
+                                            var outMsg = tx.OutMsgs?.FirstOrDefault();
+                                            string comment = outMsg?.DecodedBody?.Text ?? tx.InMsg?.DecodedBody?.Text;
+
+                                            if (string.IsNullOrEmpty(comment) || !long.TryParse(comment, out long userId))
+                                                continue;
+
+                                            UserBase txUser = await _context.Users.FirstOrDefaultAsync(u => u.ID == userId);
+                                            if (txUser == null) continue;
+
+                                            long valueNano = outMsg?.Value > 0 ? outMsg.Value : (tx.InMsg?.Value ?? 0);
+                                            double tonAmount = valueNano / 1_000_000_000.0;
+
+                                            txUser.Credit("TON", tonAmount, "deposit=" + tx.Hash);
+                                            _context.Users.Update(txUser);
+
+                                            UserAnalytics analytics = await _context.Analytics.FirstOrDefaultAsync(a => a.ID == txUser.ID);
+                                            if (analytics == null)
+                                            {
+                                                analytics = new UserAnalytics { ID = txUser.ID };
+                                                await _context.Analytics.AddAsync(analytics);
+                                            }
+                                            double USDTConversion = await GetTonPrice() * tonAmount;
+                                            analytics.TotalDeposit += USDTConversion;
+
+                                            if (txUser.ReferrerID > 0)
+                                            {
+                                                var referrer = await _context.Users.FirstOrDefaultAsync(r => r.ID == txUser.ReferrerID);
+                                                if (referrer != null)
+                                                {
+                                                    double goldBonus = tonAmount * 0.05;
+                                                    referrer.Credit("GOLD", goldBonus, $"referral_deposit_bonus={txUser.ID}");
+                                                    _context.Users.Update(referrer);
+
+                                                    try
+                                                    {
+                                                        string friendName = string.IsNullOrEmpty(txUser.Username) 
+                                                            ? $"{txUser.FirstName} {txUser.LastName}".Trim() 
+                                                            : $"@{txUser.Username}";
+
+                                                        string msg = $"💸 You received a referral deposit bonus!\n\n" +
+                                                                     $"👤 Friend: {friendName}\n" +
+                                                                     $"💰 Deposit: {tonAmount:F2} TON\n" +
+                                                                     $"🎁 Your 5% Bonus: +{goldBonus:F4} GOLD";
+
+                                                        _ = _botClient.SendMessage(txUser.ReferrerID, msg);
+                                                    }
+                                                    catch (Exception exVal)
+                                                    {
+                                                        Console.WriteLine($"[REFERRAL] Failed: {exVal.Message}");
+                                                    }
+                                                }
+                                            }
+
+                                            Deposit deposit = new()
+                                            {
+                                                UserID = txUser.ID,
+                                                Amount = tonAmount,
+                                                Balance = new Balance { TON = txUser.Balance.TON, GOLD = txUser.Balance.GOLD, CRYSTAL = 0 },
+                                                Successful = true,
+                                                Completed = true,
+                                                Hash = tx.Hash,
+                                                Time = DateTimeOffset.FromUnixTimeSeconds(tx.Utime).UtcDateTime,
+                                                SuccessfulAt = DateTime.UtcNow
+                                            };
+
+                                            await _context.Deposits.AddAsync(deposit);
+                                            await _context.SaveChangesAsync();
+
+                                            string AdminMsg = $"Deposit Done via TonAPI Polling!\n\n ID: {txUser.ID}\nDeposit Amt: {tonAmount:F2} TON\nHash: {tx.Hash}\nTON Bal: {txUser.Balance.TON}\nGOLD Bal: {txUser.Balance.GOLD}";
+                                            await _tgbot.Notify(txUser.ID, $"Deposit confirmed! {tonAmount:F2} TON added to your balance.");
+                                            await _tgbot.NotifyAdmin(AdminMsg);
+
+                                            if (txUser.ID == currentUser.ID)
+                                            {
+                                                credited = true;
+                                                creditedAmount = tonAmount;
+                                                currentUser = txUser;
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
+                }
+
+                if (!credited)
+                {
+                    await _tgbot.NotifyAdmin($"ℹ️ Verify Deposit check for User {currentUser.FirstName} {currentUser.LastName} (ID: {currentUser.ID}): Polled but no new transactions found.");
                 }
 
                 return Ok(new 

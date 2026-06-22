@@ -42,6 +42,51 @@ namespace monster_world.Services
         public List<TonTransaction> Transactions { get; set; }
     }
 
+    public class ToncenterResult
+    {
+        [JsonProperty("ok")]
+        public bool Ok { get; set; }
+
+        [JsonProperty("result")]
+        public List<ToncenterTransaction> Result { get; set; }
+    }
+
+    public class ToncenterTransaction
+    {
+        [JsonProperty("utime")]
+        public long Utime { get; set; }
+
+        [JsonProperty("transaction_id")]
+        public ToncenterTxId TransactionId { get; set; }
+
+        [JsonProperty("in_msg")]
+        public ToncenterMsg InMsg { get; set; }
+
+        [JsonProperty("out_msgs")]
+        public List<ToncenterMsg> OutMsgs { get; set; }
+    }
+
+    public class ToncenterTxId
+    {
+        [JsonProperty("hash")]
+        public string Hash { get; set; }
+    }
+
+    public class ToncenterMsg
+    {
+        [JsonProperty("source")]
+        public string Source { get; set; }
+
+        [JsonProperty("destination")]
+        public string Destination { get; set; }
+
+        [JsonProperty("value")]
+        public string Value { get; set; }
+
+        [JsonProperty("message")]
+        public string Message { get; set; }
+    }
+
     public class TonMessage
     {
         [JsonProperty("value")]

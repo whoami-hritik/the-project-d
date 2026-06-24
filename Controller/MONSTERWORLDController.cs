@@ -3769,6 +3769,16 @@ namespace monster_world.Controller
         }
 
        
+        [HttpPost("shop")]
+        public async Task<IActionResult> GetShop()
+        {
+            HttpContext.Items.TryGetValue("User", out var user);
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser)user);
+
+            var listedItems = _gameplayService.GetShopItems();
+            return Ok(new { success = true, listedItems = listedItems });
+        }
+
         [HttpPost("shop/buy")]
         public async Task<IActionResult> ShopPurchase()
         {

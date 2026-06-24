@@ -13,6 +13,9 @@ namespace monster_world.Models
         [JsonPropertyName("team")]
         public Team TeamData { get; set; }
 
+        [JsonPropertyName("collector")]
+        public CollectorConfig Collector { get; set; }
+
         [JsonPropertyName("eggEmission")]
         public List<EmissionRate> EGGEmission { get; set; }
 
@@ -87,6 +90,21 @@ namespace monster_world.Models
         
         [JsonPropertyName("costofSlot")]
         public Dictionary<string, double> CostOfSlot { get; set; }
+    }
+
+    public class CollectorConfig
+    {
+        [JsonPropertyName("maxSlots")]
+        public int MaxSlots { get; set; }
+        
+        [JsonPropertyName("costofSlot")]
+        public Dictionary<string, double> CostOfSlot { get; set; }
+
+        [JsonPropertyName("rotationDays")]
+        public int RotationDays { get; set; } = 3;
+
+        [JsonPropertyName("farmingCapHours")]
+        public double FarmingCapHours { get; set; } = 1.0;
     }
 
 

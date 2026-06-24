@@ -123,7 +123,7 @@ export class ProfileScene extends Phaser.Scene {
         this.container.add(photoOutline);
 
         // Fallback default avatar
-        const defaultAvatar = this.add.image(photoX, photoY, "icon_armadigo");
+        const defaultAvatar = this.add.image(photoX, photoY, "icon_kikflick");
         defaultAvatar.setDisplaySize(78, 78);
         this.container.add(defaultAvatar);
 
@@ -193,7 +193,8 @@ export class ProfileScene extends Phaser.Scene {
         this.container.add(usernameText);
 
         // Balances row below username (pills look)
-        const balanceY = cardTop + 95;
+        const balanceY1 = cardTop + 93;
+        const balanceY2 = cardTop + 119;
         const formatNumber = (num) => {
             if (num === undefined || num === null || isNaN(num)) return "0";
             return new Intl.NumberFormat('en', {
@@ -231,14 +232,20 @@ export class ProfileScene extends Phaser.Scene {
             return pillW;
         };
 
-        const pillSpacing = 5;
-        let currentPillX = nameX;
-        currentPillX += drawBalancePill(currentPillX, balanceY, "item_ton", this.USER.ton, "#2563eb") + pillSpacing;
-        currentPillX += drawBalancePill(currentPillX, balanceY, "item_gold", this.USER.gold, "#d97706") + pillSpacing;
-        drawBalancePill(currentPillX, balanceY, "item_eggs", this.USER.eggs, "#16a34a");
+        const pillSpacing = 8;
+        
+        // Row 1 next to avatar
+        let currentPillX1 = nameX;
+        currentPillX1 += drawBalancePill(currentPillX1, balanceY1, "item_ton", this.USER.ton, "#2563eb") + pillSpacing;
+        drawBalancePill(currentPillX1, balanceY1, "item_gold", this.USER.gold, "#d97706");
+
+        // Row 2 next to avatar
+        let currentPillX2 = nameX;
+        currentPillX2 += drawBalancePill(currentPillX2, balanceY2, "item_eggs", this.USER.eggs, "#16a34a") + pillSpacing;
+        drawBalancePill(currentPillX2, balanceY2, "item_crystal", this.USER.crystal || 0, "#8b5cf6");
 
         // Wallet connection status row
-        const walletY = cardTop + 123;
+        const walletY = cardTop + 145;
         const walletAddr = getWalletAddress();
 
         if (!walletAddr) {
@@ -338,7 +345,7 @@ export class ProfileScene extends Phaser.Scene {
         const currentXP = activeMonster.xp || 0;
         const maxXP = activeMonster.maxXP || 500;
 
-        const expY = cardTop + 172;
+        const expY = cardTop + 184;
 
         // EXP badge
         const badgeG = this.add.graphics();
@@ -385,7 +392,7 @@ export class ProfileScene extends Phaser.Scene {
         this.container.add(xpText);
 
         // Stats card box
-        const statsBoxY = cardTop + 195;
+        const statsBoxY = cardTop + 207;
         const statsBoxW = modalW - 40;
         const statsBoxH = 180;
 
@@ -437,7 +444,7 @@ export class ProfileScene extends Phaser.Scene {
         });
 
         // Team slots title
-        const teamY = cardTop + 390;
+        const teamY = cardTop + 402;
 
         const teamTitleText = this.add.text(modalX, teamY, t("active_team"), {
             fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
@@ -457,7 +464,7 @@ export class ProfileScene extends Phaser.Scene {
 
         for (let i = 0; i < 4; i++) {
             const x = startX + i * (slotSize + spacing) + slotSize / 2;
-            const y = cardTop + 440;
+            const y = cardTop + 452;
 
             // Slot background with neon glow outline
             const slotBg = this.add.graphics();
@@ -471,7 +478,7 @@ export class ProfileScene extends Phaser.Scene {
         // Custom Dynamic Vector Deposit and Withdraw Buttons
         const buttonW = 145;
         const buttonH = 42;
-        const buttonsY = cardTop + 502;
+        const buttonsY = cardTop + 514;
 
         // --- DEPOSIT BUTTON ---
         const depBtnContainer = this.add.container(modalX - buttonW / 2 - 8, buttonsY);
@@ -550,7 +557,7 @@ export class ProfileScene extends Phaser.Scene {
         });
 
         // --- PREMIUM LANGUAGE TOGGLE PILL ---
-        const langToggleY = cardTop + 546;
+        const langToggleY = cardTop + 554;
         const langBtn = this.add.container(modalX, langToggleY);
 
         const currentLang = state.language || "en";

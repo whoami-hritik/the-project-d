@@ -21,6 +21,7 @@ namespace monster_world.Mapper
                 GOLD = user.Balance.GOLD,
                 UnlockedWorlds = user.UnlockedWorlds,
                 UnlockedSlots = user.UnlockedSlots,
+                UnlockedCollectorSlots = user.UnlockedCollectorSlots,
                 CRYSTAL = user.Balance.CRYSTAL,
                 EGGS = user.Balance.EGGS,
                 Bonus = user.Bonus,

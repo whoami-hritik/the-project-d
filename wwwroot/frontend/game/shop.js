@@ -456,6 +456,7 @@ export class ShopScene extends Phaser.Scene {
                     const res = await api.BuyPack("starter");
                     if (res && res.success) {
                         const balance = res.Balance || res.balance || {};
+                        state.user.crystal = balance.CRYSTAL !== undefined ? balance.CRYSTAL : (balance.crystal !== undefined ? balance.crystal : 0);
                         state.user.gold = balance.GOLD !== undefined ? balance.GOLD : (balance.gold !== undefined ? balance.gold : 0);
                         state.user.ton = balance.TON !== undefined ? balance.TON : (balance.ton !== undefined ? balance.ton : 0);
                         state.user.eggs = balance.EGGS !== undefined ? balance.EGGS : (balance.eggs !== undefined ? balance.eggs : 0);
@@ -697,6 +698,7 @@ export class ShopScene extends Phaser.Scene {
                             const res = await api.BuyItem(`buy=${key}=${qty}`, costCurrency);
                             if (res && res.success) {
                                 const balance = res.Balance || res.balance || {};
+                                state.user.crystal = balance.CRYSTAL !== undefined ? balance.CRYSTAL : (balance.crystal !== undefined ? balance.crystal : 0);
                                 state.user.gold = balance.GOLD !== undefined ? balance.GOLD : (balance.gold !== undefined ? balance.gold : 0);
                                 state.user.ton = balance.TON !== undefined ? balance.TON : (balance.ton !== undefined ? balance.ton : 0);
                                 state.user.eggs = balance.EGGS !== undefined ? balance.EGGS : (balance.eggs !== undefined ? balance.eggs : 0);
@@ -745,6 +747,7 @@ export class ShopScene extends Phaser.Scene {
             EGGS: { name: "EGGS", icon: "item_eggs" },
             TON: { name: "TON", icon: "item_ton" },
             GOLD: { name: "GOLD", icon: "item_gold" },
+            CRYSTAL: { name: "CRYSTAL", icon: "item_crystal" },
             HEALSPELL: { name: "HEAL SPELL", icon: "item_healSpell" },
             MONSTABALL: { name: "MONSTA BALL", icon: "item_monstaBall" }
         };
@@ -879,8 +882,8 @@ export class ShopScene extends Phaser.Scene {
                 let playerBalance = 0;
 
                 const currencyKey = fromSymbol.toLowerCase();
-                if (currencyKey === "ton" || currencyKey === "gold" || currencyKey === "eggs") {
-                    playerBalance = this.USER[currencyKey] || 0;
+                if (currencyKey === "ton" || currencyKey === "gold" || currencyKey === "eggs" || currencyKey === "crystal") {
+                    playerBalance = this.USER[currencyKey] !== undefined ? this.USER[currencyKey] : (this.USER[fromSymbol] || 0);
                     maxTrade = Math.floor(playerBalance / fromRateVal);
                 } else {
                     const itemInvKey = Object.keys(this.items).find(k => k.toLowerCase() === fromSymbol.toLowerCase());
@@ -908,6 +911,7 @@ export class ShopScene extends Phaser.Scene {
                             const res = await api.Exchange(fromSymbol, toSymbol, qty * fromRateVal);
                             if (res && res.success) {
                                 const balance = res.Balance || res.balance || {};
+                                state.user.crystal = balance.CRYSTAL !== undefined ? balance.CRYSTAL : (balance.crystal !== undefined ? balance.crystal : 0);
                                 state.user.gold = balance.GOLD !== undefined ? balance.GOLD : (balance.gold !== undefined ? balance.gold : 0);
                                 state.user.ton = balance.TON !== undefined ? balance.TON : (balance.ton !== undefined ? balance.ton : 0);
                                 state.user.eggs = balance.EGGS !== undefined ? balance.EGGS : (balance.eggs !== undefined ? balance.eggs : 0);

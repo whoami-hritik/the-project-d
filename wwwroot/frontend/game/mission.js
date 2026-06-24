@@ -578,7 +578,7 @@ export class MissionScene extends Phaser.Scene {
                 this.tweens.add({ targets: btnContainer, scaleX: 1.0, scaleY: 1.0, duration: 50 });
                 if (!checkClick(pointer)) return;
                 
-                if (btnLabel === "CLAIM" && mission.verificationType !== "daily_login_streak") {
+                if (canClaim && !isDone && mission.verificationType !== "daily_login_streak") {
                     this.claimReward(mission);
                 } else {
                     this.handleGoAction(mission);

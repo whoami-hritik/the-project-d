@@ -238,8 +238,19 @@
         .workspace {
             display: flex;
             flex-grow: 1;
-            height: calc(100vh - 65px);
+            height: calc(100vh - 115px);
             overflow: hidden;
+        }
+
+        .workspace-scrollable {
+            display: none;
+            flex-grow: 1;
+            height: calc(100vh - 115px);
+            overflow-y: auto;
+            padding: 2rem;
+            flex-direction: column;
+            gap: 1.5rem;
+            background-color: var(--bg-base);
         }
 
         /* Left Panel - Users List */
@@ -633,6 +644,34 @@
             background-color: rgba(234, 179, 8, 0.05);
         }
 
+        /* Navigation Tabs */
+        .tab-bar {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 2rem;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .nav-tab {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .nav-tab.active, .nav-tab:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-primary);
+            background-color: rgba(234, 179, 8, 0.05);
+        }
+
         /* Modal Styles */
         .modal {
             display: none;
@@ -737,9 +776,21 @@
                 <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Total GOLD Supply</span>
                 <span style="font-size: 1.25rem; font-weight: 800; color: #fbbf24; margin-top: 0.25rem;" id="global-gold">0 GOLD</span>
             </div>
+            <div style="border-left: 1px solid var(--border-color); align-self: stretch;"></div>
+            <div class="stat-pill" style="display: flex; flex-direction: column; min-width: 160px;">
+                <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; letter-spacing: 0.05em;">Total CRYSTAL Supply</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: #f472b6; margin-top: 0.25rem;" id="global-crystal">0 CRYSTAL</span>
+            </div>
         </div>
 
-        <div class="workspace">
+        <!-- Navigation Tab Bar -->
+        <div class="tab-bar">
+            <button class="nav-tab active" id="btn-users-view" onclick="switchView('users')">👥 User Search</button>
+            <button class="nav-tab" id="btn-leaderboard-view" onclick="switchView('leaderboard')">💎 Crystal Leaderboard</button>
+            <button class="nav-tab" id="btn-collector-view" onclick="switchView('collector')">⚡ Collector Overview</button>
+        </div>
+
+        <div class="workspace" id="users-workspace">
             <!-- Sidebar: User/Monster list -->
             <div class="sidebar">
                 <div style="display: flex; border-bottom: 1px solid var(--border-color);">
@@ -795,6 +846,10 @@
                             <div class="balance-card">
                                 <span class="balance-label">EGGS</span>
                                 <span class="balance-value eggs-color" id="bal-eggs">0.00</span>
+                            </div>
+                            <div class="balance-card">
+                                <span class="balance-label">CRYSTAL</span>
+                                <span class="balance-value crystal-color" id="bal-crystal">0.00</span>
                             </div>
                         </div>
                     </div>
@@ -951,7 +1006,61 @@
                         </div>
 
                     </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- LEADERBOARD WORKSPACE -->
+        <div class="workspace-scrollable" id="leaderboard-workspace">
+            <div class="section-card" style="width: 100%; max-width: 1000px; margin: 0 auto;">
+                <h3 class="section-title">
+                    <span>💎 Crystal Leaderboard</span>
+                    <button class="tab-btn" onclick="fetchCrystalLeaderboard()">🔄 Refresh</button>
+                </h3>
+                <div class="data-table-container" style="max-height: 70vh;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>User ID</th>
+                                <th>Username</th>
+                                <th>Name</th>
+                                <th>Level</th>
+                                <th>Crystals</th>
+                                <th>Gold</th>
+                                <th>Eggs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-table-body">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLLECTOR WORKSPACE -->
+        <div class="workspace-scrollable" id="collector-workspace">
+            <div class="section-card" style="width: 100%; max-width: 1200px; margin: 0 auto;">
+                <h3 class="section-title">
+                    <span>⚡ Collector Stakes & Cooldowns Overview</span>
+                    <button class="tab-btn" onclick="fetchCollectorOverview()">🔄 Refresh</button>
+                </h3>
+                <div class="data-table-container" style="max-height: 70vh;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Player Details</th>
+                                <th>Unlocked Slots</th>
+                                <th>Staked Monsters</th>
+                                <th>Cooldown Monsters</th>
+                                <th>Farm Collected (All-Time)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="collector-table-body">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1162,6 +1271,7 @@
                     document.getElementById('global-withdrawals').innerText = `${stats.totalWithdrawalsEggs.toFixed(2)} EGGS / ${stats.totalWithdrawalsTon.toFixed(2)} TON`;
                     document.getElementById('global-eggs').innerText = `${stats.totalEggsCombined.toFixed(2)} EGGS (Pool: ${stats.totalEggsPool.toFixed(2)} | User: ${stats.totalEggsCirculation.toFixed(2)})`;
                     document.getElementById('global-gold').innerText = `${stats.totalGoldCirculation.toLocaleString(undefined, {maximumFractionDigits: 0})} GOLD`;
+                    document.getElementById('global-crystal').innerText = `${(stats.totalCrystalCirculation || 0).toLocaleString(undefined, {maximumFractionDigits: 0})} CRYSTAL`;
                 }
             } catch (err) {
                 console.error("Failed to load overview stats:", err);
@@ -1171,8 +1281,148 @@
         function showDashboard() {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('dashboard-screen').style.display = 'flex';
-            setSearchMode('users');
+            switchView('users');
             loadOverviewStats();
+        }
+
+        function switchView(view) {
+            document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById('users-workspace').style.display = 'none';
+            document.getElementById('leaderboard-workspace').style.display = 'none';
+            document.getElementById('collector-workspace').style.display = 'none';
+
+            if (view === 'users') {
+                document.getElementById('btn-users-view').classList.add('active');
+                document.getElementById('users-workspace').style.display = 'flex';
+                handleSearch();
+            } else if (view === 'leaderboard') {
+                document.getElementById('btn-leaderboard-view').classList.add('active');
+                document.getElementById('leaderboard-workspace').style.display = 'flex';
+                fetchCrystalLeaderboard();
+            } else if (view === 'collector') {
+                document.getElementById('btn-collector-view').classList.add('active');
+                document.getElementById('collector-workspace').style.display = 'flex';
+                fetchCollectorOverview();
+            }
+        }
+
+        async function fetchCrystalLeaderboard() {
+            const tbody = document.getElementById('leaderboard-table-body');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Loading Crystal Leaderboard...</td></tr>';
+            try {
+                const response = await fetch(`${API_BASE}/crystal-leaderboard`, {
+                    headers: getHeaders()
+                });
+                if (!response.ok) throw new Error("Unauthorized or server error");
+                const leaderboard = await response.json();
+                
+                if (leaderboard.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No records found.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = leaderboard.map((user, index) => `
+                    <tr>
+                        <td style="font-weight: bold; color: ${index < 3 ? '#fbbf24' : 'inherit'};">${index + 1}</td>
+                        <td class="text-mono">${user.id}</td>
+                        <td class="user-username">@${user.username || 'N/A'}</td>
+                        <td>${user.firstName || ''} ${user.lastName || ''}</td>
+                        <td>Level ${user.level}</td>
+                        <td class="crystal-color" style="font-weight: 700;">💎 ${user.crystals.toFixed(2)}</td>
+                        <td class="gold-color">🟡 ${user.gold.toLocaleString()}</td>
+                        <td class="eggs-color">🥚 ${user.eggs.toFixed(2)}</td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error("Leaderboard fetch error:", err);
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger);">Error loading leaderboard: ${err.message}</td></tr>`;
+            }
+        }
+
+        async function fetchCollectorOverview() {
+            const tbody = document.getElementById('collector-table-body');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">Loading Collector overview...</td></tr>';
+            try {
+                const response = await fetch(`${API_BASE}/collector-overview`, {
+                    headers: getHeaders()
+                });
+                if (!response.ok) throw new Error("Unauthorized or server error");
+                const data = await response.json();
+                
+                const overview = data.overview;
+                if (!overview || overview.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--text-muted);">No players with collector activity.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = overview.map(row => {
+                    let stakedHtml = '';
+                    if (row.staked && row.staked.length > 0) {
+                        stakedHtml = row.staked.map(m => `
+                            <div style="background: var(--bg-element); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 0.5rem; margin-bottom: 0.5rem; font-size: 0.85rem;">
+                                <div style="font-weight: 700; display: flex; justify-content: space-between;">
+                                    <span>🦖 ${m.title || m.id} (Lv.${m.level})</span>
+                                    <span style="font-size: 0.75rem; text-transform: uppercase;" class="badge">${m.rarity}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; margin-top: 0.25rem; font-size: 0.8rem; color: var(--text-secondary);">
+                                    <span>Focus: <strong style="color: ${m.collectorFocus === 'CRYSTAL' ? '#f472b6' : '#ea580c'};">${m.collectorFocus}</strong></span>
+                                    <span>Rate: ${m.collectorFocus === 'CRYSTAL' ? `💎 ${m.crystalRate}/h` : `🟡 ${m.goldRate}/h`}</span>
+                                </div>
+                                <div style="margin-top: 0.25rem; font-weight: bold; font-size: 0.8rem; color: #4ade80;">
+                                    Unclaimed: ${m.collectorFocus === 'CRYSTAL' ? `💎 ${m.crystalToCollect}` : `🟡 ${m.goldToCollect}`}
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        stakedHtml = '<span style="color: var(--text-muted); font-size: 0.85rem;">None</span>';
+                    }
+
+                    let cooldownHtml = '';
+                    if (row.cooldown && row.cooldown.length > 0) {
+                        cooldownHtml = row.cooldown.map(m => `
+                            <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 0.5rem; padding: 0.5rem; margin-bottom: 0.5rem; font-size: 0.85rem;">
+                                <div style="font-weight: 700; display: flex; justify-content: space-between;">
+                                    <span>🦖 ${m.title || m.id} (Lv.${m.level})</span>
+                                    <span style="color: var(--danger); font-size: 0.8rem;">Resting</span>
+                                </div>
+                                <div style="margin-top: 0.25rem; font-size: 0.8rem; font-weight: 600; color: #f87171;">
+                                    ⏳ Cooldown: ${m.remainingFormatted}
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        cooldownHtml = '<span style="color: var(--text-muted); font-size: 0.85rem;">None</span>';
+                    }
+
+                    return `
+                        <tr>
+                            <td>
+                                <div style="font-weight: bold;">${row.firstName || ''} ${row.lastName || ''}</div>
+                                <div class="user-username">@${row.username || 'N/A'}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">UID: ${row.userId}</div>
+                                <div style="font-size: 0.8rem; font-weight: bold; color: #f472b6; margin-top: 0.25rem;">💎 ${row.crystals.toFixed(2)} Crystals</div>
+                            </td>
+                            <td style="font-family: monospace; font-size: 1.1rem; font-weight: 700; text-align: center; vertical-align: middle;">
+                                ${row.unlockedCollectorSlots}
+                            </td>
+                            <td style="vertical-align: top; width: 280px;">
+                                ${stakedHtml}
+                            </td>
+                            <td style="vertical-align: top; width: 280px;">
+                                ${cooldownHtml}
+                            </td>
+                            <td style="vertical-align: middle;">
+                                <div class="gold-color" style="font-weight: bold;">🟡 ${row.goldCollected.toLocaleString()} GOLD</div>
+                                <div class="crystal-color" style="font-weight: bold; margin-top: 0.25rem;">💎 ${row.crystalCollected.toFixed(2)} CRYSTALS</div>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (err) {
+                console.error("Collector overview fetch error:", err);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger);">Error loading collector stats: ${err.message}</td></tr>`;
+            }
         }
 
         // --- Login / Logout Handling ---
@@ -1459,6 +1709,7 @@
             document.getElementById('bal-ton').innerText = user.balance.ton.toFixed(4);
             document.getElementById('bal-gold').innerText = user.balance.gold.toFixed(2);
             document.getElementById('bal-eggs').innerText = user.balance.eggs.toFixed(2);
+            document.getElementById('bal-crystal').innerText = (user.balance.crystal || 0).toFixed(2);
 
             // Core Analytics
             document.getElementById('analytic-deposit').innerText = `$${data.analytics.totalDeposit.toFixed(2)}`;

@@ -29,6 +29,11 @@ namespace monster_world.Models
         public bool IsFighting { get; set; } = false;
         public bool IsCaptured { get; set; } =  false;
         public DateTime CaptureAt { get; set; }   
+        public bool StakedInCollector { get; set; } = false;
+        public DateTime? CollectorDepositTime { get; set; } = null;
+        public DateTime? CollectorLastClaimTime { get; set; } = null;
+        public string CollectorFocus { get; set; } = "GOLD";
+        public string CapturedMap { get; set; } = "";
         public List<string> Logs { get; set; } = new List<string>();
 
 
@@ -40,6 +45,12 @@ namespace monster_world.Models
 
         public bool ApplyPassiveRegen()
         {
+            if (StakedInCollector)
+            {
+                IsRegenerating = false;
+                return false;
+            }
+
             if (IsFighting)
             {
                 if (IsRegenerating)

@@ -5,6 +5,14 @@
             "GOLD": 150
         }
     },
+    "collector": {
+        "maxSlots": 10,
+        "costofSlot": {
+            "GOLD": 200
+        },
+        "rotationDays": 3,
+        "farmingCapHours": 1.0
+    },
     "eggEmission": [
         {
             "winType": "jackpot",
@@ -802,7 +810,8 @@
         "EGGS-TON",
         "TON-GOLD",
         "HEALSPELL-GOLD",
-        "MONSTABALL-GOLD"
+        "MONSTABALL-GOLD",
+        "CRYSTAL-TON"
     ],
     "exchange-rate": [
         {
@@ -823,6 +832,11 @@
         {
             "pair": "MONSTABALL-GOLD",
             "rate": "1:8",
+            "limit": "nolimit"
+        },
+        {
+            "pair": "CRYSTAL-TON",
+            "rate": "200:1",
             "limit": "nolimit"
         }
     ],

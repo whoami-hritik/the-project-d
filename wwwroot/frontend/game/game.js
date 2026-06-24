@@ -395,7 +395,49 @@ export class WorldScene extends Phaser.Scene {
             align: "center"
         }).setOrigin(0.5);
 
-        collectorContainer.add([collector, collectorTitle, timerBg, timerText]);
+        // Stylized '!' info badge at top-right of the icon
+        const infoBadge = this.add.container(42, -42);
+        const badgeBg = this.add.graphics();
+        badgeBg.fillStyle(0x3b82f6, 1); // Blue
+        badgeBg.lineStyle(1.5, 0xffffff, 1);
+        badgeBg.fillCircle(0, 0, 10);
+        badgeBg.strokeCircle(0, 0, 10);
+        infoBadge.add(badgeBg);
+
+        const badgeTxt = this.add.text(0, 0, "!", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "13px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        infoBadge.add(badgeTxt);
+
+        // Subtitle explaining the collector
+        const collectorSubtitle = this.add.text(0, 85, "STAKE & YIELD", {
+            fontFamily: "Nunito, sans-serif",
+            fontSize: "10px",
+            fontWeight: "800",
+            color: "#94a3b8",
+            stroke: "#000000",
+            strokeThickness: 3.5,
+            align: "center"
+        }).setOrigin(0.5);
+
+        collectorContainer.add([collector, collectorTitle, timerBg, timerText, infoBadge, collectorSubtitle]);
+        collectorContainer.setSize(120, 120);
+        collectorContainer.setInteractive({ useHandCursor: true });
+        collectorContainer.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            this.scene.launch("CollectorScene");
+            this.scene.pause();
+            const sub = this.scene.get("CollectorScene");
+            sub.events.once("shutdown", () => {
+                this.scene.resume();
+                api.loadUser().then(result => {
+                    this.USER = state.user;
+                    this.createProfile();
+                });
+            });
+        });
 
         // Smooth pulse tween scaling the entire container
         this.tweens.add({

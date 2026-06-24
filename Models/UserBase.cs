@@ -57,6 +57,12 @@ namespace monster_world.Models
             get => System.Math.Max(1, _unlockedSlots);
             set => _unlockedSlots = System.Math.Max(1, value);
         }
+        private int _unlockedCollectorSlots = 1;
+        public int UnlockedCollectorSlots
+        {
+            get => System.Math.Max(1, _unlockedCollectorSlots);
+            set => _unlockedCollectorSlots = System.Math.Max(1, value);
+        }
         public List<string> Monsters { get; set; }
         public Items Items { get; set; }
         public List<string> Transactions { get; set; }

@@ -1097,6 +1097,539 @@ namespace monster_world.Controller
             return Ok( new { success = true, User = MapTo.UserBaseDto(User)});
         }
 
+        private string GetActiveExhibitionMap()
+        {
+            var maps = _gameplayService.GetMapData();
+            if (maps == null || maps.Count == 0) return "bootcamp";
+            int index = DateTime.UtcNow.DayOfYear % maps.Count;
+            return maps[index].Map;
+        }
+
+        private List<string> GetEligibleCollectorMonsters()
+        {
+            var collectorConfig = _gameplayService.GetCollectorData();
+            int rotationDays = collectorConfig?.RotationDays ?? 3;
+            
+            long unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long epoch = unixTime / (rotationDays * 24 * 3600);
+            
+            var rnd = new Random((int)(epoch % int.MaxValue));
+            var eligibleList = new List<string>();
+            
+            var mapMonstersList = _gameplayService.Gameplay.MapMonsters;
+            if (mapMonstersList == null) return eligibleList;
+            
+            var commonIds = _gameplayService.GetRarityMons("common")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+            var rareIds = _gameplayService.GetRarityMons("rare")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+            var epicIds = _gameplayService.GetRarityMons("epic")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+            var legendaryIds = _gameplayService.GetRarityMons("legendary")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+
+            foreach (var mapInfo in mapMonstersList)
+            {
+                var distinctMapMons = mapInfo.Monsters?.Select(id => id.ToLower()).Distinct().ToList();
+                if (distinctMapMons == null || distinctMapMons.Count == 0) continue;
+                
+                var mapCommons = distinctMapMons.Where(id => commonIds.Contains(id)).ToList();
+                var mapRares = distinctMapMons.Where(id => rareIds.Contains(id)).ToList();
+                var mapEpics = distinctMapMons.Where(id => epicIds.Contains(id)).ToList();
+                var mapLegendaries = distinctMapMons.Where(id => legendaryIds.Contains(id)).ToList();
+                
+                if (mapCommons.Any())
+                {
+                    eligibleList.Add(mapCommons[rnd.Next(mapCommons.Count)]);
+                }
+                if (mapRares.Any())
+                {
+                    eligibleList.Add(mapRares[rnd.Next(mapRares.Count)]);
+                }
+                if (mapEpics.Any())
+                {
+                    eligibleList.Add(mapEpics[rnd.Next(mapEpics.Count)]);
+                }
+                if (mapLegendaries.Any())
+                {
+                    eligibleList.Add(mapLegendaries[rnd.Next(mapLegendaries.Count)]);
+                }
+            }
+            
+            return eligibleList.Select(id => id.ToLower()).Distinct().ToList();
+        }
+
+        private async Task ProcessExpiredCollectorStakes(long userId)
+        {
+            var stakedMonsters = await _context.Monsters
+                .Where(m => m.OwnerID == userId && m.StakedInCollector)
+                .ToListAsync();
+
+            if (!stakedMonsters.Any()) return;
+
+            var activeMap = GetActiveExhibitionMap();
+            bool changed = false;
+            
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == userId);
+            if (user == null) return;
+
+            foreach (var monster in stakedMonsters)
+            {
+                if (monster.CollectorDepositTime.HasValue)
+                {
+                    double totalStakedHours = (DateTime.UtcNow - monster.CollectorDepositTime.Value).TotalHours;
+                    if (totalStakedHours >= 24.0)
+                    {
+                        double claimableHours = 0;
+                        if (monster.CollectorLastClaimTime.HasValue)
+                        {
+                            var limitTime = monster.CollectorDepositTime.Value.AddHours(24.0);
+                            claimableHours = (limitTime - monster.CollectorLastClaimTime.Value).TotalHours;
+                            if (claimableHours < 0) claimableHours = 0;
+
+                            var collectorConfig = _gameplayService.GetCollectorData();
+                            double capHours = collectorConfig?.FarmingCapHours ?? 1.0;
+                            if (claimableHours > capHours) claimableHours = capHours;
+                        }
+
+                        double baseScale = Math.Ceiling(monster.Level / 5.0);
+                        double matchBonus = (monster.CapturedMap?.ToLower() == activeMap?.ToLower()) ? 0.2 : 0.0;
+                        double multiplier = GetRarityMultiplier(monster.Rarity) + matchBonus;
+
+                        double goldRate = 0;
+                        double crystalRate = 0;
+                        string r = monster.Rarity?.ToLower() ?? "common";
+                        if (r == "common")
+                        {
+                            goldRate = baseScale * 1.0 * multiplier;
+                        }
+                        else if (r == "rare")
+                        {
+                            if (monster.CollectorFocus?.ToLower() == "crystal")
+                            {
+                                crystalRate = baseScale * 0.5 * multiplier;
+                            }
+                            else
+                            {
+                                goldRate = baseScale * 1.0 * multiplier;
+                            }
+                        }
+                        else
+                        {
+                            goldRate = baseScale * 1.0 * multiplier;
+                            crystalRate = baseScale * 0.5 * multiplier;
+                        }
+
+                        double goldEarned = claimableHours * goldRate;
+                        double crystalEarned = claimableHours * crystalRate;
+
+                        if (goldEarned > 0)
+                        {
+                            user.Balance.GOLD += Math.Round(goldEarned, 4);
+                        }
+                        if (crystalEarned > 0)
+                        {
+                            user.Balance.CRYSTAL += Math.Round(crystalEarned, 4);
+                        }
+
+                        monster.StakedInCollector = false;
+                        monster.CollectorDepositTime = DateTime.UtcNow.AddHours(24.0); // Cooldown end time
+                        monster.CollectorLastClaimTime = null;
+                        
+                        changed = true;
+                    }
+                }
+            }
+
+            if (changed)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private double GetRarityMultiplier(string rarity)
+        {
+            if (string.IsNullOrEmpty(rarity)) return 1.0;
+            return rarity.ToLower() switch
+            {
+                "common" => 1.0,
+                "rare" => 1.2,
+                "epic" => 1.4,
+                "legendary" => 1.8,
+                _ => 1.0
+            };
+        }
+
+        private (double Gold, double Crystal, double GoldRate, double CrystalRate) CalculateMonsterYield(Monster monster, string activeMap)
+        {
+            double baseScale = Math.Ceiling(monster.Level / 5.0);
+            double matchBonus = (monster.CapturedMap?.ToLower() == activeMap?.ToLower()) ? 0.2 : 0.0;
+            double multiplier = GetRarityMultiplier(monster.Rarity) + matchBonus;
+
+            double goldRate = 0;
+            double crystalRate = 0;
+
+            string r = monster.Rarity?.ToLower() ?? "common";
+            if (r == "common")
+            {
+                goldRate = baseScale * 1.0 * multiplier;
+            }
+            else if (r == "rare")
+            {
+                if (monster.CollectorFocus?.ToLower() == "crystal")
+                {
+                    crystalRate = baseScale * 0.5 * multiplier;
+                }
+                else
+                {
+                    goldRate = baseScale * 1.0 * multiplier;
+                }
+            }
+            else // epic & legendary
+            {
+                goldRate = baseScale * 1.0 * multiplier;
+                crystalRate = baseScale * 0.5 * multiplier;
+            }
+
+            double elapsedHours = 0;
+            if (monster.StakedInCollector && monster.CollectorLastClaimTime.HasValue)
+            {
+                elapsedHours = (DateTime.UtcNow - monster.CollectorLastClaimTime.Value).TotalHours;
+                if (elapsedHours < 0) elapsedHours = 0;
+
+                var collectorConfig = _gameplayService.GetCollectorData();
+                double capHours = collectorConfig?.FarmingCapHours ?? 1.0;
+                if (elapsedHours > capHours) elapsedHours = capHours;
+            }
+
+            double goldEarned = elapsedHours * goldRate;
+            double crystalEarned = elapsedHours * crystalRate;
+
+            return (goldEarned, crystalEarned, goldRate, crystalRate);
+        }
+
+        [HttpGet("collector/status")]
+        public async Task<IActionResult> GetCollectorStatus()
+        {
+            HttpContext.Items.TryGetValue("User", out var userVal);
+            if (userVal == null) return Unauthorized();
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
+
+            await ProcessExpiredCollectorStakes(User.ID);
+
+            var activeMap = GetActiveExhibitionMap();
+            var collectorData = _gameplayService.GetCollectorData();
+            int maxSlots = collectorData?.MaxSlots ?? 10;
+            int rotationDays = collectorData?.RotationDays ?? 3;
+            
+            long unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long epoch = unixTime / (rotationDays * 24 * 3600);
+            long nextResetUnix = (epoch + 1) * (rotationDays * 24 * 3600);
+            double countdownSeconds = nextResetUnix - unixTime;
+
+            double nextSlotCost = User.UnlockedCollectorSlots * (collectorData?.CostOfSlot?["GOLD"] ?? 500);
+
+            var stakedMonsters = await _context.Monsters
+                .Where(m => m.OwnerID == User.ID && m.StakedInCollector)
+                .ToListAsync();
+
+            var availableMonsters = await _context.Monsters
+                .Where(m => m.OwnerID == User.ID && !m.StakedInCollector && !m.IsFighting)
+                .ToListAsync();
+
+            bool anyRegen = false;
+            foreach (var m in availableMonsters)
+            {
+                if (m.ApplyPassiveRegen())
+                {
+                    anyRegen = true;
+                }
+            }
+            if (anyRegen)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            var eligibleIds = GetEligibleCollectorMonsters();
+            var eligibleAvailable = availableMonsters
+                .Where(m => eligibleIds.Contains(m.Id.ToLower()))
+                .ToList();
+
+            var stakedDetails = stakedMonsters.Select(m => {
+                var yield = CalculateMonsterYield(m, activeMap);
+                double elapsedHours = m.CollectorLastClaimTime.HasValue 
+                    ? Math.Max(0, (DateTime.UtcNow - m.CollectorLastClaimTime.Value).TotalHours)
+                    : 0;
+                return new {
+                    Monster = m,
+                    GoldRate = Math.Round(yield.GoldRate, 2),
+                    CrystalRate = Math.Round(yield.CrystalRate, 2),
+                    GoldEarned = Math.Round(yield.Gold, 4),
+                    CrystalEarned = Math.Round(yield.Crystal, 4),
+                    ElapsedHours = elapsedHours
+                };
+            }).ToList();
+
+            double totalGoldEarned = stakedDetails.Sum(s => s.GoldEarned);
+            double totalCrystalEarned = stakedDetails.Sum(s => s.CrystalEarned);
+
+            return Ok(new {
+                success = true,
+                activeExhibitionMap = activeMap,
+                activeExhibitionTitle = activeMap.ToUpper() + " COLLECTION",
+                countdownSeconds = countdownSeconds,
+                unlockedSlots = User.UnlockedCollectorSlots,
+                maxSlots = maxSlots,
+                nextSlotCost = nextSlotCost,
+                stakedMonsters = stakedDetails,
+                availableMonsters = eligibleAvailable,
+                eligibleMonsters = eligibleIds,
+                farmingCapHours = collectorData?.FarmingCapHours ?? 1.0,
+                totalGoldEarned = Math.Round(totalGoldEarned, 4),
+                totalCrystalEarned = Math.Round(totalCrystalEarned, 4),
+                User = MapTo.UserBaseDto(User)
+            });
+        }
+
+        public class StakeRequest
+        {
+            public string MonsterId { get; set; }
+            public string Focus { get; set; } = "GOLD";
+        }
+
+        [HttpPost("collector/stake")]
+        public async Task<IActionResult> StakeMonster([FromBody] StakeRequest request)
+        {
+            HttpContext.Items.TryGetValue("User", out var userVal);
+            if (userVal == null) return Unauthorized();
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
+
+            await ProcessExpiredCollectorStakes(User.ID);
+
+            if (request == null || string.IsNullOrEmpty(request.MonsterId))
+            {
+                return BadRequest(new { success = false, reason = "invalid request parameters" });
+            }
+
+            var monster = await _context.Monsters
+                .FirstOrDefaultAsync(m => m.OwnerID == User.ID && m.InstanceId == request.MonsterId);
+
+            if (monster == null)
+            {
+                return Ok(new { success = false, reason = "monster not found or not owned by you" });
+            }
+
+            if (!monster.StakedInCollector && monster.CollectorDepositTime.HasValue && DateTime.UtcNow < monster.CollectorDepositTime.Value)
+            {
+                var remainingSec = (monster.CollectorDepositTime.Value - DateTime.UtcNow).TotalSeconds;
+                int hours = (int)(remainingSec / 3600);
+                int minutes = (int)((remainingSec % 3600) / 60);
+                return Ok(new { success = false, reason = $"Monster is on staking cooldown. Available in {hours}h {minutes}m." });
+            }
+
+            var eligibleIds = GetEligibleCollectorMonsters();
+            if (!eligibleIds.Contains(monster.Id.ToLower()))
+            {
+                return Ok(new { success = false, reason = "This monster species is not eligible for the current exhibition." });
+            }
+
+            if (monster.StakedInCollector)
+            {
+                return Ok(new { success = false, reason = "monster is already staked in the collector" });
+            }
+
+            if (monster.IsFighting)
+            {
+                return Ok(new { success = false, reason = "monster is currently in a battle" });
+            }
+
+            int currentlyStakedCount = await _context.Monsters
+                .CountAsync(m => m.OwnerID == User.ID && m.StakedInCollector);
+
+            if (currentlyStakedCount >= User.UnlockedCollectorSlots)
+            {
+                return Ok(new { success = false, reason = "all unlocked collector slots are occupied" });
+            }
+
+            string focus = "GOLD";
+            if (monster.Rarity?.ToLower() == "rare" && !string.IsNullOrEmpty(request.Focus))
+            {
+                if (request.Focus.ToUpper() == "CRYSTAL")
+                {
+                    focus = "CRYSTAL";
+                }
+            }
+
+            monster.StakedInCollector = true;
+            monster.CollectorDepositTime = DateTime.UtcNow;
+            monster.CollectorLastClaimTime = DateTime.UtcNow;
+            monster.CollectorFocus = focus;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, User = MapTo.UserBaseDto(User), monster });
+        }
+
+        public class ClaimRequest
+        {
+            public string MonsterId { get; set; }
+        }
+
+        [HttpPost("collector/claim")]
+        public async Task<IActionResult> ClaimCollectorRewards([FromBody] ClaimRequest request)
+        {
+            HttpContext.Items.TryGetValue("User", out var userVal);
+            if (userVal == null) return Unauthorized();
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
+
+            await ProcessExpiredCollectorStakes(User.ID);
+
+            var activeMap = GetActiveExhibitionMap();
+            List<Monster> monstersToClaim = new();
+
+            if (request != null && !string.IsNullOrEmpty(request.MonsterId))
+            {
+                var monster = await _context.Monsters
+                    .FirstOrDefaultAsync(m => m.OwnerID == User.ID && m.InstanceId == request.MonsterId && m.StakedInCollector);
+                if (monster != null)
+                {
+                    monstersToClaim.Add(monster);
+                }
+            }
+            else
+            {
+                monstersToClaim = await _context.Monsters
+                    .Where(m => m.OwnerID == User.ID && m.StakedInCollector)
+                    .ToListAsync();
+            }
+
+            if (monstersToClaim.Count == 0)
+            {
+                return Ok(new { success = false, reason = "no staked monsters found to claim rewards for" });
+            }
+
+            double totalGold = 0;
+            double totalCrystal = 0;
+
+            foreach (var monster in monstersToClaim)
+            {
+                var yield = CalculateMonsterYield(monster, activeMap);
+                totalGold += yield.Gold;
+                totalCrystal += yield.Crystal;
+
+                monster.CollectorLastClaimTime = DateTime.UtcNow;
+            }
+
+            if (totalGold > 0)
+            {
+                User.Credit("GOLD", Math.Round(totalGold, 4), "collector_claim_gold");
+            }
+            if (totalCrystal > 0)
+            {
+                User.Credit("CRYSTAL", Math.Round(totalCrystal, 4), "collector_claim_crystal");
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new {
+                success = true,
+                goldClaimed = Math.Round(totalGold, 4),
+                crystalClaimed = Math.Round(totalCrystal, 4),
+                User = MapTo.UserBaseDto(User)
+            });
+        }
+
+        public class UnstakeRequest
+        {
+            public string MonsterId { get; set; }
+        }
+
+        [HttpPost("collector/unstake")]
+        public async Task<IActionResult> UnstakeMonster([FromBody] UnstakeRequest request)
+        {
+            HttpContext.Items.TryGetValue("User", out var userVal);
+            if (userVal == null) return Unauthorized();
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
+
+            await ProcessExpiredCollectorStakes(User.ID);
+
+            if (request == null || string.IsNullOrEmpty(request.MonsterId))
+            {
+                return BadRequest(new { success = false, reason = "invalid request parameters" });
+            }
+
+            var monster = await _context.Monsters
+                .FirstOrDefaultAsync(m => m.OwnerID == User.ID && m.InstanceId == request.MonsterId && m.StakedInCollector);
+
+            if (monster == null)
+            {
+                return Ok(new { success = false, reason = "staked monster not found or not owned by you" });
+            }
+
+            var activeMap = GetActiveExhibitionMap();
+            var yield = CalculateMonsterYield(monster, activeMap);
+
+            if (yield.Gold > 0)
+            {
+                User.Credit("GOLD", Math.Round(yield.Gold, 4), $"collector_unstake_gold={monster.InstanceId}");
+            }
+            if (yield.Crystal > 0)
+            {
+                User.Credit("CRYSTAL", Math.Round(yield.Crystal, 4), $"collector_unstake_crystal={monster.InstanceId}");
+            }
+
+            monster.StakedInCollector = false;
+            if (monster.CollectorDepositTime.HasValue)
+            {
+                var stakedDuration = DateTime.UtcNow - monster.CollectorDepositTime.Value;
+                if (stakedDuration < TimeSpan.Zero) stakedDuration = TimeSpan.Zero;
+                if (stakedDuration.TotalHours > 24.0) stakedDuration = TimeSpan.FromHours(24.0);
+                monster.CollectorDepositTime = DateTime.UtcNow.Add(stakedDuration);
+            }
+            else
+            {
+                monster.CollectorDepositTime = null;
+            }
+            monster.CollectorLastClaimTime = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new {
+                success = true,
+                goldClaimed = Math.Round(yield.Gold, 4),
+                crystalClaimed = Math.Round(yield.Crystal, 4),
+                User = MapTo.UserBaseDto(User),
+                monster
+            });
+        }
+
+        [HttpPost("collector/unlock-slot")]
+        public async Task<IActionResult> UnlockCollectorSlot()
+        {
+            HttpContext.Items.TryGetValue("User", out var userVal);
+            if (userVal == null) return Unauthorized();
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
+
+            var collectorData = _gameplayService.GetCollectorData();
+            int maxSlots = collectorData?.MaxSlots ?? 10;
+            double cost = collectorData?.CostOfSlot?["GOLD"] ?? 500;
+
+            if (User.UnlockedCollectorSlots >= maxSlots)
+            {
+                return Ok(new { success = false, reason = "max collector slots already unlocked" });
+            }
+
+            double unlockCost = User.UnlockedCollectorSlots * cost;
+
+            if (User.Balance.GOLD < unlockCost)
+            {
+                return Ok(new { success = false, reason = $"insufficient gold balance. Required: {unlockCost} GOLD." });
+            }
+
+            User.Credit("GOLD", -unlockCost, $"unlock_collector_slot={User.UnlockedCollectorSlots + 1}");
+            User.UnlockedCollectorSlots += 1;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, User = MapTo.UserBaseDto(User) });
+        }
+
         [HttpPost("tutorial/complete")]
         public async Task<IActionResult> CompleteTutorial()
         {
@@ -1785,6 +2318,7 @@ namespace monster_world.Controller
             if (random.NextDouble() <= catchChance)
             {
                 DefendingMonster.OwnerID = User.ID;
+                DefendingMonster.CapturedMap = battleState.Map ?? "";
                 DefendingMonster.Log(DefendingMonster.InstanceId, DefendingMonster.Level, $"captured_in_map={battleState.Map}");
                 User.Monsters.Add(DefendingMonster.InstanceId);
                 User.TotalVictory += 1;
@@ -1975,23 +2509,20 @@ namespace monster_world.Controller
             HttpContext.Items.TryGetValue("User", out var user);
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)user); //testuser
             await CleanUpTimedOutBattles(User.ID);
+            await ProcessExpiredCollectorStakes(User.ID);
 
             var form = await GetForm(new { pageIndex = 0 });
 
             int startIndex = 6 * form.pageIndex;
 
-            var monsterIds = (User.Monsters ?? Enumerable.Empty<string>())
+            var query = _context.Monsters
+                .Where(m => User.Monsters.Contains(m.InstanceId) && !m.StakedInCollector);
+
+            int totalMonsters = await query.CountAsync();
+
+            var monsters = await query
                 .Skip(startIndex)
                 .Take(6)
-                .ToList();
-
-            if (!monsterIds.Any())
-            {
-                return Ok(new { success = true, Monsters = new List<Monster>(), totalMonsters = User.Monsters.Count() });
-            }
-
-            var monsters = await _context.Monsters
-                .Where(m => monsterIds.Contains(m.InstanceId))
                 .ToListAsync();
 
             bool changed = false;
@@ -2008,7 +2539,7 @@ namespace monster_world.Controller
                 await _context.SaveChangesAsync();
             }
 
-            return Ok(new { success = true, Monsters = monsters, totalMonsters = User.Monsters.Count() });
+            return Ok(new { success = true, Monsters = monsters, totalMonsters = totalMonsters });
         }
 
 
@@ -2754,6 +3285,26 @@ namespace monster_world.Controller
                     return Ok(new { success = false, reason = "insufficient balance" });
                 }
             }
+            else if (form.From == "CRYSTAL" && form.To == "TON")
+            {
+                if (User.Balance.CRYSTAL >= form.Amount && form.Amount > 0)
+                {
+                    double TONConversion = (form.Amount / fromPart) * toPart;
+                    double USDTValue = TONConversion * await GetTonPrice();
+
+                    await _poolService.RemoveUSDTLiquidity(USDTValue);
+                    analytics.TotalExchanged += USDTValue;
+
+                    User.Credit("CRYSTAL", -form.Amount, "exchange=CRYSTALtoTON");
+                    User.Credit("TON", TONConversion, "exchange=CRYSTALtoTON");
+
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    return Ok(new { success = false, reason = "insufficient balance" });
+                }
+            }
             else if (form.From == "TON" && form.To == "GOLD")
             {
                 if (User.Balance.TON >= form.Amount && form.Amount > 0)
@@ -2858,6 +3409,7 @@ namespace monster_world.Controller
             
             foreach(var monster in monsters)
             {
+                if (monster.StakedInCollector) continue;
                 monster.HP = monster.MaxHP;
             }
             await _context.SaveChangesAsync();
@@ -2894,6 +3446,9 @@ namespace monster_world.Controller
 
             if (monster.OwnerID != User.ID)
                 return Ok(new { success = false, reason = "not an owner"});
+
+            if (monster.StakedInCollector)
+                return Ok(new { success = false, reason = "staked monsters cannot heal" });
 
             bool regenChanged = monster.ApplyPassiveRegen();
             
@@ -2940,6 +3495,9 @@ namespace monster_world.Controller
 
             if (monster.OwnerID != User.ID)
                 return Ok(new { success = false, reason = "not an owner"});
+
+            if (monster.StakedInCollector)
+                return Ok(new { success = false, reason = "staked monsters cannot heal" });
 
             bool regenChanged = monster.ApplyPassiveRegen();
             
@@ -2991,9 +3549,10 @@ namespace monster_world.Controller
             HttpContext.Items.TryGetValue("User", out var user);
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)user);
             await CleanUpTimedOutBattles(User.ID);
+            await ProcessExpiredCollectorStakes(User.ID);
 
             var monsters = await _context.Monsters
-                .Where(m => User.Monsters.Contains(m.InstanceId))
+                .Where(m => User.Monsters.Contains(m.InstanceId) && !m.StakedInCollector)
                 .ToListAsync();
 
             bool anyChanged = false;
@@ -3207,34 +3766,6 @@ namespace monster_world.Controller
                     }
                 }
             }
-        }
-
-        [ValidateRequestIgnore]
-        [HttpPost("shop")]
-        public async Task<IActionResult> ShopItems()
-        {
-
-            // HttpContext.Items.TryGetValue("User", out var user);
-            // UserBase User = await _userService.GetOrCreateUser((TelegramUser) user);
-
-            var form = await GetForm( new
-            {
-                Section = ""
-            });
-
-            if (form.Section == "crystal-shop")
-            {
-            
-            }
-            if (form.Section == "exchange")
-            {
-                
-            }
-
-            var listedItems = _gameplayService.GetShopItems();
-        
-            return Ok(new { success = true, listedItems }); 
-
         }
 
        

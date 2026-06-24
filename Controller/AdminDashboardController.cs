@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using monster_world.DBContext;
 using monster_world.Models;
 using monster_world.Filters;
+using monster_world.Services;
 
 namespace monster_world.Controller
 {
@@ -15,10 +16,12 @@ namespace monster_world.Controller
     public class AdminDashboardController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly GameplayService _gameplayService;
 
-        public AdminDashboardController(AppDbContext context)
+        public AdminDashboardController(AppDbContext context, GameplayService gameplayService)
         {
             _context = context;
+            _gameplayService = gameplayService;
         }
 
         private bool IsAuthorized()
@@ -89,7 +92,7 @@ namespace monster_world.Controller
                     u.LastName,
                     u.Role,
                     u.RegistrationDate,
-                    Balance = new { u.Balance.TON, u.Balance.GOLD, u.Balance.EGGS }
+                    Balance = new { u.Balance.TON, u.Balance.GOLD, u.Balance.EGGS, u.Balance.CRYSTAL }
                 })
                 .ToListAsync();
 
@@ -266,6 +269,9 @@ namespace monster_world.Controller
             // Total Gold
             double totalGoldCirculation = await _context.Users.SumAsync(u => u.Balance.GOLD);
 
+            // Total Crystal
+            double totalCrystalCirculation = await _context.Users.SumAsync(u => u.Balance.CRYSTAL);
+
             return Ok(new
             {
                 TotalUsers = totalUsers,
@@ -276,7 +282,8 @@ namespace monster_world.Controller
                 TotalEggsPool = totalEggsPool,
                 TotalEggsCirculation = totalEggsCirculation,
                 TotalEggsCombined = totalEggsCombined,
-                TotalGoldCirculation = totalGoldCirculation
+                TotalGoldCirculation = totalGoldCirculation,
+                TotalCrystalCirculation = totalCrystalCirculation
             });
         }
 
@@ -405,6 +412,221 @@ namespace monster_world.Controller
                 exactMatch = false,
                 Monsters = monsters
             });
+        }
+
+        [HttpGet("crystal-leaderboard")]
+        public async Task<IActionResult> GetCrystalLeaderboard()
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            var leaderboard = await _context.Users
+                .AsNoTracking()
+                .OrderByDescending(u => u.Balance.CRYSTAL)
+                .Take(100)
+                .Select(u => new
+                {
+                    u.ID,
+                    u.Username,
+                    u.FirstName,
+                    u.LastName,
+                    Crystals = u.Balance.CRYSTAL,
+                    Gold = u.Balance.GOLD,
+                    Eggs = u.Balance.EGGS,
+                    u.Level
+                })
+                .ToListAsync();
+
+            return Ok(leaderboard);
+        }
+
+        [HttpGet("collector-overview")]
+        public async Task<IActionResult> GetCollectorOverview()
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            var activeMap = GetActiveExhibitionMap();
+
+            // Load all monsters that are staked or on cooldown
+            var monsters = await _context.Monsters
+                .AsNoTracking()
+                .Where(m => m.StakedInCollector || (m.CollectorDepositTime.HasValue && DateTime.UtcNow < m.CollectorDepositTime.Value))
+                .ToListAsync();
+
+            // Load all users who either have collector monsters, or have unlocked > 1 slot
+            var userIdsWithMonsters = monsters.Select(m => m.OwnerID).Distinct().ToList();
+            
+            var users = await _context.Users
+                .AsNoTracking()
+                .Where(u => u.UnlockedCollectorSlots > 1 || userIdsWithMonsters.Contains(u.ID))
+                .ToListAsync();
+
+            var result = new List<object>();
+
+            foreach (var user in users)
+            {
+                var userMonsters = monsters.Where(m => m.OwnerID == user.ID).ToList();
+                var staked = new List<object>();
+                var cooldown = new List<object>();
+
+                // Parse transactions to get already collected farm for this player
+                double totalGoldCollected = 0;
+                double totalCrystalCollected = 0;
+                if (user.Transactions != null)
+                {
+                    foreach (var tx in user.Transactions)
+                    {
+                        var parts = tx.Split('|');
+                        if (parts.Length >= 4)
+                        {
+                            string currency = parts[1];
+                            if (double.TryParse(parts[2], out double amount))
+                            {
+                                string action = parts[3];
+                                if (action.Contains("collector_claim") || action.Contains("collector_unstake"))
+                                {
+                                    if (currency == "GOLD") totalGoldCollected += amount;
+                                    if (currency == "CRYSTAL") totalCrystalCollected += amount;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                foreach (var m in userMonsters)
+                {
+                    if (m.StakedInCollector)
+                    {
+                        var yield = CalculateMonsterYield(m, activeMap);
+                        staked.Add(new
+                        {
+                            m.InstanceId,
+                            m.Id,
+                            m.Title,
+                            m.Level,
+                            m.Rarity,
+                            m.Element,
+                            m.CollectorFocus,
+                            m.CollectorDepositTime,
+                            m.CollectorLastClaimTime,
+                            GoldRate = Math.Round(yield.GoldRate, 2),
+                            CrystalRate = Math.Round(yield.CrystalRate, 2),
+                            GoldToCollect = Math.Round(yield.Gold, 4),
+                            CrystalToCollect = Math.Round(yield.Crystal, 4)
+                        });
+                    }
+                    else if (m.CollectorDepositTime.HasValue && DateTime.UtcNow < m.CollectorDepositTime.Value)
+                    {
+                        var remaining = m.CollectorDepositTime.Value - DateTime.UtcNow;
+                        cooldown.Add(new
+                        {
+                            m.InstanceId,
+                            m.Id,
+                            m.Title,
+                            m.Level,
+                            m.Rarity,
+                            m.Element,
+                            m.CollectorDepositTime, // Cooldown end time
+                            RemainingSeconds = Math.Max(0, (int)remaining.TotalSeconds),
+                            RemainingFormatted = $"{(int)remaining.TotalHours}h {remaining.Minutes}m"
+                        });
+                    }
+                }
+
+                result.Add(new
+                {
+                    UserId = user.ID,
+                    user.Username,
+                    user.FirstName,
+                    user.LastName,
+                    user.UnlockedCollectorSlots,
+                    Crystals = user.Balance?.CRYSTAL ?? 0,
+                    GoldCollected = Math.Round(totalGoldCollected, 4),
+                    CrystalCollected = Math.Round(totalCrystalCollected, 4),
+                    Staked = staked,
+                    Cooldown = cooldown
+                });
+            }
+
+            return Ok(new
+            {
+                ActiveMap = activeMap,
+                Overview = result
+            });
+        }
+
+        private string GetActiveExhibitionMap()
+        {
+            var maps = _gameplayService.GetMapData();
+            if (maps == null || maps.Count == 0) return "bootcamp";
+            int index = DateTime.UtcNow.DayOfYear % maps.Count;
+            return maps[index].Map;
+        }
+
+        private double GetRarityMultiplier(string rarity)
+        {
+            if (string.IsNullOrEmpty(rarity)) return 1.0;
+            return rarity.ToLower() switch
+            {
+                "common" => 1.0,
+                "rare" => 1.2,
+                "epic" => 1.4,
+                "legendary" => 1.8,
+                _ => 1.0
+            };
+        }
+
+        private (double Gold, double Crystal, double GoldRate, double CrystalRate) CalculateMonsterYield(Monster monster, string activeMap)
+        {
+            double baseScale = Math.Ceiling(monster.Level / 5.0);
+            double matchBonus = (monster.CapturedMap?.ToLower() == activeMap?.ToLower()) ? 0.2 : 0.0;
+            double multiplier = GetRarityMultiplier(monster.Rarity) + matchBonus;
+
+            double goldRate = 0;
+            double crystalRate = 0;
+
+            string r = monster.Rarity?.ToLower() ?? "common";
+            if (r == "common")
+            {
+                goldRate = baseScale * 1.0 * multiplier;
+            }
+            else if (r == "rare")
+            {
+                if (monster.CollectorFocus?.ToLower() == "crystal")
+                {
+                    crystalRate = baseScale * 0.5 * multiplier;
+                }
+                else
+                {
+                    goldRate = baseScale * 1.0 * multiplier;
+                }
+            }
+            else // epic & legendary
+            {
+                goldRate = baseScale * 1.0 * multiplier;
+                crystalRate = baseScale * 0.5 * multiplier;
+            }
+
+            double elapsedHours = 0;
+            if (monster.StakedInCollector && monster.CollectorLastClaimTime.HasValue)
+            {
+                elapsedHours = (DateTime.UtcNow - monster.CollectorLastClaimTime.Value).TotalHours;
+                if (elapsedHours < 0) elapsedHours = 0;
+
+                var collectorConfig = _gameplayService.GetCollectorData();
+                double capHours = collectorConfig?.FarmingCapHours ?? 1.0;
+                if (elapsedHours > capHours) elapsedHours = capHours;
+            }
+
+            double goldEarned = elapsedHours * goldRate;
+            double crystalEarned = elapsedHours * crystalRate;
+
+            return (goldEarned, crystalEarned, goldRate, crystalRate);
         }
     }
 }

@@ -564,4 +564,77 @@ export async function UnlockSlots() {
     }
 }
 
+export async function getCollectorStatus() {
+    const options = {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        }
+    };
+    const result = await post("collector/status", options);
+    if (result) {
+        return result;
+    }
+}
+
+export async function stakeMonster(monsterId, focus) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { MonsterId: monsterId, Focus: focus }
+    };
+    const result = await post("collector/stake", options);
+    if (result) {
+        return result;
+    }
+}
+
+export async function claimCollectorRewards(monsterId) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { MonsterId: monsterId }
+    };
+    const result = await post("collector/claim", options);
+    if (result) {
+        return result;
+    }
+}
+
+export async function unstakeMonster(monsterId) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { MonsterId: monsterId }
+    };
+    const result = await post("collector/unstake", options);
+    if (result) {
+        return result;
+    }
+}
+
+export async function unlockCollectorSlot() {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        }
+    };
+    const result = await post("collector/unlock-slot", options);
+    if (result) {
+        return result;
+    }
+}
+
 

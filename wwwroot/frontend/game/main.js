@@ -16,6 +16,7 @@ import { MissionScene } from "./mission.js";
 import { ProfileScene } from "./profile.js";
 import { StreakScene } from "./streak.js";
 import { TutorialScene } from "./tutorial.js";
+import { CollectorScene } from "./collector.js";
 
 class MainScene extends Phaser.Scene {
     constructor() {
@@ -50,7 +51,7 @@ export function startGame() {
             mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH
         },
-        scene: [MainScene, PreloadScene, WorldScene, MapScene, InventoryScene, LabScene, BattleScene, ItemScene, ShopScene, ReferralScene, TestScene, LeaderboardScene, NotificationScene, MissionScene, ProfileScene, StreakScene, TutorialScene],
+        scene: [MainScene, PreloadScene, WorldScene, MapScene, InventoryScene, LabScene, BattleScene, ItemScene, ShopScene, ReferralScene, TestScene, LeaderboardScene, NotificationScene, MissionScene, ProfileScene, StreakScene, TutorialScene, CollectorScene],
         plugins: {
             scene: [{
                 key: 'rexVirtualJoystick',

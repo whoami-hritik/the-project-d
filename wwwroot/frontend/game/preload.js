@@ -181,6 +181,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("item_coin", "images/items/icons/coins.png");
         this.load.image("item_ton", "images/items/icons/ton.png");
         this.load.image("item_gold", "images/items/icons/item_gold.png");
+        this.load.image("item_crystal", "images/items/icons/diamond_sacred_crystal.png");
         this.load.image("mission_battle", "images/items/icons/mission_battle.png");
         this.load.image("mission_heal", "images/items/icons/mission_heal.png");
         this.load.image("mission_chest", "images/items/icons/mission_chest.png");
@@ -395,7 +396,8 @@ export class PreloadScene extends Phaser.Scene {
 
 
         //collector
-        this.load.image("collector_icon", "images/collector/collector_icon.png");
+        this.load.image("collector_icon", "images/collector/collector_icon_transparent.png");
+        this.load.image("collector_character", "images/collector/collector_character.png");
 
 
 

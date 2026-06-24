@@ -220,7 +220,11 @@ namespace monster_world.Controller
                     m.SPD,
                     m.Rarity,
                     m.Element,
-                    m.IsFighting
+                    m.IsFighting,
+                    m.StakedInCollector,
+                    m.CollectorFocus,
+                    m.CollectorDepositTime,
+                    m.CollectorLastClaimTime
                 })
                 .ToListAsync();
 
@@ -627,6 +631,373 @@ namespace monster_world.Controller
             double crystalEarned = elapsedHours * crystalRate;
 
             return (goldEarned, crystalEarned, goldRate, crystalRate);
+        }
+
+        private List<string> GetEligibleCollectorMonsters()
+        {
+            var collectorConfig = _gameplayService.GetCollectorData();
+            int rotationDays = collectorConfig?.RotationDays ?? 3;
+            
+            long unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long epoch = unixTime / (rotationDays * 24 * 3600);
+            
+            var rnd = new Random((int)(epoch % int.MaxValue));
+            var eligibleList = new List<string>();
+            
+            var mapMonstersList = _gameplayService.Gameplay.MapMonsters;
+            if (mapMonstersList == null) return eligibleList;
+            
+            var commonIds = _gameplayService.GetRarityMons("common")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+            var rareIds = _gameplayService.GetRarityMons("rare")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+            var epicIds = _gameplayService.GetRarityMons("epic")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+            var legendaryIds = _gameplayService.GetRarityMons("legendary")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+
+            foreach (var mapInfo in mapMonstersList)
+            {
+                var distinctMapMons = mapInfo.Monsters?.Select(id => id.ToLower()).Distinct().ToList();
+                if (distinctMapMons == null || distinctMapMons.Count == 0) continue;
+                
+                var mapCommons = distinctMapMons.Where(id => commonIds.Contains(id)).ToList();
+                var mapRares = distinctMapMons.Where(id => rareIds.Contains(id)).ToList();
+                var mapEpics = distinctMapMons.Where(id => epicIds.Contains(id)).ToList();
+                var mapLegendaries = distinctMapMons.Where(id => legendaryIds.Contains(id)).ToList();
+                
+                if (mapCommons.Any())
+                {
+                    eligibleList.Add(mapCommons[rnd.Next(mapCommons.Count)]);
+                }
+                if (mapRares.Any())
+                {
+                    eligibleList.Add(mapRares[rnd.Next(mapRares.Count)]);
+                }
+                if (mapEpics.Any())
+                {
+                    eligibleList.Add(mapEpics[rnd.Next(mapEpics.Count)]);
+                }
+                if (mapLegendaries.Any())
+                {
+                    eligibleList.Add(mapLegendaries[rnd.Next(mapLegendaries.Count)]);
+                }
+            }
+            
+            return eligibleList.Select(id => id.ToLower()).Distinct().ToList();
+        }
+
+        private async Task ProcessExpiredCollectorStakes(long userId)
+        {
+            var stakedMonsters = await _context.Monsters
+                .Where(m => m.OwnerID == userId && m.StakedInCollector)
+                .ToListAsync();
+
+            if (!stakedMonsters.Any()) return;
+
+            var activeMap = GetActiveExhibitionMap();
+            bool changed = false;
+            
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == userId);
+            if (user == null) return;
+
+            foreach (var monster in stakedMonsters)
+            {
+                if (monster.CollectorDepositTime.HasValue)
+                {
+                    double totalStakedHours = (DateTime.UtcNow - monster.CollectorDepositTime.Value).TotalHours;
+                    if (totalStakedHours >= 24.0)
+                    {
+                        double claimableHours = 0;
+                        if (monster.CollectorLastClaimTime.HasValue)
+                        {
+                            var limitTime = monster.CollectorDepositTime.Value.AddHours(24.0);
+                            claimableHours = (limitTime - monster.CollectorLastClaimTime.Value).TotalHours;
+                            if (claimableHours < 0) claimableHours = 0;
+
+                            var collectorConfig = _gameplayService.GetCollectorData();
+                            double capHours = collectorConfig?.FarmingCapHours ?? 1.0;
+                            if (claimableHours > capHours) claimableHours = capHours;
+                        }
+
+                        double baseScale = Math.Ceiling(monster.Level / 5.0);
+                        double matchBonus = (monster.CapturedMap?.ToLower() == activeMap?.ToLower()) ? 0.2 : 0.0;
+                        double multiplier = GetRarityMultiplier(monster.Rarity) + matchBonus;
+
+                        double goldRate = 0;
+                        double crystalRate = 0;
+                        string r = monster.Rarity?.ToLower() ?? "common";
+                        if (r == "common")
+                        {
+                            goldRate = baseScale * 1.0 * multiplier;
+                        }
+                        else if (r == "rare")
+                        {
+                            if (monster.CollectorFocus?.ToLower() == "crystal")
+                            {
+                                crystalRate = baseScale * 0.5 * multiplier;
+                            }
+                            else
+                            {
+                                goldRate = baseScale * 1.0 * multiplier;
+                            }
+                        }
+                        else
+                        {
+                            goldRate = baseScale * 1.0 * multiplier;
+                            crystalRate = baseScale * 0.5 * multiplier;
+                        }
+
+                        double goldEarned = claimableHours * goldRate;
+                        double crystalEarned = claimableHours * crystalRate;
+
+                        if (goldEarned > 0)
+                        {
+                            user.Balance.GOLD += Math.Round(goldEarned, 4);
+                        }
+                        if (crystalEarned > 0)
+                        {
+                            user.Balance.CRYSTAL += Math.Round(crystalEarned, 4);
+                        }
+
+                        monster.StakedInCollector = false;
+                        monster.CollectorDepositTime = DateTime.UtcNow.AddHours(24.0); // Cooldown end time
+                        monster.CollectorLastClaimTime = null;
+                        
+                        changed = true;
+                    }
+                }
+            }
+
+            if (changed)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public class AdminStakePayload
+        {
+            public long UserId { get; set; }
+            public string MonsterId { get; set; }
+            public string Focus { get; set; } = "GOLD";
+        }
+
+        [HttpPost("collector-stake")]
+        public async Task<IActionResult> AdminStakeMonster([FromBody] AdminStakePayload payload)
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            if (payload == null || string.IsNullOrEmpty(payload.MonsterId))
+            {
+                return BadRequest(new { success = false, reason = "invalid request parameters" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == payload.UserId);
+            if (user == null)
+            {
+                return NotFound(new { success = false, reason = "User not found" });
+            }
+
+            await ProcessExpiredCollectorStakes(user.ID);
+
+            var monster = await _context.Monsters
+                .FirstOrDefaultAsync(m => m.OwnerID == user.ID && m.InstanceId == payload.MonsterId);
+
+            if (monster == null)
+            {
+                return Ok(new { success = false, reason = "monster not found or not owned by user" });
+            }
+
+            if (!monster.StakedInCollector && monster.CollectorDepositTime.HasValue && DateTime.UtcNow < monster.CollectorDepositTime.Value)
+            {
+                var remainingSec = (monster.CollectorDepositTime.Value - DateTime.UtcNow).TotalSeconds;
+                int hours = (int)(remainingSec / 3600);
+                int minutes = (int)((remainingSec % 3600) / 60);
+                return Ok(new { success = false, reason = $"Monster is on staking cooldown. Available in {hours}h {minutes}m." });
+            }
+
+            var eligibleIds = GetEligibleCollectorMonsters();
+            if (!eligibleIds.Contains(monster.Id.ToLower()))
+            {
+                return Ok(new { success = false, reason = "This monster species is not eligible for the current exhibition." });
+            }
+
+            if (monster.StakedInCollector)
+            {
+                return Ok(new { success = false, reason = "monster is already staked in the collector" });
+            }
+
+            if (monster.IsFighting)
+            {
+                return Ok(new { success = false, reason = "monster is currently in a battle" });
+            }
+
+            int currentlyStakedCount = await _context.Monsters
+                .CountAsync(m => m.OwnerID == user.ID && m.StakedInCollector);
+
+            if (currentlyStakedCount >= user.UnlockedCollectorSlots)
+            {
+                return Ok(new { success = false, reason = "all unlocked collector slots are occupied" });
+            }
+
+            string focus = "GOLD";
+            if (monster.Rarity?.ToLower() == "rare" && !string.IsNullOrEmpty(payload.Focus))
+            {
+                if (payload.Focus.ToUpper() == "CRYSTAL")
+                {
+                    focus = "CRYSTAL";
+                }
+            }
+
+            monster.StakedInCollector = true;
+            monster.CollectorDepositTime = DateTime.UtcNow;
+            monster.CollectorLastClaimTime = DateTime.UtcNow;
+            monster.CollectorFocus = focus;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, monster });
+        }
+
+        public class AdminClaimPayload
+        {
+            public long UserId { get; set; }
+            public string MonsterId { get; set; }
+        }
+
+        [HttpPost("collector-claim")]
+        public async Task<IActionResult> AdminClaimRewards([FromBody] AdminClaimPayload payload)
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == payload.UserId);
+            if (user == null)
+            {
+                return NotFound(new { success = false, reason = "User not found" });
+            }
+
+            await ProcessExpiredCollectorStakes(user.ID);
+
+            var activeMap = GetActiveExhibitionMap();
+            List<Monster> monstersToClaim = new();
+
+            if (payload != null && !string.IsNullOrEmpty(payload.MonsterId))
+            {
+                var monster = await _context.Monsters
+                    .FirstOrDefaultAsync(m => m.OwnerID == user.ID && m.InstanceId == payload.MonsterId && m.StakedInCollector);
+                if (monster != null)
+                {
+                    monstersToClaim.Add(monster);
+                }
+            }
+            else
+            {
+                monstersToClaim = await _context.Monsters
+                    .Where(m => m.OwnerID == user.ID && m.StakedInCollector)
+                    .ToListAsync();
+            }
+
+            if (monstersToClaim.Count == 0)
+            {
+                return Ok(new { success = false, reason = "no staked monsters found to claim rewards for" });
+            }
+
+            double totalGold = 0;
+            double totalCrystal = 0;
+
+            foreach (var monster in monstersToClaim)
+            {
+                var yield = CalculateMonsterYield(monster, activeMap);
+                totalGold += yield.Gold;
+                totalCrystal += yield.Crystal;
+
+                monster.CollectorLastClaimTime = DateTime.UtcNow;
+            }
+
+            if (totalGold > 0)
+            {
+                user.Credit("GOLD", Math.Round(totalGold, 4), "admin_collector_claim_gold");
+            }
+            if (totalCrystal > 0)
+            {
+                user.Credit("CRYSTAL", Math.Round(totalCrystal, 4), "admin_collector_claim_crystal");
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new {
+                success = true,
+                goldClaimed = Math.Round(totalGold, 4),
+                crystalClaimed = Math.Round(totalCrystal, 4)
+            });
+        }
+
+        public class AdminUnstakePayload
+        {
+            public long UserId { get; set; }
+            public string MonsterId { get; set; }
+        }
+
+        [HttpPost("collector-unstake")]
+        public async Task<IActionResult> AdminUnstakeMonster([FromBody] AdminUnstakePayload payload)
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            if (payload == null || string.IsNullOrEmpty(payload.MonsterId))
+            {
+                return BadRequest(new { success = false, reason = "invalid request parameters" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == payload.UserId);
+            if (user == null)
+            {
+                return NotFound(new { success = false, reason = "User not found" });
+            }
+
+            await ProcessExpiredCollectorStakes(user.ID);
+
+            var monster = await _context.Monsters
+                .FirstOrDefaultAsync(m => m.OwnerID == user.ID && m.InstanceId == payload.MonsterId && m.StakedInCollector);
+
+            if (monster == null)
+            {
+                return Ok(new { success = false, reason = "staked monster not found or not owned by user" });
+            }
+
+            var activeMap = GetActiveExhibitionMap();
+            var yield = CalculateMonsterYield(monster, activeMap);
+
+            if (yield.Gold > 0)
+            {
+                user.Credit("GOLD", Math.Round(yield.Gold, 4), $"admin_collector_unstake_gold={monster.InstanceId}");
+            }
+            if (yield.Crystal > 0)
+            {
+                user.Credit("CRYSTAL", Math.Round(yield.Crystal, 4), $"admin_collector_unstake_crystal={monster.InstanceId}");
+            }
+
+            monster.StakedInCollector = false;
+            if (monster.CollectorDepositTime.HasValue)
+            {
+                var stakedDuration = DateTime.UtcNow - monster.CollectorDepositTime.Value;
+                if (stakedDuration < TimeSpan.Zero) stakedDuration = TimeSpan.Zero;
+                if (stakedDuration.TotalHours > 24.0) stakedDuration = TimeSpan.FromHours(24.0);
+                monster.CollectorDepositTime = DateTime.UtcNow.Add(stakedDuration);
+            }
+            else
+            {
+                monster.CollectorDepositTime = null;
+            }
+            monster.CollectorLastClaimTime = null;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true });
         }
     }
 }

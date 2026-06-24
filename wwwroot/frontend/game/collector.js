@@ -324,6 +324,7 @@ export class CollectorScene extends Phaser.Scene {
         createloadingOverlay(this);
         try {
             const res = await api.getCollectorStatus();
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
 
             if (res && res.success) {
@@ -344,6 +345,7 @@ export class CollectorScene extends Phaser.Scene {
                 this.closeCollector();
             }
         } catch (err) {
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
             console.error("Error loading collector data:", err);
             showNotification(this, "Network error loading collector data");
@@ -781,6 +783,7 @@ export class CollectorScene extends Phaser.Scene {
         createloadingOverlay(this);
         try {
             const res = await api.claimCollectorRewards(monsterId);
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
 
             if (res && res.success) {
@@ -802,6 +805,7 @@ export class CollectorScene extends Phaser.Scene {
                 showNotification(this, res?.reason || t("claim_failed"));
             }
         } catch (err) {
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
             console.error("Error claiming rewards:", err);
             showNotification(this, t("claim_failed"));
@@ -812,6 +816,7 @@ export class CollectorScene extends Phaser.Scene {
         createloadingOverlay(this);
         try {
             const res = await api.unstakeMonster(monsterId);
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
 
             if (res && res.success) {
@@ -821,6 +826,7 @@ export class CollectorScene extends Phaser.Scene {
                 showNotification(this, res?.reason || t("unstake_failed"));
             }
         } catch (err) {
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
             console.error("Error unstaking monster:", err);
             showNotification(this, t("unstake_failed"));
@@ -831,6 +837,7 @@ export class CollectorScene extends Phaser.Scene {
         createloadingOverlay(this);
         try {
             const res = await api.unlockCollectorSlot();
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
 
             if (res && res.success) {
@@ -840,6 +847,7 @@ export class CollectorScene extends Phaser.Scene {
                 showNotification(this, res?.reason || t("unlock_failed"));
             }
         } catch (err) {
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
             console.error("Error unlocking slot:", err);
             showNotification(this, t("unlock_failed"));
@@ -1368,6 +1376,7 @@ export class CollectorScene extends Phaser.Scene {
         createloadingOverlay(this);
         try {
             const res = await api.stakeMonster(monsterId, focus);
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
 
             if (res && res.success) {
@@ -1382,6 +1391,7 @@ export class CollectorScene extends Phaser.Scene {
                 showNotification(this, res?.reason || t("staking_failed"));
             }
         } catch (err) {
+            if (!this.sys || !this.sys.isActive()) return;
             destroyloadingOverlay(this);
             console.error("Error staking monster:", err);
             showNotification(this, t("staking_failed"));

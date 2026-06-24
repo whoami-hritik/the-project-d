@@ -1372,6 +1372,14 @@
                                 <div style="margin-top: 0.25rem; font-weight: bold; font-size: 0.8rem; color: #4ade80;">
                                     Unclaimed: ${m.collectorFocus === 'CRYSTAL' ? `💎 ${m.crystalToCollect}` : `🟡 ${m.goldToCollect}`}
                                 </div>
+                                <div style="display: flex; gap: 0.25rem; margin-top: 0.5rem;">
+                                    <button class="tab-btn" onclick="adminClaimCollectorRewards(${row.userId}, '${m.instanceId}')" style="flex: 1; font-size: 0.7rem; padding: 0.15rem 0.3rem; background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; cursor: pointer;">
+                                        Claim
+                                    </button>
+                                    <button class="tab-btn" onclick="adminUnstakeCollectorMonster(${row.userId}, '${m.instanceId}')" style="flex: 1; font-size: 0.7rem; padding: 0.15rem 0.3rem; background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; cursor: pointer;">
+                                        Unstake
+                                    </button>
+                                </div>
                             </div>
                         `).join('');
                     } else {
@@ -1782,13 +1790,45 @@
             } else {
                 data.monsters.forEach(m => {
                     const tr = document.createElement('tr');
-                    const statusClass = m.isFighting ? 'text-success font-bold' : 'text-muted';
-                    const statusText = m.isFighting ? '⚔️ In Battle Team' : '💤 Idle';
+                    
+                    let statusClass = 'text-muted';
+                    let statusText = '💤 Idle';
+                    if (m.isFighting) {
+                        statusClass = 'text-success font-bold';
+                        statusText = '⚔️ In Battle Team';
+                    } else if (m.stakedInCollector) {
+                        statusClass = 'crystal-color font-bold';
+                        statusText = `⚡ Staked (${m.collectorFocus})`;
+                    } else if (m.collectorDepositTime && new Date(m.collectorDepositTime) > new Date()) {
+                        statusClass = 'text-danger font-bold';
+                        statusText = '⏳ Cooldown';
+                    }
                     
                     let rarityColor = 'var(--text-muted)';
                     if (m.rarity === 'legendary') rarityColor = '#f59e0b';
                     else if (m.rarity === 'epic') rarityColor = '#a855f7';
                     else if (m.rarity === 'rare') rarityColor = '#3b82f6';
+                    
+                    let collectorActions = '';
+                    if (m.stakedInCollector) {
+                        collectorActions = `
+                            <button class="tab-btn" onclick="adminClaimCollectorRewards(${user.id}, '${m.instanceId}')" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid #10b981; display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
+                                💎 Claim
+                            </button>
+                            <button class="tab-btn" onclick="adminUnstakeCollectorMonster(${user.id}, '${m.instanceId}')" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
+                                📥 Unstake
+                            </button>
+                        `;
+                    } else if (!m.isFighting) {
+                        const isCooldown = m.collectorDepositTime && new Date(m.collectorDepositTime) > new Date();
+                        if (!isCooldown) {
+                            collectorActions = `
+                                <button class="tab-btn" onclick="adminStakeCollectorMonster(${user.id}, '${m.instanceId}', '${m.rarity}')" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; border: 1px solid #3b82f6; display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem; cursor: pointer;">
+                                    ⚡ Stake
+                                </button>
+                            `;
+                        }
+                    }
                     
                     tr.innerHTML = `
                         <td class="text-mono" style="font-size: 0.8rem;">${m.instanceId}</td>
@@ -1802,13 +1842,14 @@
                         <td style="text-transform: capitalize;">${m.element || 'Normal'}</td>
                         <td class="${statusClass}">${statusText}</td>
                         <td>
-                            <div style="display: flex; gap: 0.25rem;">
+                            <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
                                 <button class="tab-btn" onclick="openInspectMonsterModal('${m.instanceId}')" style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
                                     🔍 Inspect
                                 </button>
                                 <button class="tab-btn" onclick="openEditMonsterModal('${m.instanceId}')" style="display: flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; padding: 0.25rem 0.5rem;">
                                     ✏️ Edit
                                 </button>
+                                ${collectorActions}
                             </div>
                         </td>
                     `;
@@ -2074,6 +2115,102 @@
             } catch (err) {
                 console.error(err);
                 alert("An error occurred while saving monster data.");
+            }
+        }
+
+        async function adminStakeCollectorMonster(userId, monsterId, rarity) {
+            let focus = "GOLD";
+            if (rarity.toLowerCase() === 'rare') {
+                const choice = confirm("Stake with CRYSTAL focus? (Cancel for GOLD focus)");
+                focus = choice ? "CRYSTAL" : "GOLD";
+            }
+
+            if (!confirm(`Are you sure you want to stake monster ${monsterId} for user ${userId}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/collector-stake`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ userId, monsterId, focus })
+                });
+
+                const res = await response.json();
+                if (res.success) {
+                    alert("Successfully staked monster!");
+                    if (activeUserId === userId) {
+                        selectUser(userId);
+                    }
+                    if (document.getElementById('collector-workspace').style.display !== 'none') {
+                        fetchCollectorOverview();
+                    }
+                } else {
+                    alert("Staking failed: " + (res.reason || "Unknown error"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error staking monster");
+            }
+        }
+
+        async function adminClaimCollectorRewards(userId, monsterId) {
+            if (!confirm(`Are you sure you want to claim collector rewards for monster ${monsterId}?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/collector-claim`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ userId, monsterId })
+                });
+
+                const res = await response.json();
+                if (res.success) {
+                    alert(`Successfully claimed: +${res.goldClaimed.toFixed(4)} GOLD, +${res.crystalClaimed.toFixed(2)} CRYSTALS`);
+                    if (activeUserId === userId) {
+                        selectUser(userId);
+                    }
+                    if (document.getElementById('collector-workspace').style.display !== 'none') {
+                        fetchCollectorOverview();
+                    }
+                } else {
+                    alert("Claim failed: " + (res.reason || "Unknown error"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error claiming rewards");
+            }
+        }
+
+        async function adminUnstakeCollectorMonster(userId, monsterId) {
+            if (!confirm(`Are you sure you want to unstake/retrieve monster ${monsterId}? (Farmed rewards will be claimed automatically)`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/collector-unstake`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ userId, monsterId })
+                });
+
+                const res = await response.json();
+                if (res.success) {
+                    alert("Successfully unstaked monster!");
+                    if (activeUserId === userId) {
+                        selectUser(userId);
+                    }
+                    if (document.getElementById('collector-workspace').style.display !== 'none') {
+                        fetchCollectorOverview();
+                    }
+                } else {
+                    alert("Unstaking failed: " + (res.reason || "Unknown error"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error unstaking monster");
             }
         }
     </script>

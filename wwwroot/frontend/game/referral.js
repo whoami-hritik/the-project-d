@@ -169,9 +169,9 @@ export class ReferralScene extends Phaser.Scene {
         }).setOrigin(0.5);
         this.container.add(this.earnedTitle);
 
-        this.earnedCount = this.add.text(287.5, 298, `0 ${t("gold_unit")}\n0 ${t("balls_unit")}`, {
+        this.earnedCount = this.add.text(287.5, 298, `0 ${t("gold_unit")}\n0 ${t("crystal_name")}\n0 ${t("balls_unit")}`, {
             fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "14px",
+            fontSize: "12px",
             color: "#ca8a04",
             align: "center"
         }).setOrigin(0.5);
@@ -272,7 +272,7 @@ export class ReferralScene extends Phaser.Scene {
             if (result && result.success) {
                 // Update stats
                 this.invitedCount.setText(result.totalReferrals);
-                this.earnedCount.setText(`${result.totalEarnedGold} ${t("gold_unit")}\n${result.totalEarnedBalls || 0} ${t("balls_unit")}`);
+                this.earnedCount.setText(`${result.totalEarnedGold} ${t("gold_unit")}\n${result.totalEarnedCrystal || 0} ${t("crystal_name")}\n${result.totalEarnedBalls || 0} ${t("balls_unit")}`);
                 
                 // Update Link
                 this.referralLink = result.referralLink;

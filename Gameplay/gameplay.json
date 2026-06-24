@@ -930,7 +930,7 @@
     "referralRewards": {
         "referrer": {
             "currency": {
-                "GOLD": 2
+                "CRYSTAL": 2
             },
             "items": {
                 "MonstaBall": 1

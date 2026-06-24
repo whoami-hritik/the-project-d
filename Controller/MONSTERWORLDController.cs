@@ -515,8 +515,42 @@ namespace monster_world.Controller
                 }
             }
 
-            totalEarnedGold = (validReferralsCount * 5) + depositCommissionsGold;
-            totalEarnedBalls = validReferralsCount * 1;
+            var referrerConfig = _gameplayService.Gameplay.ReferralRewards?.Referrer;
+            double configGoldPerReferral = 0;
+            double configCrystalPerReferral = 0;
+            int configBallsPerReferral = 0;
+
+            if (referrerConfig != null)
+            {
+                if (referrerConfig.Currency != null)
+                {
+                    if (referrerConfig.Currency.TryGetValue("GOLD", out double goldVal))
+                    {
+                        configGoldPerReferral = goldVal;
+                    }
+                    if (referrerConfig.Currency.TryGetValue("CRYSTAL", out double crystalVal))
+                    {
+                        configCrystalPerReferral = crystalVal;
+                    }
+                }
+                if (referrerConfig.Items != null)
+                {
+                    if (referrerConfig.Items.TryGetValue("MonstaBall", out int ballsVal))
+                    {
+                        configBallsPerReferral = ballsVal;
+                    }
+                }
+            }
+            else
+            {
+                // Fallback to old defaults
+                configGoldPerReferral = 5;
+                configBallsPerReferral = 1;
+            }
+
+            totalEarnedGold = (validReferralsCount * configGoldPerReferral) + depositCommissionsGold;
+            totalEarnedCrystal = validReferralsCount * configCrystalPerReferral;
+            totalEarnedBalls = validReferralsCount * configBallsPerReferral;
 
             return Ok(new
             {
@@ -1817,7 +1851,7 @@ namespace monster_world.Controller
                 List<MonsDef> monsDefs = _gameplayService.GetRandomNodeMonster(form.Map, randomRarity, form.Node);
                 MonsDef monsDef = _gameplayService.RandomMons(monsDefs);
                 Console.WriteLine($"[CONSOLE]monsDef = {monsDef.MonsterId} {monsDef.Title} {monsDef.Element}");
-                int rndLevel = rnd.Next(1, User.Level + 5);
+                int rndLevel = rnd.Next(1, User.Level + 3);
 
                 var monster = _gameplayService.CreateMonsterInstance(monsDef.MonsterId, 0, rndLevel);
                 Enemymonsters.Add(monster);
@@ -2324,21 +2358,7 @@ namespace monster_world.Controller
                 User.TotalVictory += 1;
                 User.DailyVictory += 1;
 
-                // Recalculate and update user level
-                int maxMonsterLevel = await _context.Monsters
-                    .Where(m => m.OwnerID == User.ID)
-                    .Select(m => (int?)m.Level)
-                    .MaxAsync() ?? 1;
-                if (DefendingMonster.Level > maxMonsterLevel)
-                {
-                    maxMonsterLevel = DefendingMonster.Level;
-                }
 
-                if (maxMonsterLevel > User.Level)
-                {
-                    User.Level = maxMonsterLevel;
-                    _context.Users.Update(User);
-                }
 
                 battleState.Victory = true;
                 battleState.PlayerMonsters.ForEach(x => x.IsFighting = false);
@@ -3741,9 +3761,41 @@ namespace monster_world.Controller
                 var referrer = await _context.Users.FirstOrDefaultAsync(u => u.ID == user.ReferrerID);
                 if (referrer != null)
                 {
-                    // Referrer gets 5 GOLD and 1 MonstaBall
-                    referrer.Credit("GOLD", 5, $"referral_level2_reward={user.ID}");
-                    referrer.AddItems("MonstaBall", 1, $"referral_level2_reward={user.ID}");
+                    var rewardConfig = _gameplayService.Gameplay.ReferralRewards?.Referrer;
+                    string rewardMessageDetails = "";
+
+                    if (rewardConfig != null)
+                    {
+                        if (rewardConfig.Currency != null)
+                        {
+                            foreach (var cur in rewardConfig.Currency)
+                            {
+                                referrer.Credit(cur.Key, cur.Value, $"referral_level2_reward={user.ID}");
+                                rewardMessageDetails += $"+{cur.Value} {cur.Key}, ";
+                            }
+                        }
+                        if (rewardConfig.Items != null)
+                        {
+                            foreach (var item in rewardConfig.Items)
+                            {
+                                referrer.AddItems(item.Key, item.Value, $"referral_level2_reward={user.ID}");
+                                rewardMessageDetails += $"+{item.Value} {item.Key}, ";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Fallback to old hardcoded defaults if config is null
+                        referrer.Credit("GOLD", 5, $"referral_level2_reward={user.ID}");
+                        referrer.AddItems("MonstaBall", 1, $"referral_level2_reward={user.ID}");
+                        rewardMessageDetails = "+5 GOLD, +1 MonstaBall, ";
+                    }
+
+                    if (rewardMessageDetails.EndsWith(", "))
+                    {
+                        rewardMessageDetails = rewardMessageDetails.Substring(0, rewardMessageDetails.Length - 2);
+                    }
+
                     _context.Users.Update(referrer);
 
                     user.ReferrerRewarded = true;
@@ -3756,7 +3808,7 @@ namespace monster_world.Controller
                             : $"@{user.Username}";
 
                         string msg = $"🎉 Your referred friend {friendName} reached Level 2!\n\n" +
-                                     $"🎁 Your Reward: +5 GOLD, +1 MonstaBall";
+                                     $"🎁 Your Reward: {rewardMessageDetails}";
 
                         _ = _botClient.SendMessage(user.ReferrerID, msg);
                     }

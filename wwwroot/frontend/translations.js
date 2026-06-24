@@ -33,7 +33,7 @@ export const translations = {
         "deposit_success": "Deposit confirmed successfully!",
         "deposit_not_detected": "Deposit not detected yet. Please wait a moment and click verify again.",
         "disconnect_confirm": "Do you want to disconnect your wallet?",
-        "withdraw_soon": "Withdrawal coming soon!",
+        "withdraw_soon": "Withdrawal opening on 2 July 26!",
 
         // Shop Scene
         "shop_title": "🛒 SHOP",
@@ -101,7 +101,7 @@ export const translations = {
         // Referral Scene
         "referrals_title": "🤝 REFERRALS",
         "referrals_header": "🎁 Share Your Link & Earn Rewards",
-        "referrals_reward1": "• You get: 5 GOLD, 1 MonstaBall when referred friend",
+        "referrals_reward1": "• You get: 2 CRYSTAL, 1 MonstaBall when referred friend",
         "referrals_reward1_rule": "reaches Level 2 (Valid Referral Rule)",
         "referrals_reward2": "• You also get: 5% of their deposits (TON) in GOLD!",
         "total_invited": "Total Invited",
@@ -189,7 +189,7 @@ export const translations = {
         "failed_to_load_link": "Failed to load link",
         "error_loading_link": "Error loading link",
         "anonymous": "Anonymous",
-        "reward_referred_friend": "+5 GOLD +1 BALL",
+        "reward_referred_friend": "+2 CRYSTAL +1 BALL",
         "cannot_catch_boss": "Boss monsters cannot be captured!",
 
         // Tutorial Scene
@@ -312,7 +312,7 @@ export const translations = {
         "deposit_success": "Депозит успешно подтвержден!",
         "deposit_not_detected": "Депозит еще не обнаружен. Пожалуйста, подождите немного и нажмите проверить снова.",
         "disconnect_confirm": "Вы хотите отключить свой кошелек?",
-        "withdraw_soon": "Вывод средств будет доступен скоро!",
+        "withdraw_soon": "Открытие вывода средств 2 июля 2026 года!",
 
         // Shop Scene
         "shop_title": "🛒 МАГАЗИН",
@@ -380,7 +380,7 @@ export const translations = {
         // Referral Scene
         "referrals_title": "🤝 РЕФЕРАЛЫ",
         "referrals_header": "🎁 Поделитесь ссылкой и получайте награды",
-        "referrals_reward1": "• Вы получите: 5 ЗОЛОТА, 1 МонстаБол за друга,",
+        "referrals_reward1": "• Вы получите: 2 КРИСТАЛЛА, 1 МонстаБол за друга,",
         "referrals_reward1_rule": "достигшего 2 уровня (Правило валидного реферала)",
         "referrals_reward2": "• Вы также получите: 5% от их депозитов (TON) в ЗОЛОТЕ!",
         "total_invited": "Всего приглашено",
@@ -468,7 +468,7 @@ export const translations = {
         "failed_to_load_link": "Не удалось загрузить ссылку",
         "error_loading_link": "Ошибка загрузки ссылки",
         "anonymous": "Аноним",
-        "reward_referred_friend": "+5 ЗОЛОТА +1 ШАР",
+        "reward_referred_friend": "+2 КРИСТАЛЛА +1 ШАР",
         "cannot_catch_boss": "Боссов нельзя поймать!",
 
         // Tutorial Scene

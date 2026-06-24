@@ -341,6 +341,7 @@ namespace monster_world.Controller
             public int ATK { get; set; }
             public int DEF { get; set; }
             public int SPD { get; set; }
+            public bool? IsFighting { get; set; }
         }
 
         [HttpPost("update-monster")]
@@ -365,6 +366,10 @@ namespace monster_world.Controller
             monster.ATK = payload.ATK;
             monster.DEF = payload.DEF;
             monster.SPD = payload.SPD;
+            if (payload.IsFighting.HasValue)
+            {
+                monster.IsFighting = payload.IsFighting.Value;
+            }
 
             _context.Monsters.Update(monster);
             await _context.SaveChangesAsync();

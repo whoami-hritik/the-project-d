@@ -660,9 +660,9 @@
                 "torky"
             ],
             "rarityChance": {
-                "common": 0.80,
-                "rare": 0.15,
-                "epic": 0.05,
+                "common": 0.70,
+                "rare": 0.20,
+                "epic": 0.10,
                 "legendary": 0
             }
         },
@@ -686,9 +686,9 @@
                 "blubbo"
             ],
             "rarityChance": {
-                "common": 0.64,
-                "rare": 0.24,
-                "epic": 0.1,
+                "common": 0.60,
+                "rare": 0.25,
+                "epic": 0.13,
                 "legendary": 0.02
             }
         }

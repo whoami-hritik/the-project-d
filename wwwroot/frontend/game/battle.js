@@ -60,7 +60,7 @@ export class BattleScene extends Phaser.Scene {
         }
 
         if (data.selectedMonsters && data.battleState && data.battleState.playerMonsters) {
-            this.selectedMonsters = data.selectedMonsters.filter(selectedMon => 
+            this.selectedMonsters = data.selectedMonsters.filter(selectedMon =>
                 data.battleState.playerMonsters.some(m => m.instanceId === selectedMon.instanceId)
             );
         } else {
@@ -223,7 +223,7 @@ export class BattleScene extends Phaser.Scene {
         // Determine which container is the defender's container for this attack
         const isOwn = toOwnEffectSkill.includes(attackerState ? attackerState.lastEffect : "");
         const targetSelf = isOwn ? !attackResult.backfired : attackResult.backfired;
-        
+
         let container;
         let startY;
         if (isPlayerAttacking) {
@@ -404,6 +404,16 @@ export class BattleScene extends Phaser.Scene {
             attackerTokenWidth += letter.displayWidth;
             this.attackerContainer.add(letter);
         });
+
+        const pRarityStr = (this.player.rarity || this.player.Rarity || "common").toUpperCase();
+        const playerRarityText = this.add.text(10, 10, pRarityStr, {
+            fontFamily: "Lilita One, Coiny, sans-serif",
+            fontSize: "8.5px",
+            color: this.getRarityColor(pRarityStr)
+        }).setOrigin(0, 0.5).setDepth(20);
+        playerRarityText.setStroke("#000000", 2.5);
+        this.attackerContainer.add(playerRarityText);
+
         const ATTACKER_HP_BG = this.add.image(2.5, 40, "hpbar_big_bg");
         ATTACKER_HP_BG.setDisplaySize(ATTACKER_HP_BG.displayWidth / 1.5, ATTACKER_HP_BG.displayHeight / 1.5).setOrigin(0);
         const ATTACKER_HP = this.add.image(2.5, 40, "hpbar_big_fill");
@@ -411,6 +421,21 @@ export class BattleScene extends Phaser.Scene {
             .setOrigin(0);
         ATTACKER_HP.name = "hpbar_fill_green";
         this.attackerContainer.add([ATTACKER_HP_BG, ATTACKER_HP]);
+
+        this.playerHpText = this.add.text(
+            2.5 + ATTACKER_HP.displayWidth / 2,
+            40 + ATTACKER_HP.displayHeight / 2,
+            `${this.player.hp}/${this.player.maxHP}`,
+            {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+                fontSize: "12px",
+                color: "#ffffff",
+                fontWeight: "900"
+            }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        this.playerHpText.setStroke("#000000", 3);
+        this.attackerContainer.add(this.playerHpText);
+
         this.updatePlayerHp();
 
         this.tweens.add({
@@ -450,6 +475,16 @@ export class BattleScene extends Phaser.Scene {
                 defenderTokenWidth += letter.displayWidth;
                 this.defenderContainer.add(letter);
             });
+
+            const eRarityStr = (this.enemy.rarity || this.enemy.Rarity || "common").toUpperCase();
+            const enemyRarityText = this.add.text(10, 10, eRarityStr, {
+                fontFamily: "Lilita One, Coiny, sans-serif",
+                fontSize: "8.5px",
+                color: this.getRarityColor(eRarityStr)
+            }).setOrigin(0, 0.5).setDepth(20);
+            enemyRarityText.setStroke("#000000", 2.5);
+            this.defenderContainer.add(enemyRarityText);
+
             const DEFENDER_HP_BG = this.add.image(2.5, 40, "hpbar_big_bg");
             DEFENDER_HP_BG.setDisplaySize(DEFENDER_HP_BG.displayWidth / 1.5, DEFENDER_HP_BG.displayHeight / 1.5).setOrigin(0);
             const DEFENDER_HP = this.add.image(2.5, 40, "hpbar_big_fill");
@@ -457,6 +492,32 @@ export class BattleScene extends Phaser.Scene {
                 .setOrigin(0);
             DEFENDER_HP.name = "hpbar_fill_green";
             this.defenderContainer.add([DEFENDER_HP_BG, DEFENDER_HP]);
+
+            this.enemyHpText = this.add.text(
+                2.5 + DEFENDER_HP.displayWidth / 2,
+                40 + DEFENDER_HP.displayHeight / 2,
+                `${this.enemy.hp}/${this.enemy.maxHP}`,
+                {
+                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+                    fontSize: "12px",
+                    color: "#ffffff",
+                    fontWeight: "900"
+                }
+            ).setOrigin(0.5, 0.5).setDepth(20);
+            this.enemyHpText.setStroke("#000000", 3);
+            this.defenderContainer.add(this.enemyHpText);
+
+            // Let's create the catch chance text element centered below the HP bar
+            this.enemyCatchText = this.add.text(
+                defenderPane.displayWidth / 2, 57, "", {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+                fontSize: "11px",
+                fontWeight: "bold"
+            }
+            ).setOrigin(0.5, 0).setDepth(20);
+            this.enemyCatchText.setStroke("#000000", 3);
+            this.defenderContainer.add(this.enemyCatchText);
+
             this.updateEnemyHp();
 
             this.tweens.add({
@@ -597,8 +658,8 @@ export class BattleScene extends Phaser.Scene {
                 showNotification(this, "Shop is unavailable during training!");
                 return;
             }
-             this.scene.stop("ShopScene");
-             this.scene.launch("ShopScene", { activeTab: "Items", onlyItems: true });
+            this.scene.stop("ShopScene");
+            this.scene.launch("ShopScene", { activeTab: "Items", onlyItems: true });
         });
         this.backButton.on("pointerup", () => {
             if (this.player.hp <= 0) {
@@ -714,11 +775,18 @@ export class BattleScene extends Phaser.Scene {
             const hpfill = this.add.image(icon.x + 5, icon.y + 50, "hpbar_small_fill").setOrigin(0)
             hpfill.setDisplaySize(hpfill.displayWidth / 1.5 * Math.max(0, Math.min(1, currentHp / maxHp)), hpfill.displayHeight / 1.5);
 
+            const pRarityStr = (monster.rarity || monster.Rarity || "common").toUpperCase();
+            const playerRarityText = this.add.text(10, 10, pRarityStr, {
+                fontFamily: "Lilita One, Coiny, sans-serif",
+                fontSize: "8.5px",
+                color: this.getRarityColor(pRarityStr)
+            }).setOrigin(0, 0.5).setDepth(20);
+            playerRarityText.setStroke("#000000", 2.5);
             if (this.player.instanceId === monster.instanceId) {
                 monsterContainer.setAlpha(0.5);
             }
 
-            monsterContainer.add([pane, icon, hp, hpfill, ...letters, lv, ...levArray]);
+            monsterContainer.add([pane, icon, hp, hpfill, ...letters, lv, ...levArray, playerRarityText]);
             this.teamContainer.add(monsterContainer);
 
             pane.on("pointerup", (pointer) => {
@@ -791,8 +859,44 @@ export class BattleScene extends Phaser.Scene {
         const aimStat = this.add.image(40, 327, "hpbar_big_fill").setOrigin(0).setDisplaySize(110, 15).setDepth(10);
         const spdStat = this.add.image(40, 367, "hpbar_big_fill").setOrigin(0).setDisplaySize(110, 15).setDepth(10);
 
+        const atkText = this.add.text(
+            40 + 55, 247 + 7.5, `${Math.round(this.attackerAtk)}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        atkText.setStroke("#000000", 3);
+
+        const defText = this.add.text(
+            40 + 55, 287 + 7.5, `${Math.round(this.attackerDef)}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        defText.setStroke("#000000", 3);
+
+        const aimText = this.add.text(
+            40 + 55, 327 + 7.5, `${Math.round(this.attackerAim)}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        aimText.setStroke("#000000", 3);
+
+        const spdText = this.add.text(
+            40 + 55, 367 + 7.5, `${Math.round(this.attackerSpd)}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        spdText.setStroke("#000000", 3);
+
         const container = this.add.container();
-        container.add([spdIcon, aimIcon, atkIcon, defIcon, atkStatBg, aimStatBg, defStatBg, spdStatBg, atkStat, defStat, aimStat]);
+        container.add([spdIcon, aimIcon, atkIcon, defIcon, atkStatBg, aimStatBg, defStatBg, spdStatBg, atkStat, defStat, aimStat, spdStat, atkText, defText, aimText, spdText]);
 
         const atkFullWidth = atkStat.width;
         const atkcropWidth = (this.attackerAtk / 100) * atkFullWidth;
@@ -816,6 +920,9 @@ export class BattleScene extends Phaser.Scene {
             this.attackerDef = this.playerState.def;
             this.attackerAim = this.playerState.aim;
 
+            atkText.setText(`${Math.round(this.attackerAtk)}`);
+            defText.setText(`${Math.round(this.attackerDef)}`);
+            aimText.setText(`${Math.round(this.attackerAim)}`);
 
             const atkFullWidth = atkStat.width;
             const atkcropWidth = (this.attackerAtk / 100) * atkFullWidth;
@@ -1307,6 +1414,14 @@ export class BattleScene extends Phaser.Scene {
         });
     }
 
+    getRarityColor(rarity) {
+        const r = (rarity || "common").toLowerCase().trim();
+        if (r === "rare") return "#60a5fa";      // bright blue
+        if (r === "epic") return "#c084fc";      // bright purple
+        if (r === "legendary") return "#fbbf24"; // gold/orange
+        return "#cbd5e1";                        // silver-gray for common
+    }
+
     updatePlayerHp() {
         let hpbar = this.attackerContainer.getByName("hpbar_fill_green");
         if (hpbar) {
@@ -1317,6 +1432,10 @@ export class BattleScene extends Phaser.Scene {
             }
             this.lastPlayerHp = newHp;
         }
+        if (this.playerHpText) {
+            this.playerHpText.setText(`${this.player.hp}/${this.player.maxHP}`);
+        }
+        this.updatePlayerStatsDisplay();
     }
 
     updateEnemyHp() {
@@ -1329,6 +1448,85 @@ export class BattleScene extends Phaser.Scene {
             }
             this.lastEnemyHp = newHp;
         }
+        if (this.enemyHpText) {
+            this.enemyHpText.setText(`${this.enemy.hp}/${this.enemy.maxHP}`);
+        }
+        this.updateEnemyStatsDisplay();
+    }
+
+    calculateCatchChance() {
+        const isBoss = this.enemy.isBoss || this.enemy.IsBoss;
+        if (isBoss) {
+            console.log("calculateCatchChance: enemy is boss, catch chance 0");
+            return 0;
+        }
+        const gameplay = this.cache.json.get("gameplay_data");
+        if (!gameplay || !gameplay.catchOddRanges) {
+            console.warn("calculateCatchChance: gameplay_data or catchOddRanges not loaded!");
+            return 0;
+        }
+        const enemyRarity = (this.enemy.rarity || this.enemy.Rarity || "common").toLowerCase().trim();
+        const catchRange = gameplay.catchOddRanges.find(x =>
+            x.rarity.toLowerCase().trim() === enemyRarity
+        );
+        if (!catchRange) {
+            console.warn("calculateCatchChance: no catch range configured for rarity", enemyRarity);
+            return 0;
+        }
+        const enemyHp = typeof this.enemy.hp === "number" ? this.enemy.hp : (this.enemy.HP || 0);
+        const enemyMaxHp = typeof this.enemy.maxHP === "number" ? this.enemy.maxHP : (this.enemy.MaxHP || 100);
+        let hpPercent = 0;
+        if (enemyMaxHp > 0) {
+            hpPercent = Math.round((enemyHp / enemyMaxHp) * 100);
+            hpPercent = Math.max(0, Math.min(100, hpPercent));
+        }
+        const oddRange = catchRange.odds.find(y => {
+            const parts = y.hpWhen.split(":");
+            const min = parseInt(parts[0]);
+            const max = parseInt(parts[1]);
+            return hpPercent >= min && hpPercent <= max;
+        });
+        if (!oddRange) {
+            console.warn("calculateCatchChance: no odds found for hpPercent", hpPercent, "in rarity", enemyRarity);
+            return 0;
+        }
+        const baseChance = oddRange.chance;
+        const playerLevel = typeof this.player.level === "number" ? this.player.level : (this.player.Level || 1);
+        const enemyLevel = typeof this.enemy.level === "number" ? this.enemy.level : (this.enemy.Level || 1);
+        const levelDifference = playerLevel - enemyLevel;
+        const levelModifier = Math.max(0.25, Math.min(2.0, 1.0 + (levelDifference * 0.02)));
+        const finalChance = Math.max(0.01, Math.min(0.99, baseChance * levelModifier));
+        console.log(`calculateCatchChance: enemyRarity=${enemyRarity}, hpPercent=${hpPercent}%, baseChance=${baseChance}, lvlDiff=${levelDifference}, levelModifier=${levelModifier}, finalChance=${finalChance}`);
+        return finalChance;
+    }
+
+    updateEnemyStatsDisplay() {
+        if (!this.enemyCatchText) return;
+        const isBoss = this.enemy.isBoss || this.enemy.IsBoss;
+        if (isBoss) {
+            this.enemyCatchText.setText("CATCH: UNMATCHED");
+            this.enemyCatchText.setColor("#ef4444");
+            return;
+        }
+        const chance = this.calculateCatchChance();
+        let chanceStr = "VERY LOW";
+        let color = "#ef4444";
+        if (chance >= 0.40) {
+            chanceStr = "HIGH";
+            color = "#22c55e";
+        } else if (chance >= 0.15) {
+            chanceStr = "MEDIUM";
+            color = "#eab308";
+        } else if (chance >= 0.05) {
+            chanceStr = "LOW";
+            color = "#f97316";
+        }
+        this.enemyCatchText.setText(`CATCH: ${chanceStr}`);
+        this.enemyCatchText.setColor(color);
+    }
+
+    updatePlayerStatsDisplay() {
+        // Handled dynamically via playerHpText
     }
 
     saveBattleMonstersToState() {
@@ -1824,7 +2022,7 @@ export class BattleScene extends Phaser.Scene {
                                     .setInteractive({ useHandCursor: true });
 
                                 okBtn.on("pointerup", (pointer) => {
-                                     this.saveBattleMonstersToState();
+                                    this.saveBattleMonstersToState();
                                     if (!checkClick(pointer)) return;
 
                                     this.cameras.main.fadeOut(500, 0, 0, 0);
@@ -1881,7 +2079,7 @@ export class BattleScene extends Phaser.Scene {
                             defeatBanner.destroy();
 
                             MonsterUpgradeScreen(this, this.player, () => {
-                                 this.saveBattleMonstersToState();
+                                this.saveBattleMonstersToState();
                                 this.cameras.main.fadeOut(500, 0, 0, 0);
                                 this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
                                     this.scene.start("MapScene", { map: this.world });
@@ -2087,7 +2285,7 @@ export class BattleScene extends Phaser.Scene {
 
     executeMockAttack(skill, cardBack) {
         this.preventOptions();
-        
+
         this.tweens.add({
             targets: cardBack,
             y: OPTIONS_POS_Y - 80,
@@ -2101,7 +2299,7 @@ export class BattleScene extends Phaser.Scene {
 
                 fx.on("animationcomplete", () => {
                     fx.destroy();
-                    
+
                     playAnimScratch(this, this.defenderContainer.x + 100, this.defenderContainer.y + 100, () => {
                         this.enemy.hp = 5;
                         this.updateEnemyHp();

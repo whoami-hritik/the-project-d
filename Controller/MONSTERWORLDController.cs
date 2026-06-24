@@ -1851,7 +1851,7 @@ namespace monster_world.Controller
                 List<MonsDef> monsDefs = _gameplayService.GetRandomNodeMonster(form.Map, randomRarity, form.Node);
                 MonsDef monsDef = _gameplayService.RandomMons(monsDefs);
                 Console.WriteLine($"[CONSOLE]monsDef = {monsDef.MonsterId} {monsDef.Title} {monsDef.Element}");
-                int rndLevel = rnd.Next(1, User.Level + 3);
+                int rndLevel = Math.Min(rnd.Next(1, User.Level + 3), 30);
 
                 var monster = _gameplayService.CreateMonsterInstance(monsDef.MonsterId, 0, rndLevel);
                 Enemymonsters.Add(monster);
@@ -3633,6 +3633,7 @@ namespace monster_world.Controller
             public long OwnerID { get; set; }
             public string Title { get; set; }
             public string Element { get; set; }
+            public string Rarity { get; set; }
             public string Desc { get; set; }
             public int Level { get; set; }
             public int XP { get; set; }
@@ -3683,6 +3684,7 @@ namespace monster_world.Controller
                 OwnerID = monster.OwnerID,
                 Title = monster.Title,
                 Element = monster.Element,
+                Rarity = monster.Rarity,
                 Desc = monster.Desc,
                 Level = monster.Level,
                 XP = monster.XP,
@@ -3720,6 +3722,9 @@ namespace monster_world.Controller
 
             if (monster.OwnerID != User.ID)
                 return Ok(new { success = false, reason = "not an owner" });
+
+            if (monster.Level >= 30)
+                return Ok(new { success = false, reason = "monster is already at the maximum level (30)" });
 
             if (monster.XP < monster.MaxXP)
                 return Ok(new { success = false, reason = "not enough XP to level up" });

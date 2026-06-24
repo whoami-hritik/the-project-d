@@ -44,6 +44,7 @@ export class WorldScene extends Phaser.Scene {
     create() {
         this.width = this.scale.width;
         this.height = this.scale.height;
+        this.isModalDragging = false;
 
 
 
@@ -226,8 +227,28 @@ export class WorldScene extends Phaser.Scene {
         });
 
         return lengthWidth;
+    }
 
+    getRarityByMonsterId(monsterId) {
+        const data = this.cache.json.get("monsters_data");
+        if (!data) return "common";
+        for (const rarity in data) {
+            if (Array.isArray(data[rarity])) {
+                const found = data[rarity].find(x => x.monsterid.toLowerCase() === monsterId.toLowerCase());
+                if (found) {
+                    return found.rarity || rarity;
+                }
+            }
+        }
+        return "common";
+    }
 
+    getRarityColor(rarity) {
+        const r = (rarity || "common").toLowerCase().trim();
+        if (r === "rare") return "#60a5fa";      // bright blue
+        if (r === "epic") return "#c084fc";      // bright purple
+        if (r === "legendary") return "#fbbf24"; // gold/orange
+        return "#64748b";                        // darker slate for common
     }
 
     createOverlay() {
@@ -446,7 +467,7 @@ export class WorldScene extends Phaser.Scene {
 
         this.cameras.main.scrollY = 0;
         this.input.on("pointermove", (pointer) => {
-            if (pointer.isDown) {
+            if (pointer.isDown && !this.isModalDragging) {
                 this.cameras.main.scrollX -= (pointer.x - pointer.prevPosition.x);
             }
         });
@@ -795,12 +816,15 @@ export class WorldScene extends Phaser.Scene {
                             }
                             scrollContainer.add(monsterImg);
 
+                            const rarity = this.getRarityByMonsterId(m);
+                            const nameColor = this.getRarityColor(rarity);
+
                             const nameText = this.add.text(mX, mY + 42, m.toUpperCase(), {
-                                fontFamily: "Outfit, Arial, sans-serif",
+                                fontFamily: "Lilita One, Coiny, sans-serif",
                                 fontSize: "9px",
-                                color: capturedMonsters.includes(m) ? "#059669" : "#64748b"
+                                color: nameColor
                             }).setOrigin(0.5);
-                            nameText.setStroke("#ffffff", 2.5);
+                            nameText.setStroke("#0f172a", 2.5);
                             scrollContainer.add(nameText);
                         });
 
@@ -819,6 +843,7 @@ export class WorldScene extends Phaser.Scene {
                         dragZone.on("pointerdown", (pointer) => {
                             startX = pointer.x;
                             isDragging = true;
+                            this.isModalDragging = true;
                         });
 
                         const onPointerMove = (pointer) => {
@@ -833,6 +858,7 @@ export class WorldScene extends Phaser.Scene {
 
                         const onPointerUp = () => {
                             isDragging = false;
+                            this.isModalDragging = false;
                         };
 
                         this.input.on("pointermove", onPointerMove);
@@ -862,6 +888,7 @@ export class WorldScene extends Phaser.Scene {
 
                         btn_go.on("pointerup", (pointer) => {
                             if (!checkClick(pointer)) return;
+                            this.isModalDragging = false;
                             this.input.off("pointermove", onPointerMove);
                             this.input.off("pointerup", onPointerUp);
                             this.scene.stop();
@@ -870,6 +897,7 @@ export class WorldScene extends Phaser.Scene {
 
                         btn_close.on("pointerup", (pointer) => {
                             if (!checkClick(pointer)) return;
+                            this.isModalDragging = false;
                             this.input.off("pointermove", onPointerMove);
                             this.input.off("pointerup", onPointerUp);
                             this.destroyOverlay();

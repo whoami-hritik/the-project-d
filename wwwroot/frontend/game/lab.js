@@ -61,9 +61,35 @@ export class LabScene extends Phaser.Scene {
         const spdcropWidth = (this.monsInfo.speed / 100) * spdFullWidth;
         spdStat.setCrop(0, 0, spdcropWidth, spdStat.height);
 
-        const container = this.add.container();
-        container.add([spdIcon, atkIcon, defIcon, spdStatBg, atkStatBg, defStatBg, spdStat, atkStat, defStat]);
+        const atkText = this.add.text(
+            40 + 55, 247 + 7.5, `${Math.round(this.monsInfo.attack)}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        atkText.setStroke("#000000", 3);
 
+        const defText = this.add.text(
+            40 + 55, 287 + 7.5, `${Math.round(this.monsInfo.defense)}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        defText.setStroke("#000000", 3);
+
+        const spdText = this.add.text(
+            40 + 55, 327 + 7.5, `${Math.round(this.monsInfo.speed)}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "11px",
+            color: "#ffffff"
+        }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        spdText.setStroke("#000000", 3);
+
+        const container = this.add.container();
+        container.add([spdIcon, atkIcon, defIcon, spdStatBg, atkStatBg, defStatBg, spdStat, atkStat, defStat, atkText, defText, spdText]);
 
     }
 
@@ -98,6 +124,20 @@ export class LabScene extends Phaser.Scene {
         const hpCropWidth = (this.monsInfo.hp / (this.monsInfo.maxHP || 100)) * hpFullWidth;
         HPFILL.setCrop(0, 0, hpCropWidth, HPFILL.height);
 
+        const hpText = this.add.text(
+            3.5 + HPFILL.displayWidth / 2,
+            45 + HPFILL.displayHeight / 2,
+            `${this.monsInfo.hp}/${this.monsInfo.maxHP || 100}`,
+            {
+                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+                fontSize: "10px",
+                color: "#ffffff",
+                fontWeight: "900"
+            }
+        ).setOrigin(0.5, 0.5).setDepth(20);
+        hpText.setStroke("#000000", 3);
+        PANE_CONTAINER.add(hpText);
+
         const LV = this.add.image(0, -5, "ch35").setOrigin(0);
 
         const levelStr = String(this.monsInfo.level)
@@ -112,6 +152,15 @@ export class LabScene extends Phaser.Scene {
 
 
         PANE_CONTAINER.add([PANE, HPBG, HPFILL, LV]);
+
+        const rStr = (this.monsInfo.rarity || this.monsInfo.Rarity || "common").toUpperCase();
+        const rarityText = this.add.text(40, 13, rStr, {
+            fontFamily: "Lilita One, Coiny, sans-serif",
+            fontSize: "8.5px",
+            color: this.getRarityColor(rStr)
+        }).setOrigin(0, 0.5).setDepth(120);
+        rarityText.setStroke("#000000", 2.5);
+        PANE_CONTAINER.add(rarityText);
 
         const nameTokens = Array.from(this.monsInfo.title, chr => chr.charCodeAt(0));
         let lastTokenWidth = 0;
@@ -177,17 +226,17 @@ export class LabScene extends Phaser.Scene {
         if (this.monsInfo.xp >= (this.monsInfo.maxXP || 100)) {
             const levelUpX = healBtn ? 245 : 125;
             const levelUpGoldCost = 100 * this.monsInfo.level;
-            
+
             // Create premium level up button container
             const levelupContainer = this.add.container(levelUpX, 550);
-            
+
             const graphics = this.add.graphics();
             // Golden gradient with border highlight
             graphics.fillGradientStyle(0xffd700, 0xffa500, 0xff8c00, 0xff8c00, 1);
             graphics.fillRoundedRect(0, 0, 115, 38, 10);
             graphics.lineStyle(2, 0xffffff, 0.9);
             graphics.strokeRoundedRect(0, 0, 115, 38, 10);
-            
+
             const text = this.add.text(57.5, 19, t("level_up_cost", { cost: levelUpGoldCost }), {
                 fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "11px",
@@ -196,11 +245,11 @@ export class LabScene extends Phaser.Scene {
                 lineSpacing: -2
             }).setOrigin(0.5, 0.5);
             text.setStroke("#4a2306", 3);
-            
+
             levelupContainer.add([graphics, text]);
             levelupContainer.setSize(115, 38);
             levelupContainer.setInteractive({ useHandCursor: true });
-            
+
             levelupContainer.on("pointerup", () => {
                 api.LevelUpMonster(this.monsInfo.instanceId).then(result => {
                     if (result && result.success) {
@@ -359,7 +408,13 @@ export class LabScene extends Phaser.Scene {
 
     }
 
-
+    getRarityColor(rarity) {
+        const r = (rarity || "common").toLowerCase().trim();
+        if (r === "rare") return "#60a5fa";
+        if (r === "epic") return "#c084fc";
+        if (r === "legendary") return "#fbbf24";
+        return "#cbd5e1";
+    }
 }
 
 
@@ -405,16 +460,16 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                 onComplete: () => {
                     if (monsInfo.xp >= monsInfo.maxXP) {
                         const levelUpGoldCost = 100 * monsInfo.level;
-                        
+
                         // Create a premium container for Level Up button
                         const levelUpBtnContainer = scene.add.container(105, 455);
-                        
+
                         const graphics = scene.add.graphics();
                         graphics.fillGradientStyle(0xffd700, 0xffa500, 0xff8c00, 0xff8c00, 1);
                         graphics.fillRoundedRect(0, 0, 140, 44, 12);
                         graphics.lineStyle(2, 0xffffff, 0.9);
                         graphics.strokeRoundedRect(0, 0, 140, 44, 12);
-                        
+
                         const text = scene.add.text(70, 22, t("level_up_cost", { cost: levelUpGoldCost }), {
                             fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "12px",
@@ -423,16 +478,16 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                             lineSpacing: -2
                         }).setOrigin(0.5, 0.5);
                         text.setStroke("#4a2306", 3);
-                        
+
                         levelUpBtnContainer.add([graphics, text]);
                         levelUpBtnContainer.setSize(140, 44);
                         levelUpBtnContainer.setInteractive({ useHandCursor: true });
-                        
+
                         const btn_later = scene.add.image(150, 510, "btn_later").setOrigin(0).setDisplaySize(50, 25);
                         btn_later.setInteractive({ useHandCursor: true });
-                        
+
                         container.add([levelUpBtnContainer, btn_later]);
-                        
+
                         levelUpBtnContainer.on("pointerup", () => {
                             api.LevelUpMonster(monsInfo.instanceId).then((result) => {
                                 if (result.success) {

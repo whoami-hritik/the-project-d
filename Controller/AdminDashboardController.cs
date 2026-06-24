@@ -358,14 +358,26 @@ namespace monster_world.Controller
                 return NotFound(new { message = "Monster not found" });
             }
 
-            monster.Level = payload.Level;
-            monster.HP = payload.HP;
-            monster.MaxHP = payload.MaxHP;
-            monster.XP = payload.XP;
-            monster.MaxXP = payload.MaxXP;
-            monster.ATK = payload.ATK;
-            monster.DEF = payload.DEF;
-            monster.SPD = payload.SPD;
+            int targetLevel = payload.Level;
+            if (targetLevel > 30) targetLevel = 30;
+            if (targetLevel < 1) targetLevel = 1;
+
+            if (monster.Level != targetLevel)
+            {
+                _gameplayService.RecalculateMonsterStats(monster, targetLevel);
+            }
+            else
+            {
+                monster.Level = targetLevel;
+                monster.HP = payload.HP;
+                monster.MaxHP = payload.MaxHP;
+                monster.XP = payload.XP;
+                monster.MaxXP = payload.MaxXP;
+                monster.ATK = payload.ATK;
+                monster.DEF = payload.DEF;
+                monster.SPD = payload.SPD;
+            }
+
             if (payload.IsFighting.HasValue)
             {
                 monster.IsFighting = payload.IsFighting.Value;
@@ -1003,6 +1015,34 @@ namespace monster_world.Controller
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true });
+        }
+
+        [HttpPost("reset-overleveled-monsters")]
+        public async Task<IActionResult> ResetOverleveledMonsters()
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            var overleveledMonsters = await _context.Monsters
+                .Where(m => m.Level > 30)
+                .ToListAsync();
+
+            int count = overleveledMonsters.Count;
+
+            foreach (var monster in overleveledMonsters)
+            {
+                _gameplayService.RecalculateMonsterStats(monster, 30);
+                _context.Monsters.Update(monster);
+            }
+
+            if (count > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new { success = true, count = count });
         }
     }
 }

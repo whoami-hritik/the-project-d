@@ -1,4 +1,90 @@
 {
+    "catchOddRanges": [
+        {
+            "rarity": "common",
+            "odds": [
+                {
+                    "hpWhen": "90:200",
+                    "chance": 0.05
+                },
+                {
+                    "hpWhen": "70:90",
+                    "chance": 0.2
+                },
+                {
+                    "hpWhen": "50:70",
+                    "chance": 0.3
+                },
+                {
+                    "hpWhen": "0:50",
+                    "chance": 0.4
+                }
+            ]
+        },
+        {
+            "rarity": "rare",
+            "odds": [
+                {
+                    "hpWhen": "90:220",
+                    "chance": 0.02
+                },
+                {
+                    "hpWhen": "70:90",
+                    "chance": 0.15
+                },
+                {
+                    "hpWhen": "50:70",
+                    "chance": 0.25
+                },
+                {
+                    "hpWhen": "0:50",
+                    "chance": 0.3
+                }
+            ]
+        },
+        {
+            "rarity": "epic",
+            "odds": [
+                {
+                    "hpWhen": "90:240",
+                    "chance": 0
+                },
+                {
+                    "hpWhen": "70:90",
+                    "chance": 0.1
+                },
+                {
+                    "hpWhen": "50:70",
+                    "chance": 0.12
+                },
+                {
+                    "hpWhen": "0:50",
+                    "chance": 0.25
+                }
+            ]
+        },
+        {
+            "rarity": "legendary",
+            "odds": [
+                {
+                    "hpWhen": "90:260",
+                    "chance": 0
+                },
+                {
+                    "hpWhen": "70:90",
+                    "chance": 0.03
+                },
+                {
+                    "hpWhen": "50:70",
+                    "chance": 0.05
+                },
+                {
+                    "hpWhen": "0:50",
+                    "chance": 0.1
+                }
+            ]
+        }
+    ],
     "catchOddsRanges": [
       {
         "fromLvl": 1,

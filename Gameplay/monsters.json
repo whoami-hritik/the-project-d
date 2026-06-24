@@ -655,10 +655,6 @@
                 {
                     "id": "revive",
                     "getsAt": 21
-                },
-                {
-                    "id": "tree_crusher",
-                    "getsAt": 25
                 }
             ]
         },

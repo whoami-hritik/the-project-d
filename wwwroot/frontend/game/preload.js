@@ -519,7 +519,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.spritesheet("thunderstorm", "images/battle/abilities/fx/thunderbolt.png", { frameWidth: 180, frameHeight: 940 });
         this.load.spritesheet("suck_life", "images/battle/abilities/fx/leech.png", { frameWidth: 70, frameHeight: 70 });
         this.load.spritesheet("static_shock", "images/battle/abilities/fx/static_shock.png", { frameWidth: 266, frameHeight: 320 });
-
+        this.load.spritesheet("earth_revenge_1", "images/battle/abilities/fx/explosion.png", { frameWidth: 410, frameHeight: 426 });
         this.load.spritesheet("avalanche", "images/battle/abilities/fx/boulder_ice.png", { frameWidth: 279, frameHeight: 220 });
         this.load.spritesheet("bite", "images/battle/abilities/fx/bite.png", { frameWidth: 230, frameHeight: 316 });
         this.load.spritesheet("revenge_earth_1", "images/battle/abilities/fx/nature_beam.png", { frameWidth: 135, frameHeight: 460 });
@@ -627,9 +627,9 @@ export class PreloadScene extends Phaser.Scene {
         });
 
         // Load json metadata files
-        this.load.json("gameplay_data", "data/gameplay.json");
-        this.load.json("monsters_data", "data/monsters.json");
-        this.load.json("skills_data", "data/skills.json");
+        this.load.json("gameplay_data", "data/gameplay.json?v=" + Date.now());
+        this.load.json("monsters_data", "data/monsters.json?v=" + Date.now());
+        this.load.json("skills_data", "data/skills.json?v=" + Date.now());
     }
 
     create() {

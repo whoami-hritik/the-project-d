@@ -350,8 +350,50 @@ namespace monster_world.Services
 
         }
 
+        public void RecalculateMonsterStats(Monster monster, int newLevel)
+        {
+            if (newLevel > 30)
+            {
+                newLevel = 30;
+            }
+            if (newLevel < 1)
+            {
+                newLevel = 1;
+            }
+
+            MonsDef monsDef = GetMonsDef(monster.Id);
+            if (monsDef == null) return;
+
+            int TotalBudget = GetTotalBudget(monsDef.Rarity);
+            BaseStat statDef = _gameplay.BaseStats.FirstOrDefault(x => x.Role == monsDef.Role);
+            if (statDef == null) return;
+
+            int baseAtk = Extentions.Extentions.RandomBetween(statDef.Atk, ":");
+            int baseDef = Extentions.Extentions.RandomBetween(statDef.Def, ":");
+            int baseSpd = Extentions.Extentions.RandomBetween(statDef.Spd, ":");
+            int baseHP = Math.Max(1, TotalBudget - (baseAtk + baseDef + baseSpd));
+
+            Stat upStats = UpStats(monsDef.Role, newLevel);
+
+            monster.Level = newLevel;
+            monster.ATK = baseAtk + upStats.Atk;
+            monster.DEF = baseDef + upStats.Def;
+            monster.SPD = baseSpd + upStats.Spd;
+            monster.MaxHP = Math.Max(1, baseHP + upStats.HP);
+            monster.HP = monster.MaxHP;
+            monster.MaxXP = (int)(Math.Round((100 * Math.Pow(newLevel, 1.5)) / 100.0) * 100);
+            monster.XP = 0;
+        }
+
         public void LevelUpMonster(Monster monster)
         {
+            if (monster.Level >= 30)
+            {
+                monster.Level = 30;
+                monster.XP = monster.MaxXP;
+                return;
+            }
+
             MonsDef monsDef = GetMonsDef(monster.Id);
             UpStat upStat = _gameplay.StatsUps.FirstOrDefault(x => x.Role == monsDef.Role);
 

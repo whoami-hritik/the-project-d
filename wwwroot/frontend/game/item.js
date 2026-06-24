@@ -1,5 +1,6 @@
 import * as api from "../webapp/api.js";
 import { showNotification } from "../utility.js";
+import { t } from "../translations.js";
 
 export class ItemScene extends Phaser.Scene {
     constructor() {
@@ -44,7 +45,6 @@ export class ItemScene extends Phaser.Scene {
 
     updateItems() {
         const validItemKeys = Object.keys(this.items).filter(key => this.items[key] > 0);
-        const TOTAL_ITEMS = validItemKeys.length;
         const COLUMN = 5;
         const SLOT_WIDTH = 73.33;
         const SLOT_HEIGHT = 73.33;
@@ -55,6 +55,26 @@ export class ItemScene extends Phaser.Scene {
             .setAlpha(0);
 
         this.container.add(item_selected_bg);
+
+        const itemInfo = {
+            HealSpell: { name: t("heal_spell_name"), desc: t("heal_spell_desc") },
+            MonstaBall: { name: t("monsta_ball_name"), desc: t("monsta_ball_desc") },
+            RagePotion: { name: t("rage_potion_name"), desc: t("rage_potion_desc") },
+            DarkSpell: { name: t("dark_spell_name"), desc: t("dark_spell_desc") },
+            AvalancheSpell: { name: t("avalanche_name"), desc: t("avalanche_desc") },
+            WindSpell: { name: t("wind_spell_name"), desc: t("wind_spell_desc") },
+            WaterFallSpell: { name: t("water_fall_name"), desc: t("water_fall_desc") },
+            LavaSpell: { name: t("lava_spell_name"), desc: t("lava_spell_desc") },
+            ThunderSpell: { name: t("thunder_name"), desc: t("thunder_desc") },
+            Shield: { name: t("shield_name"), desc: t("shield_desc") },
+            Poison: { name: t("poison_name"), desc: t("poison_desc") },
+            Hallucinogen: { name: t("hallucinogen_name"), desc: t("hallucinogen_desc") }
+        };
+
+        const getItemDetails = (k) => {
+            const matchedKey = Object.keys(itemInfo).find(x => x.toLowerCase() === k.toLowerCase());
+            return matchedKey ? itemInfo[matchedKey] : { name: k.toUpperCase(), desc: "SPECIAL GAMEPLAY ITEM" };
+        };
 
         validItemKeys.forEach((key, index) => {
             const i = Math.floor(index / COLUMN);
@@ -84,6 +104,14 @@ export class ItemScene extends Phaser.Scene {
                 item_selected_bg.setAlpha(1);
                 item_selected_bg.setPosition(10 + j * SLOT_WIDTH, 60 + i * SLOT_HEIGHT);
 
+                const details = getItemDetails(key);
+                if (this.selectedItemName) {
+                    this.selectedItemName.setText(details.name);
+                }
+                if (this.selectedItemDesc) {
+                    this.selectedItemDesc.setText(details.desc);
+                }
+
                 if (this.inBattle) {
                     if (this.useBtn) {
                         this.useBtn.destroy();
@@ -91,7 +119,7 @@ export class ItemScene extends Phaser.Scene {
                     const use_btn = this.add.image(0, 0, "btn_use");
                     use_btn.setDisplaySize(use_btn.displayWidth / 2, use_btn.displayHeight / 2)
                         .setOrigin(0).setInteractive({ useHandCursor: true });
-                    use_btn.setPosition(this.scale.width / 2 - use_btn.displayWidth / 2, 220);
+                    use_btn.setPosition(this.bg.displayWidth / 2 - use_btn.displayWidth / 2, 265);
                     this.container.add(use_btn);
                     this.useBtn = use_btn;
 
@@ -108,7 +136,8 @@ export class ItemScene extends Phaser.Scene {
     initializeBg() {
         this.createOverlay();
         const bg = this.add.image(0, 0, "bg_item");
-        bg.setDisplaySize(bg.displayWidth / 1.5, bg.displayHeight / 2).setOrigin(0);
+        bg.setDisplaySize(bg.displayWidth / 1.5, bg.displayHeight / 1.7).setOrigin(0);
+        this.bg = bg;
 
         this.container = this.add.container(this.scale.width / 2 - bg.displayWidth / 2, this.scale.height / 2 - bg.displayHeight / 2).setDepth(101);
 
@@ -133,6 +162,23 @@ export class ItemScene extends Phaser.Scene {
             }
         }
 
+        // Add selected item Name and Description text elements
+        this.selectedItemName = this.add.text(bg.displayWidth / 2, 215, "", {
+            fontFamily: "Lilita One, Coiny, sans-serif",
+            fontSize: "14px",
+            color: "#f59e0b"
+        }).setOrigin(0.5).setDepth(105);
+        this.selectedItemName.setStroke("#0f172a", 3);
+        this.container.add(this.selectedItemName);
+
+        this.selectedItemDesc = this.add.text(bg.displayWidth / 2, 238, "", {
+            fontFamily: "Nunito, Arial, sans-serif",
+            fontSize: "11px",
+            color: "#cbd5e1",
+            wordWrap: { width: bg.displayWidth - 40, useAdvancedWrap: true },
+            align: "center"
+        }).setOrigin(0.5).setDepth(105);
+        this.container.add(this.selectedItemDesc);
 
         btn_close.on("pointerup", () => {
             this.destroyOverlay();

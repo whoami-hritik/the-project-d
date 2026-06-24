@@ -660,7 +660,16 @@ export class InventoryScene extends Phaser.Scene {
                 hpBar.setDisplaySize(hpBar.displayWidth / 1.5, hpBar.displayHeight / 1.5);
                 hpBar.setCrop(0, 0, (monster.hp / (monster.maxHP || 100)) * hpBar.width, hpBar.height);
 
-                const objects = [paneThumb, icon, lv, hpBg, hpBar, ...letters, ...levArray];
+                // Rarity text
+                const rStr = (monster.rarity || monster.Rarity || "common").toUpperCase();
+                const rarityText = this.add.text(x + 12, y + 70, rStr, {
+                    fontFamily: "Lilita One, Coiny, sans-serif",
+                    fontSize: "8.5px",
+                    color: this.getRarityColor(rStr)
+                }).setOrigin(0, 0.5);
+                rarityText.setStroke("#000000", 2.5);
+
+                const objects = [paneThumb, icon, lv, hpBg, hpBar, rarityText, ...letters, ...levArray];
                 this.cardMap[monster.instanceId] = { pane: paneThumb, objects, x, y };
 
                 // Add flat to container
@@ -791,5 +800,13 @@ export class InventoryScene extends Phaser.Scene {
                 this.refreshTeamSlots();
             }
         }).catch(err => console.error("Error syncing team monsters:", err));
+    }
+
+    getRarityColor(rarity) {
+        const r = (rarity || "common").toLowerCase().trim();
+        if (r === "rare") return "#60a5fa";
+        if (r === "epic") return "#c084fc";
+        if (r === "legendary") return "#fbbf24";
+        return "#cbd5e1";
     }
 }

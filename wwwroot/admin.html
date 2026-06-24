@@ -747,7 +747,10 @@
                 <span class="badge">ADMIN CORE</span>
             </div>
             
-            <button class="logout-btn" onclick="handleLogout()">Disconnect</button>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button class="logout-btn" style="border-color: #f59e0b; color: #f59e0b;" onmouseover="this.style.backgroundColor='rgba(245,158,11,0.1)'" onmouseout="this.style.backgroundColor='transparent'" onclick="triggerLevelReset()">🛠️ Reset Levels > 30</button>
+                <button class="logout-btn" onclick="handleLogout()">Disconnect</button>
+            </div>
         </header>
 
         <!-- Global Stats Row -->
@@ -1471,6 +1474,32 @@
         function handleLogout() {
             localStorage.removeItem('adminToken');
             showAuth();
+        }
+
+        async function triggerLevelReset() {
+            if (!confirm("Are you sure you want to reset all monsters with level > 30 down to level 30 and recalculate their stats?")) {
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE}/reset-overleveled-monsters`, {
+                    method: 'POST',
+                    headers: getHeaders()
+                });
+                if (response.status === 401) {
+                    handleLogout();
+                    return;
+                }
+                const data = await response.json();
+                if (data.success) {
+                    alert(`Successfully reset ${data.count} monsters back to level 30 with updated stats!`);
+                    loadUsersList();
+                } else {
+                    alert("Failed to reset monsters: " + (data.reason || "Unknown error"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error occurred while resetting monsters.");
+            }
         }
 
         // --- API Helpers ---

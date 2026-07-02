@@ -183,17 +183,16 @@ export class MarketplaceScene extends Phaser.Scene {
     ShowItemInfo(listed_item, isMyListing) {
         if (this.searchBarContainer) this.searchBarContainer.setVisible(false);
 
-        if (this.contentContainer) this.contentContainer.destroy();
-        this.contentContainer = this.add.container(0, 0);
-        this.contentContainer.setDepth(100);
+        const container = this.add.container(0, 0);
+        container.setDepth(100);
 
         // overlay
         const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.5).setOrigin(0).setInteractive({ useHandCursor: true });
-        this.contentContainer.add(overlay);
+        container.add(overlay);
 
         overlay.on("pointerup", () => {
             if (this.searchBarContainer) this.searchBarContainer.setVisible(true);
-            this.contentContainer.destroy();
+            container.destroy();
         });
 
         const items_info = this.add.image(0, 485, "info_items_panel").setOrigin(0);
@@ -239,7 +238,7 @@ export class MarketplaceScene extends Phaser.Scene {
             color: "#ffffff"
         }).setOrigin(0.5, 0);
 
-        this.contentContainer.add([items_info, itemsImg, text, level, username, stockGraphics, stockText]);
+        container.add([items_info, itemsImg, text, level, username, stockGraphics, stockText]);
 
         if (isMyListing) {
             const remove_button = this.add.image(20, 745, "btn_remove").setOrigin(0).setInteractive({ useHandCursor: true });
@@ -251,7 +250,7 @@ export class MarketplaceScene extends Phaser.Scene {
                     if (response && response.success) {
                         showNotification(this, "Listing successfully removed!");
                         if (this.searchBarContainer) this.searchBarContainer.setVisible(true);
-                        this.contentContainer.destroy();
+                        container.destroy();
                         this.refreshCurrentTab();
                     } else {
                         showNotification(this, response?.reason || "Failed to remove listing");
@@ -263,12 +262,12 @@ export class MarketplaceScene extends Phaser.Scene {
                     destroyloadingOverlay(this);
                 }
             });
-            this.contentContainer.add(remove_button);
+            container.add(remove_button);
         } else {
-            const buy_button = this.add.image(20, 745, "btn_buy").setOrigin(0).setInteractive({ useHandCursor: true });
-            const price = this.add.text(135, 755, `${listed_item.price} CRY`, {
-                fontFamily: "Nunito",
-                fontSize: "12px",
+            const buy_button = this.add.image(20, 745, "btn_crystal_pay").setOrigin(0).setInteractive({ useHandCursor: true });
+            const price = this.add.text(180, 755, `${listed_item.price}`, {
+                fontFamily: "Lilita One",
+                fontSize: "22px",
                 color: "#ffffff"
             }).setOrigin(0, 0);
 
@@ -281,7 +280,7 @@ export class MarketplaceScene extends Phaser.Scene {
                         if (response && response.success) {
                             showNotification(this, "Purchase successful!");
                             if (this.searchBarContainer) this.searchBarContainer.setVisible(true);
-                            this.contentContainer.destroy();
+                            container.destroy();
                             this.ItemsMarket();
                         } else {
                             showNotification(this, response?.reason || "Failed to purchase item");
@@ -294,7 +293,7 @@ export class MarketplaceScene extends Phaser.Scene {
                     }
                 });
             });
-            this.contentContainer.add([buy_button, price]);
+            container.add([buy_button, price]);
         }
     }
 

@@ -313,9 +313,10 @@ function showCollectorPanel(scene, rarity) {
     function getSlotCosts(rarity, totalSlots) {
         const r = rarity.toLowerCase();
         if (r === "common") {
+            const effectiveSlots = Math.max(1, totalSlots);
             return [
-                { currency: "GOLD", cost: (totalSlots - 1) * 500, icon: "item_gold" },
-                { currency: "TON", cost: (totalSlots - 1) * 0.1, icon: "item_ton" }
+                { currency: "GOLD", cost: Math.max(0, (effectiveSlots - 1) * 500), icon: "item_gold" },
+                { currency: "TON", cost: Math.max(0, (effectiveSlots - 1) * 0.1), icon: "item_ton" }
             ];
         } else if (r === "rare") {
             return [

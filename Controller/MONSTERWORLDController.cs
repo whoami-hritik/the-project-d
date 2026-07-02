@@ -1971,10 +1971,10 @@ namespace monster_world.Controller
 
             if (rarity == "common")
             {
-                int currentSlots = User.UnlockedCommonSlots;
+                int currentSlots = Math.Max(1, User.UnlockedCommonSlots);
                 int idx = currentSlots; 
-                goldCost = (idx - 1) * 500;
-                tonCost = (idx - 1) * 0.1;
+                goldCost = Math.Max(0.0, (idx - 1) * 500.0);
+                tonCost = Math.Max(0.0, (idx - 1) * 0.1);
             }
             else if (rarity == "rare")
             {

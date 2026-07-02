@@ -1508,7 +1508,7 @@
             "Title": "Complete 20 battles",
             "Description": "Fight battles to test your strength",
             "RewardAmount": 5.0,
-            "RewardCurrency": "HealSpell",
+            "RewardCurrency": "MonstaBall",
             "VerificationType": "complete_battles_weekly",
             "VerificationUrl": "",
             "IsActive": true,

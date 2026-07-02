@@ -87,11 +87,11 @@ export class StreakScene extends Phaser.Scene {
         // Days configuration
         const days = [
             { day: 1, reward: "GOLD", amt: "10-15", icon: "item_gold" },
-            { day: 2, reward: "Heal", amt: "x1", icon: "item_healSpell" },
+            { day: 2, reward: "Ball", amt: "x1", icon: "item_monstaBall" },
             { day: 3, reward: "GOLD", amt: "x15", icon: "item_gold" },
             { day: 4, reward: "Ball", amt: "x1", icon: "item_monstaBall" },
             { day: 5, reward: "GOLD", amt: "x20", icon: "item_gold" },
-            { day: 6, reward: "Heal", amt: "x1", icon: "item_healSpell" },
+            { day: 6, reward: "Ball", amt: "x1", icon: "item_monstaBall" },
             { day: 7, reward: "Chest", amt: "x1", icon: "item_box_red", isGrand: true }
         ];
 

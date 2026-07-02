@@ -187,7 +187,7 @@ export class MarketplaceScene extends Phaser.Scene {
         container.setDepth(100);
 
         // overlay
-        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.5).setOrigin(0).setInteractive({ useHandCursor: true });
+        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.5).setOrigin(0).setScrollFactor(0).setInteractive({ useHandCursor: true });
         container.add(overlay);
 
         overlay.on("pointerup", () => {

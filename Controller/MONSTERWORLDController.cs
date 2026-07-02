@@ -324,9 +324,9 @@ namespace monster_world.Controller
             }
             else if (currentDay == 2)
             {
-                rewardType = "HealSpell";
+                rewardType = "MonstaBall";
                 rewardAmount = 1;
-                user.AddItems("HealSpell", 1, "claim_streak_day_2");
+                user.AddItems("MonstaBall", 1, "claim_streak_day_2");
             }
             else if (currentDay == 3)
             {
@@ -348,9 +348,9 @@ namespace monster_world.Controller
             }
             else if (currentDay == 6)
             {
-                rewardType = "HealSpell";
+                rewardType = "MonstaBall";
                 rewardAmount = 1;
-                user.AddItems("HealSpell", 1, "claim_streak_day_6");
+                user.AddItems("MonstaBall", 1, "claim_streak_day_6");
             }
             else if (currentDay == 7)
             {
@@ -358,8 +358,7 @@ namespace monster_world.Controller
                 multiRewards = new Dictionary<string, int>
                 {
                     { "GOLD", new Random().Next(30, 51) },
-                    { "MonstaBall", 2 },
-                    { "HealSpell", 1 },
+                    { "MonstaBall", 3 },
                     { "RagePotion", 1 }
                 };
 

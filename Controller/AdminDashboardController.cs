@@ -481,12 +481,12 @@ namespace monster_world.Controller
                 .Where(m => m.StakedInCollector || (m.CollectorDepositTime.HasValue && DateTime.UtcNow < m.CollectorDepositTime.Value))
                 .ToListAsync();
 
-            // Load all users who either have collector monsters, or have unlocked > 1 slot
+            // Load all users who either have collector monsters, or have unlocked > 1 slot in any rarity
             var userIdsWithMonsters = monsters.Select(m => m.OwnerID).Distinct().ToList();
             
             var users = await _context.Users
                 .AsNoTracking()
-                .Where(u => u.UnlockedCollectorSlots > 1 || userIdsWithMonsters.Contains(u.ID))
+                .Where(u => u.UnlockedCommonSlots > 1 || u.UnlockedRareSlots > 0 || u.UnlockedEpicSlots > 0 || u.UnlockedLegendarySlots > 0 || userIdsWithMonsters.Contains(u.ID))
                 .ToListAsync();
 
             var result = new List<object>();
@@ -567,7 +567,10 @@ namespace monster_world.Controller
                     user.Username,
                     user.FirstName,
                     user.LastName,
-                    user.UnlockedCollectorSlots,
+                    user.UnlockedCommonSlots,
+                    user.UnlockedRareSlots,
+                    user.UnlockedEpicSlots,
+                    user.UnlockedLegendarySlots,
                     Crystals = user.Balance?.CRYSTAL ?? 0,
                     GoldCollected = Math.Round(totalGoldCollected, 4),
                     CrystalCollected = Math.Round(totalCrystalCollected, 4),
@@ -1219,6 +1222,179 @@ namespace monster_world.Controller
                 .ToListAsync();
 
             return Ok(logs);
+        }
+
+        public class GiveAssetRequest
+        {
+            public long UserId { get; set; }
+            public string Type { get; set; } // "balance", "item", "monster", "slots"
+            public string Currency { get; set; }
+            public double Amount { get; set; } // also used for monster level, or slot count
+            public string ItemName { get; set; }
+            public string MonsterId { get; set; }
+            public string Rarity { get; set; } // "common", "rare", "epic", "legendary"
+        }
+
+        [HttpPost("give-asset")]
+        public async Task<IActionResult> GiveAsset([FromBody] GiveAssetRequest request)
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == request.UserId);
+            if (user == null)
+            {
+                return NotFound(new { success = false, message = "User not found." });
+            }
+
+            if (request.Type == "balance")
+            {
+                string currencyUpper = request.Currency?.ToUpper();
+                if (currencyUpper == "TON" || currencyUpper == "GOLD" || currencyUpper == "CRYSTAL" || currencyUpper == "EGGS")
+                {
+                    user.Credit(currencyUpper, request.Amount, "admin_give");
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+                    return Ok(new { success = true, message = $"Successfully adjusted {request.Amount} {currencyUpper} for user {user.Username ?? user.ID.ToString()}." });
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = "Invalid currency. Must be TON, GOLD, CRYSTAL, or EGGS." });
+                }
+            }
+            else if (request.Type == "item")
+            {
+                string itemLower = request.ItemName?.ToLower();
+                int amtInt = (int)request.Amount;
+                bool found = true;
+
+                switch (itemLower)
+                {
+                    case "monstaball": user.Items.MonstaBall += amtInt; break;
+                    case "ragepotion": user.Items.RagePotion += amtInt; break;
+                    case "windspell": user.Items.WindSpell += amtInt; break;
+                    case "waterfallspell": user.Items.WaterFallSpell += amtInt; break;
+                    case "avalanchespell": user.Items.AvalancheSpell += amtInt; break;
+                    case "lavaspell": user.Items.LavaSpell += amtInt; break;
+                    case "thunderspell": user.Items.ThunderSpell += amtInt; break;
+                    case "darkspell": user.Items.DarkSpell += amtInt; break;
+                    case "healspell": user.Items.HealSpell += amtInt; break;
+                    case "shield": user.Items.Shield += amtInt; break;
+                    case "poison": user.Items.Poison += amtInt; break;
+                    case "hallucinogen": user.Items.Hallucinogen += amtInt; break;
+                    default: found = false; break;
+                }
+
+                if (!found)
+                {
+                    return BadRequest(new { success = false, message = $"Invalid item name: {request.ItemName}." });
+                }
+
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = $"Successfully adjusted {amtInt} {request.ItemName} for user {user.Username ?? user.ID.ToString()}." });
+            }
+            else if (request.Type == "monster")
+            {
+                if (string.IsNullOrWhiteSpace(request.MonsterId))
+                {
+                    return BadRequest(new { success = false, message = "Monster ID is required." });
+                }
+
+                int level = (int)request.Amount;
+                if (level <= 0) level = 1;
+
+                try
+                {
+                    Monster monster = _gameplayService.CreateMonsterInstance(request.MonsterId, user.ID, level);
+                    if (monster == null)
+                    {
+                        return BadRequest(new { success = false, message = "Failed to create monster instance. Check if Monster ID exists." });
+                    }
+
+                    monster.Log(monster.InstanceId, monster.Level, "admin_give=" + monster.InstanceId);
+                    await _context.Monsters.AddAsync(monster);
+
+                    if (user.Monsters == null) user.Monsters = new List<string>();
+                    user.Monsters.Add(monster.InstanceId);
+
+                    _context.Users.Update(user);
+                    await _context.SaveChangesAsync();
+
+                    return Ok(new { success = true, message = $"Successfully added {monster.Title} (Level {level}) to user {user.Username ?? user.ID.ToString()}." });
+                }
+                catch (Exception ex)
+                {
+                    return Ok(new { success = false, message = $"Error creating monster: {ex.Message}" });
+                }
+            }
+            else if (request.Type == "slots")
+            {
+                string rarityLower = request.Rarity?.ToLower();
+                int slotsCount = (int)request.Amount;
+                if (slotsCount < 0) slotsCount = 0;
+
+                if (rarityLower == "common")
+                {
+                    user.UnlockedCommonSlots = slotsCount;
+                }
+                else if (rarityLower == "rare")
+                {
+                    user.UnlockedRareSlots = slotsCount;
+                }
+                else if (rarityLower == "epic")
+                {
+                    user.UnlockedEpicSlots = slotsCount;
+                }
+                else if (rarityLower == "legendary")
+                {
+                    user.UnlockedLegendarySlots = slotsCount;
+                }
+                else
+                {
+                    return BadRequest(new { success = false, message = "Invalid rarity. Must be common, rare, epic, or legendary." });
+                }
+
+                user.UnlockedCollectorSlots = user.UnlockedCommonSlots + user.UnlockedRareSlots + user.UnlockedEpicSlots + user.UnlockedLegendarySlots;
+
+                _context.Users.Update(user);
+                await _context.SaveChangesAsync();
+                return Ok(new { success = true, message = $"Successfully set {request.Rarity} collector slots to {slotsCount} for user {user.Username ?? user.ID.ToString()}." });
+            }
+
+            return BadRequest(new { success = false, message = "Invalid asset type. Must be balance, item, monster, or slots." });
+        }
+
+        public class BroadcastMessageRequest
+        {
+            public long UserId { get; set; }
+            public string Message { get; set; }
+        }
+
+        [HttpPost("broadcast-user")]
+        public async Task<IActionResult> BroadcastToUser([FromBody] BroadcastMessageRequest request)
+        {
+            if (!IsAuthorized())
+            {
+                return Unauthorized();
+            }
+
+            if (request == null || request.UserId <= 0 || string.IsNullOrWhiteSpace(request.Message))
+            {
+                return BadRequest(new { success = false, message = "Invalid request parameters." });
+            }
+
+            try
+            {
+                await _tgbot.Notify(request.UserId, request.Message);
+                return Ok(new { success = true, message = "Message sent successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return Ok(new { success = false, message = $"Failed to send message: {ex.Message}" });
+            }
         }
     }
 }

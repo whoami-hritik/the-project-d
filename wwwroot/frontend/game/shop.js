@@ -12,7 +12,7 @@ export class ShopScene extends Phaser.Scene {
     init(data) {
         this.width = this.scale.width;
         this.height = this.scale.height;
-        this.activeTab = data && data.activeTab ? data.activeTab : "Items"; // "Packs", "Items", "Exchange"
+        this.activeTab = data && data.activeTab && data.activeTab !== "Packs" ? data.activeTab : "Items"; // "Items", "Exchange"
         this.onlyItems = data && data.onlyItems ? data.onlyItems : false;
         this.items = {};
         this.shopItems = {};
@@ -142,21 +142,22 @@ export class ShopScene extends Phaser.Scene {
         resourceBg.strokeRoundedRect(modalX - modalW / 2 + 12, modalY - modalH / 2 + 35, modalW - 24, 40, 8);
         this.container.add(resourceBg);
 
-        // Setup 3 resource boxes (TON, GOLD, EGGS) inside Resource Bar
+        // Setup 4 resource boxes (TON, GOLD, EGGS, CRYSTAL) inside Resource Bar
         this.resourceTexts = {};
         const resources = [
             { key: "ton", icon: "item_ton", label: "TON" },
             { key: "gold", icon: "item_gold", label: "GOLD" },
-            { key: "eggs", icon: "item_eggs", label: "EGGS" }
+            { key: "eggs", icon: "item_eggs", label: "EGGS" },
+            { key: "crystal", icon: "item_crystal", label: "CRYSTAL" }
         ];
 
-        const boxW = 100;
+        const boxW = 78;
         const boxH = 28;
-        const totalBarW = 316;
+        const totalBarW = 330;
         const startX = modalX - totalBarW / 2;
 
         resources.forEach((res, i) => {
-            const boxX = startX + i * 108;
+            const boxX = startX + i * 84;
             const boxY = modalY - modalH / 2 + 41;
 
             const boxGraphics = this.add.graphics();
@@ -205,7 +206,7 @@ export class ShopScene extends Phaser.Scene {
     }
 
     updateResourceBar() {
-        const resources = ["ton", "gold", "eggs"];
+        const resources = ["ton", "gold", "eggs", "crystal"];
         resources.forEach((key) => {
             const textObj = this.resourceTexts[key];
             if (!textObj) return;
@@ -276,9 +277,8 @@ export class ShopScene extends Phaser.Scene {
         }
 
         const tabs = [
-            { name: "Packs", x: modalX - 110, w: 90 },
-            { name: "Items", x: modalX, w: 90 },
-            { name: "Exchange", x: modalX + 110, w: 100 }
+            { name: "Items", x: modalX - 60, w: 100 },
+            { name: "Exchange", x: modalX + 60, w: 110 }
         ];
 
         tabs.forEach((tab) => {
@@ -363,200 +363,11 @@ export class ShopScene extends Phaser.Scene {
         this.listContainer.y = this.viewY;
         this.listHeight = 0;
 
-        if (this.activeTab === "Packs") {
-            this.renderPacksTab();
-        } else if (this.activeTab === "Items") {
+        if (this.activeTab === "Items") {
             this.renderItemsTab();
         } else if (this.activeTab === "Exchange") {
             this.renderExchangeTab();
         }
-    }
-
-    renderPacksTab() {
-        const cardW = 320;
-        const cardH = 260; // Slightly taller to display image, description, and buy button
-        const cardX = -cardW / 2;
-        const cardY = 15;
-
-        const cardGraphics = this.add.graphics();
-        cardGraphics.fillStyle(0xffffff, 0.95); // Pure white card
-        cardGraphics.lineStyle(2, 0xcbd5e1, 1); // Slate 300 border
-        cardGraphics.fillRoundedRect(cardX, cardY, cardW, cardH, 12);
-        cardGraphics.strokeRoundedRect(cardX, cardY, cardW, cardH, 12);
-        this.listContainer.add(cardGraphics);
-
-        // Starter Pack Image
-        const packImg = this.add.image(0, cardY + 70, "starter_pack_frame").setDisplaySize(140, 100);
-        this.listContainer.add(packImg);
-
-        // Title
-        const titleTxt = this.add.text(0, cardY + 135, t("starter_pack"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "18px",
-            color: "#1e3a8a" // Sleek Navy blue
-        }).setOrigin(0.5);
-        titleTxt.setStroke("#ffffff", 3);
-        this.listContainer.add(titleTxt);
-
-        // Content description
-        const desc1 = this.add.text(0, cardY + 160, t("starter_pack_desc"), {
-            fontFamily: "Nunito, Arial, sans-serif",
-            fontSize: "12px",
-            fontWeight: "800",
-            color: "#0f172a"
-        }).setOrigin(0.5);
-        this.listContainer.add(desc1);
-
-        // Price text
-        const priceTxt = this.add.text(0, cardY + 185, t("price_ton", { amount: 1.5 }), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "15px",
-            color: "#d97706"
-        }).setOrigin(0.5);
-        priceTxt.setStroke("#ffffff", 3);
-        this.listContainer.add(priceTxt);
-
-        // Buy button using btn_blank sprite
-        const btnW = 100;
-        const btnH = 32;
-        const btnX = 0;
-        const btnY = cardY + 220;
-
-        const btn = this.add.image(btnX, btnY, "btn_blank").setDisplaySize(btnW, btnH).setInteractive({ useHandCursor: true });
-        btn.setTint(0x16a34a); // Green tint
-        this.listContainer.add(btn);
-
-        const btnTxt = this.add.text(btnX, btnY, t("buy_now"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "13px",
-            color: "#ffffff"
-        }).setOrigin(0.5);
-        btnTxt.setStroke("#14532d", 3);
-        btnTxt.setShadow(1, 1, "#000000", 1, true, true);
-        this.listContainer.add(btnTxt);
-
-        // Micro-interaction hover/down states
-        btn.on("pointerover", () => {
-            btn.setScale((btnW / btn.width) * 1.05, (btnH / btn.height) * 1.05);
-            btnTxt.setScale(1.05);
-        });
-        btn.on("pointerout", () => {
-            btn.setScale(btnW / btn.width, btnH / btn.height);
-            btnTxt.setScale(1.0);
-        });
-        btn.on("pointerdown", () => {
-            btn.setScale((btnW / btn.width) * 0.95, (btnH / btn.height) * 0.95);
-            btnTxt.setScale(0.95);
-        });
-
-        btn.on("pointerup", async () => {
-            this.showConfirmPackModal(async () => {
-                this.createloadingOverlay();
-                try {
-                    const res = await api.BuyPack("starter");
-                    if (res && res.success) {
-                        const balance = res.Balance || res.balance || {};
-                        state.user.crystal = balance.CRYSTAL !== undefined ? balance.CRYSTAL : (balance.crystal !== undefined ? balance.crystal : 0);
-                        state.user.gold = balance.GOLD !== undefined ? balance.GOLD : (balance.gold !== undefined ? balance.gold : 0);
-                        state.user.ton = balance.TON !== undefined ? balance.TON : (balance.ton !== undefined ? balance.ton : 0);
-                        state.user.eggs = balance.EGGS !== undefined ? balance.EGGS : (balance.eggs !== undefined ? balance.eggs : 0);
-                        this.USER = state.user;
-                        this.items = res.Items || res.items || {};
-
-                        this.updateResourceBar();
-                        showNotification(this, t("starter_pack_success"));
-                    } else {
-                        showNotification(this, res.reason || t("purchase_failed"));
-                    }
-                } catch (err) {
-                    console.error("Pack purchase failed", err);
-                    showNotification(this, t("network_error_buy"));
-                } finally {
-                    this.destroyloadingOverlay();
-                }
-            });
-        });
-
-        this.listHeight = cardY + cardH + 20;
-    }
-
-    showConfirmPackModal(onConfirm) {
-        const modalContainer = this.add.container(0, 0).setDepth(301);
-
-        const blocker = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.6)
-            .setOrigin(0)
-            .setInteractive();
-        modalContainer.add(blocker);
-
-        const modalW = 280;
-        const modalH = 220;
-        const modalX = this.width / 2;
-        const modalY = this.height / 2;
-
-        // Draw dialog card - Bright light theme with dark slate outline
-        const card = this.add.graphics();
-        card.fillStyle(0xf8fafc, 0.98); // Slate 50
-        card.lineStyle(2.5, 0x0f172a, 1);  // Slate 900
-        card.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 12);
-        card.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 12);
-        modalContainer.add(card);
-
-        // Title
-        const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 25, t("buy_starter_pack"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "16px",
-            color: "#0f172a"
-        }).setOrigin(0.5);
-        titleTxt.setStroke("#ffffff", 3);
-        modalContainer.add(titleTxt);
-
-        // Pack Image inside Confirm Modal
-        const icon = this.add.image(modalX, modalY - 25, "starter_pack_frame").setDisplaySize(90, 64);
-        modalContainer.add(icon);
-
-        // Price Tag
-        const priceTxt = this.add.text(modalX, modalY + 32, t("cost_ton", { amount: 1.5 }), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "14px",
-            color: "#d97706"
-        }).setOrigin(0.5);
-        priceTxt.setStroke("#ffffff", 3);
-        modalContainer.add(priceTxt);
-
-        // Cancel Button using btn_blank tinted dark slate
-        const btnCancel = this.add.image(modalX - 55, modalY + 75, "btn_blank").setDisplaySize(90, 28).setInteractive({ useHandCursor: true });
-        btnCancel.setTint(0x475569);
-        modalContainer.add(btnCancel);
-
-        const cancelTxt = this.add.text(modalX - 55, modalY + 75, t("cancel"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "12px",
-            color: "#ffffff"
-        }).setOrigin(0.5);
-        cancelTxt.setStroke("#334155", 2);
-        modalContainer.add(cancelTxt);
-
-        btnCancel.on("pointerup", () => {
-            modalContainer.destroy();
-        });
-
-        // Confirm Button using btn_blank tinted green
-        const btnConfirm = this.add.image(modalX + 55, modalY + 75, "btn_blank").setDisplaySize(90, 28).setInteractive({ useHandCursor: true });
-        btnConfirm.setTint(0x16a34a);
-        modalContainer.add(btnConfirm);
-
-        const confirmTxt = this.add.text(modalX + 55, modalY + 75, t("confirm"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "12px",
-            color: "#ffffff"
-        }).setOrigin(0.5);
-        confirmTxt.setStroke("#14532d", 2);
-        modalContainer.add(confirmTxt);
-
-        btnConfirm.on("pointerup", () => {
-            modalContainer.destroy();
-            onConfirm();
-        });
     }
 
     renderItemsTab() {
@@ -884,7 +695,11 @@ export class ShopScene extends Phaser.Scene {
                 const currencyKey = fromSymbol.toLowerCase();
                 if (currencyKey === "ton" || currencyKey === "gold" || currencyKey === "eggs" || currencyKey === "crystal") {
                     playerBalance = this.USER[currencyKey] !== undefined ? this.USER[currencyKey] : (this.USER[fromSymbol] || 0);
-                    maxTrade = Math.floor(playerBalance / fromRateVal);
+                    if (currencyKey === "ton") {
+                        maxTrade = Math.floor(playerBalance * 10) / 10;
+                    } else {
+                        maxTrade = Math.floor(playerBalance / fromRateVal);
+                    }
                 } else {
                     const itemInvKey = Object.keys(this.items).find(k => k.toLowerCase() === fromSymbol.toLowerCase());
                     playerBalance = itemInvKey ? this.items[itemInvKey] : 0;
@@ -1126,7 +941,7 @@ export class ShopScene extends Phaser.Scene {
         const toIcon = this.add.image(modalX + 45, modalY - 45, toIconKey).setDisplaySize(36, 36);
         modalContainer.add(toIcon);
 
-        let qty = 1; // Number of "rate parts" being traded
+        let qty = fromSymbol.toUpperCase() === "TON" ? 0.1 : 1; // Number of "rate parts" being traded
 
         // Minus Button using btn_blank tinted red
         const btnMinus = this.add.image(modalX - 50, modalY + 20, "btn_blank").setDisplaySize(32, 32).setInteractive({ useHandCursor: true });
@@ -1137,6 +952,19 @@ export class ShopScene extends Phaser.Scene {
         const btnPlus = this.add.image(modalX + 50, modalY + 20, "btn_blank").setDisplaySize(32, 32).setInteractive({ useHandCursor: true });
         btnPlus.setTint(0x22c55e);
         modalContainer.add(btnPlus);
+
+        // Max Button using btn_blank tinted amber
+        const btnMax = this.add.image(modalX + 95, modalY + 20, "btn_blank").setDisplaySize(46, 28).setInteractive({ useHandCursor: true });
+        btnMax.setTint(0xd97706);
+        modalContainer.add(btnMax);
+
+        const maxText = this.add.text(modalX + 95, modalY + 20, "MAX", {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "12px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        maxText.setStroke("#78350f", 2);
+        modalContainer.add(maxText);
 
         // Normal text signs for minus, plus, and counter
         const minusText = this.add.text(modalX - 50, modalY + 20, "-", {
@@ -1160,7 +988,7 @@ export class ShopScene extends Phaser.Scene {
         qtyBg.strokeRoundedRect(modalX - 22, modalY + 5, 44, 30, 4);
         modalContainer.add(qtyBg);
 
-        const qtyText = this.add.text(modalX, modalY + 20, qty, {
+        const qtyText = this.add.text(modalX, modalY + 20, fromSymbol.toUpperCase() === "TON" ? qty.toFixed(1) : qty, {
             fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
             fontSize: "18px",
             color: "#0f172a"
@@ -1186,28 +1014,51 @@ export class ShopScene extends Phaser.Scene {
         const updateExchangeTexts = () => {
             const fromAmt = qty * fromRate;
             const toAmt = qty * toRate;
+            const formattedFromAmt = fromAmt % 1 !== 0 ? fromAmt.toFixed(1) : fromAmt.toString();
             const formattedToAmt = toAmt % 1 !== 0 ? toAmt.toFixed(4) : toAmt.toString();
 
-            tradeQtyTxt.setText(t("send", { amount: fromAmt, currency: fromSymbol }));
+            tradeQtyTxt.setText(t("send", { amount: formattedFromAmt, currency: fromSymbol }));
             receiveTxt.setText(t("get", { amount: formattedToAmt, currency: toSymbol }));
         };
 
         updateExchangeTexts();
 
         btnMinus.on("pointerup", () => {
-            if (qty > 1) {
-                qty--;
-                qtyText.setText(qty);
-                updateExchangeTexts();
+            if (fromSymbol.toUpperCase() === "TON") {
+                if (qty > 0.15) {
+                    qty = parseFloat((qty - 0.1).toFixed(1));
+                    qtyText.setText(qty.toFixed(1));
+                    updateExchangeTexts();
+                }
+            } else {
+                if (qty > 1) {
+                    qty--;
+                    qtyText.setText(qty);
+                    updateExchangeTexts();
+                }
             }
         });
 
         btnPlus.on("pointerup", () => {
-            if (qty < maxVal) {
-                qty++;
-                qtyText.setText(qty);
-                updateExchangeTexts();
+            if (fromSymbol.toUpperCase() === "TON") {
+                if (qty + 0.05 < maxVal) {
+                    qty = parseFloat((qty + 0.1).toFixed(1));
+                    qtyText.setText(qty.toFixed(1));
+                    updateExchangeTexts();
+                }
+            } else {
+                if (qty < maxVal) {
+                    qty++;
+                    qtyText.setText(qty);
+                    updateExchangeTexts();
+                }
             }
+        });
+
+        btnMax.on("pointerup", () => {
+            qty = maxVal;
+            qtyText.setText(fromSymbol.toUpperCase() === "TON" ? qty.toFixed(1) : qty);
+            updateExchangeTexts();
         });
 
         // Cancel Button using btn_blank tinted slate

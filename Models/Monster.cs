@@ -32,9 +32,16 @@ namespace monster_world.Models
         public bool StakedInCollector { get; set; } = false;
         public DateTime? CollectorDepositTime { get; set; } = null;
         public DateTime? CollectorLastClaimTime { get; set; } = null;
-        public string CollectorFocus { get; set; } = "GOLD";
+        public int CollectionHourCap { get; set; } = 24;
         public string CapturedMap { get; set; } = "";
+        public string CollectorFocus { get; set; } = "GOLD";
         public List<string> Logs { get; set; } = new List<string>();
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public double GoldRate { get; set; } = 0;
+
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public double CrystalRate { get; set; } = 0;
 
 
         public void HealMonster(int healing, string action)
@@ -63,7 +70,7 @@ namespace monster_world.Models
 
             if (!IsRegenerating)
             {
-                if (HP <= 0)
+                if (HP < MaxHP)
                 {
                     IsRegenerating = true;
                 }

@@ -449,9 +449,340 @@
                     "getsAt": 10
                 }
             ]
+        },
+        {
+            "monsterid": "quacko",
+            "title": "QUACKO",
+            "desc": "Quackos fly using|their big leaf to escape|cold season.",
+            "element": "earth",
+            "rarity": "rare",
+            "role": "control",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "leaf_strike",
+                    "getsAt": 3
+                },
+                {
+                    "id": "rage",
+                    "getsAt": 5
+                },
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 7
+                },
+                {
+                    "id": "leaf_strike",
+                    "getsAt": 7
+                },
+                {
+                    "id": "spores",
+                    "getsAt": 10
+                },
+                {
+                    "id": "rage",
+                    "getsAt": 10
+                },
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 10
+                },
+                {
+                    "id": "spores",
+                    "getsAt": 13
+                },
+                {
+                    "id": "rainbow",
+                    "getsAt": 15
+                },
+                {
+                    "id": "leaf_strike",
+                    "getsAt": 18
+                },
+                {
+                    "id": "rainbow",
+                    "getsAt": 20
+                }
+            ]
+        },
+        {
+            "monsterid": "lavapede",
+            "title": "LAVAPEDE",
+            "desc": "Despite their small size,|Lavapedes are known|to start forest fires.",
+            "element": "fire",
+            "rarity": "rare",
+            "role": "defensive",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 4
+                },
+                {
+                    "id": "rain_fire",
+                    "getsAt": 4
+                },
+                {
+                    "id": "smoke",
+                    "getsAt": 7
+                },
+                {
+                    "id": "heatwave",
+                    "getsAt": 10
+                },
+                {
+                    "id": "enflame",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "sparkat",
+            "title": "SPARKAT",
+            "desc": "It is said that looking|into a Sparkat eyes|may bring bad luck.",
+            "element": "fire",
+            "rarity": "rare",
+            "role": "aggressive",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "bite",
+                    "getsAt": 3
+                },
+                {
+                    "id": "poison_bite",
+                    "getsAt": 5
+                },
+                {
+                    "id": "smoke",
+                    "getsAt": 5
+                },
+                {
+                    "id": "enflame",
+                    "getsAt": 7
+                },
+                {
+                    "id": "volcano",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "kitnex",
+            "title": "SPARKAT",
+            "desc": "It is said that looking|into a Sparkat eyes|may bring bad luck.",
+            "element": "fire",
+            "rarity": "rare",
+            "role": "aggressive",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "bite",
+                    "getsAt": 3
+                },
+                {
+                    "id": "poison_bite",
+                    "getsAt": 5
+                },
+                {
+                    "id": "smoke",
+                    "getsAt": 5
+                },
+                {
+                    "id": "enflame",
+                    "getsAt": 7
+                },
+                {
+                    "id": "volcano",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "rexaroo",
+            "title": "REXAROO",
+            "desc": "Rexaroos have a|pocket in their belly|used to hold babies.",
+            "element": "fire",
+            "rarity": "rare",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "bite",
+                    "getsAt": 4
+                },
+                {
+                    "id": "smoke",
+                    "getsAt": 4
+                },
+                {
+                    "id": "poison_bite",
+                    "getsAt": 7
+                }
+            ]
         }
     ],
     "epic": [
+        {
+            "monsterid": "torchip",
+            "title": "TORCHIP",
+            "desc": "Torchips are usually|friendly, but their flames|may grow very hot.",
+            "element": "fire",
+            "rarity": "epic",
+            "role": "aggressive",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "rain_fire",
+                    "getsAt": 3
+                },
+                {
+                    "id": "quick_attack",
+                    "getsAt": 5
+                },
+                {
+                    "id": "enflame",
+                    "getsAt": 7
+                },
+                {
+                    "id": "hellfire",
+                    "getsAt": 10
+                },
+                {
+                    "id": "magma",
+                    "getsAt": 13
+                }
+            ]
+        },
+        {
+            "monsterid": "kikflick",
+            "title": "KIKFLICK",
+            "desc": "Kikflicks climb on trees|to find fruits they can|later plant elsewhere.",
+            "element": "earth",
+            "rarity": "epic",
+            "role": "speed",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "leaf_strike",
+                    "getsAt": 3
+                },
+                {
+                    "id": "shockwave",
+                    "getsAt": 5
+                },
+                {
+                    "id": "rage",
+                    "getsAt": 7
+                },
+                {
+                    "id": "rainbow",
+                    "getsAt": 13
+                },
+                {
+                    "id": "spores",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "jeempy",
+            "title": "JEEMPY",
+            "desc": "Commonly found on|green hills, Jeempys|feed on grass.",
+            "element": "earth",
+            "rarity": "epic",
+            "role": "defensive",
+            "abilities": [
+                {
+                    "id": "sonic_waves",
+                    "getsAt": 1
+                },
+                {
+                    "id": "quick_attack",
+                    "getsAt": 4
+                },
+                {
+                    "id": "leaf_strike",
+                    "getsAt": 4
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 7
+                },
+                {
+                    "id": "eating_plant",
+                    "getsAt": 10
+                },
+                {
+                    "id": "poison_gas",
+                    "getsAt": 13
+                },
+                {
+                    "id": "rainbow",
+                    "getsAt": 15
+                }
+            ]
+        },
+        {
+            "monsterid": "menza",
+            "title": "MENZA",
+            "desc": "Lurking on trees,|Menzas are quick to|attack any threat.",
+            "element": "fire",
+            "evolvesTo": "pangrill",
+            "rarity": "epic",
+            "role": "aggressive",
+            "abilities": [
+                {
+                    "id": "scratch",
+                    "getsAt": 1
+                },
+                {
+                    "id": "rain_fire",
+                    "getsAt": 3
+                },
+                {
+                    "id": "rage",
+                    "getsAt": 3
+                },
+                {
+                    "id": "heatwave",
+                    "getsAt": 5
+                },
+                {
+                    "id": "fireworks",
+                    "getsAt": 7
+                },
+                {
+                    "id": "magma",
+                    "getsAt": 10
+                },
+                {
+                    "id": "hellfire",
+                    "getsAt": 15
+                }
+            ]
+        },
         {
             "monsterid": "cobrix",
             "desc": "",
@@ -509,6 +840,14 @@
                 {
                     "id": "fire_spin",
                     "getsAt": 13
+                },
+                {
+                    "id": "magma",
+                    "getsAt": 15
+                },
+                {
+                    "id": "hellfire",
+                    "getsAt": 18
                 }
             ]
         },
@@ -577,6 +916,10 @@
                 {
                     "id": "haunt",
                     "getsAt": 10
+                },
+                {
+                    "id": "dark_beam",
+                    "getsAt": 13
                 }
             ]
         },
@@ -676,6 +1019,10 @@
                     "getsAt": 1
                 },
                 {
+                    "id": "magma",
+                    "getsAt": 2
+                },
+                {
                     "id": "tornado",
                     "getsAt": 4
                 },
@@ -725,6 +1072,10 @@
                 {
                     "id": "earth_revenge_1",
                     "getsAt": 13
+                },
+                {
+                    "id": "ion_beam",
+                    "getsAt": 15
                 }
             ]
         },
@@ -760,6 +1111,10 @@
                 {
                     "id": "avalanche",
                     "getsAt": 13
+                },
+                {
+                    "id": "ice_splash",
+                    "getsAt": 15
                 }
             ]
         },
@@ -775,6 +1130,10 @@
                 {
                     "id": "poison_bite",
                     "getsAt": 1
+                },
+                {
+                    "id": "confuse",
+                    "getsAt": 3
                 },
                 {
                     "id": "shockwave",
@@ -896,15 +1255,15 @@
                 },
                 {
                     "id": "thunderstorm",
-                    "getsAt": 20
+                    "getsAt": 15
                 },
                 {
                     "id": "shockwave",
-                    "getsAt": 22
+                    "getsAt": 20
                 },
                 {
                     "id": "static_shock",
-                    "getsAt": 25
+                    "getsAt": 22
                 }
             ]
         }

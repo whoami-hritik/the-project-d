@@ -88,6 +88,10 @@ export class InventoryScene extends Phaser.Scene {
             if (!checkClick(pointer)) return;
             this.scene.stop("InventoryScene");
         });
+
+        this.events.on("shutdown", () => {
+            // No cleanup needed
+        });
     }
 
     nextIndex() {
@@ -173,6 +177,7 @@ export class InventoryScene extends Phaser.Scene {
                     });
 
                     const MONSTER = this.add.container(0, 0, [shadow, team_monster, monsterPane, hpBarBG, hpBar, titleContainer]);
+
                     this.teamSlotsContainer.add(MONSTER);
 
                     team_monster.on("pointerup", (pointer) => {
@@ -304,6 +309,182 @@ export class InventoryScene extends Phaser.Scene {
                 });
             }
         }
+    }
+
+
+    showMonsterInfo(monster) {
+        const container = this.add.container(0, 0);
+        container.setDepth(100);
+
+        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.5).setOrigin(0);
+        overlay.setInteractive();
+
+        overlay.on("pointerup", () => {
+            container.destroy();
+        });
+
+        const info_panel = this.add.image(0, 410, `info_${monster.rarity}_panel`).setOrigin(0);
+
+        const monsterImg = this.add.image(200, info_panel.y + info_panel.displayHeight / 2 - 15, `front_${monster.id}`).setOrigin(0, 1);
+        monsterImg.setDisplaySize(monsterImg.displayWidth / 1.5, monsterImg.displayHeight / 1.5);
+
+        const monster_level = this.add.text(15, 464, `Lv ${monster.level}`, {
+            fontFamily: "Lilita One",
+            fontSize: "12px",
+            color: "#000000"
+        }).setOrigin(0);
+
+        const monster_name = this.add.text(15, 480, monster.title, {
+            fontFamily: "Lilita One",
+            fontSize: "20px",
+            color: "#ffffff"
+        }).setOrigin(0);
+        monster_name.setStroke("#000000", 2);
+
+        const element_symbol = this.add.image(monster_name.x + monster_name.displayWidth + 2, monster_name.y - 5, `symbol_${monster.element}`).setOrigin(0);
+        element_symbol.setDisplaySize(element_symbol.displayWidth / 1.3, element_symbol.displayHeight / 1.3);
+
+        // Dynamically compute farming rates
+        const getBaseCollectorRates = (r) => {
+            const rLower = (r || "common").toLowerCase();
+            if (rLower === "rare") return { gold: 5, crystal: 0 };
+            if (rLower === "epic") return { gold: 5, crystal: 2 };
+            if (rLower === "legendary") return { gold: 10, crystal: 3 };
+            return { gold: 3, crystal: 0 };
+        };
+
+        const getCollectorLevelMultiplier = (lvl) => {
+            if (lvl <= 3) return 1;
+            if (lvl <= 5) return 1.1;
+            if (lvl <= 8) return 1.2;
+            if (lvl <= 10) return 1.3;
+            if (lvl <= 15) return 1.4;
+            if (lvl <= 20) return 1.5;
+            if (lvl <= 25) return 1.7;
+            return 2;
+        };
+
+        const baseRates = getBaseCollectorRates(monster.rarity || monster.Rarity);
+        const levelVal = monster.level || monster.Level || 1;
+        const mult = getCollectorLevelMultiplier(levelVal);
+        const goldRateVal = (monster.goldRate !== undefined && monster.goldRate !== null) ? monster.goldRate : (baseRates.gold * mult);
+        const crystalRateVal = (monster.crystalRate !== undefined && monster.crystalRate !== null) ? monster.crystalRate : (baseRates.crystal * mult);
+
+        const goldFarm = this.add.image(10, 515, "hud_gold").setOrigin(0);
+        const goldFarmTxt = this.add.text(goldFarm.x + 45, goldFarm.y + 10, `${goldRateVal.toFixed(1).replace(/\.0$/, "")}/H`, {
+            fontFamily: "Lilita One",
+            fontSize: "14px",
+            color: "#ffffff"
+        }).setOrigin(0);
+
+        // Add base layers to container first
+        container.add([overlay, info_panel, monsterImg, monster_level, monster_name, element_symbol, goldFarm, goldFarmTxt]);
+
+        const crystalFarm = this.add.image(goldFarm.x, goldFarm.y + goldFarm.displayHeight + 10, "hud_crystal").setOrigin(0);
+        const crystalFarmTxt = this.add.text(crystalFarm.x + 45, crystalFarm.y + 10, `${crystalRateVal.toFixed(1).replace(/\.0$/, "")}/H`, {
+            fontFamily: "Lilita One",
+            fontSize: "14px",
+            color: "#ffffff"
+        }).setOrigin(0);
+        container.add([crystalFarm, crystalFarmTxt]);
+
+        const monsterHashBar = this.add.image(19, 635, "info_hashbar").setOrigin(0);
+
+        const monsterHash = this.add.text(70, 645, monster.instanceId, {
+            fontFamily: "Lilita One",
+            fontSize: "14px",
+            color: "#ffffff"
+        }).setOrigin(0);
+
+        container.add([monsterHashBar, monsterHash]);
+
+        // Draw Interactive Action Buttons (must be added after background components)
+        let teamBtn;
+        if (this.isInTeam(monster)) {
+            // Monster is in the team. Button shown: "In Team". Clicking removes it from the team.
+            teamBtn = this.add.image(20, 683, "btn_out_team").setOrigin(0).setInteractive({ useHandCursor: true });
+            container.add(teamBtn);
+            teamBtn.on("pointerdown", () => {
+                this.removeFromTeam(monster);
+                container.destroy();
+                this.showMonsterInfo(monster);
+            });
+        } else {
+            // Monster is out of the team. Button shown: "Out of Team". Clicking adds it to the team.
+            teamBtn = this.add.image(20, 683, "btn_in_team").setOrigin(0).setInteractive({ useHandCursor: true });
+            container.add(teamBtn);
+            teamBtn.on("pointerdown", () => {
+                this.addToTeam(monster);
+                container.destroy();
+                this.showMonsterInfo(monster);
+            });
+        }
+
+        const isStaked = monster.stakedInCollector || monster.StakedInCollector;
+        let stakeBtn;
+        if (!isStaked) {
+            stakeBtn = this.add.image(207, 683, "btn_stake").setOrigin(0).setInteractive({ useHandCursor: true });
+            container.add(stakeBtn);
+            stakeBtn.on("pointerdown", () => {
+                this.stakeMonsterFlow(monster);
+                container.destroy();
+            });
+        } else {
+            stakeBtn = this.add.image(207, 683, "btn_unstake").setOrigin(0).setInteractive({ useHandCursor: true });
+            container.add(stakeBtn);
+            stakeBtn.on("pointerdown", () => {
+                this.unstakeMonsterFlow(monster);
+                container.destroy();
+            });
+        }
+
+        const btn_list_market = this.add.image(20, 742, "btn_list_market").setOrigin(0).setInteractive({ useHandCursor: true });
+        container.add(btn_list_market);
+
+        btn_list_market.on("pointerup", async (pointer) => {
+            if (!checkClick(pointer)) return;
+
+            utility.createloadingOverlay(this);
+            let RecommendedPrice = 0.1;
+            try {
+                const res = await api.recommendMarketplacePrice(monster.instanceId);
+                RecommendedPrice = (res && res.success) ? res.recommendedPrice : 0.1;
+            } catch (err) {
+                console.error(err);
+            } finally {
+                utility.destroyloadingOverlay(this);
+            }
+
+            this.scene.launch("KeyboardScene", {
+                type: "numeric",
+                value: RecommendedPrice,
+                placeholder: "Enter price in TON...",
+                onCommit: async (val) => {
+                    const price = parseFloat(val);
+                    if (isNaN(price) || price <= 0) {
+                        showNotification(this, "Please enter a valid price greater than 0");
+                        return;
+                    }
+
+                    utility.createloadingOverlay(this);
+                    try {
+                        const response = await api.listInMarketplace(monster.instanceId, "monster", price);
+                        if (response && response.success) {
+                            showNotification(this, "Monster successfully listed in the marketplace!");
+                            container.destroy();
+                            this.scene.restart();
+                        } else {
+                            showNotification(this, response?.reason || "Failed to list monster");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showNotification(this, "Connection error.");
+                    } finally {
+                        utility.destroyloadingOverlay(this);
+                    }
+                }
+            });
+        });
     }
 
     showUnlockSlotModal(slotIndex) {
@@ -448,49 +629,92 @@ export class InventoryScene extends Phaser.Scene {
 
     // ─── Action button (In Team / Out Team) ───────────────────────────────────
 
-    showActionButton(cardX, cardY, label, callback) {
+    showActionButtons(cardX, cardY, monster) {
         if (this.actionBtn) { this.actionBtn.destroy(); this.actionBtn = null; }
 
-        const btnX = cardX + slotWidth / 2;
-        const btnY = cardY - 14;
+        this.actionBtn = this.add.container(0, 0).setDepth(30);
 
-        this.actionBtn = this.add.container(btnX, btnY).setDepth(30);
+        const isStaked = monster.stakedInCollector || monster.StakedInCollector;
+        const isEligible = (this.eligibleSpecies || []).includes(monster.id.toLowerCase());
+        const inTeam = this.isInTeam(monster);
 
-        const width = 110;
-        const height = 28;
+        let buttons = [];
+
+        if (isStaked) {
+            buttons.push({
+                label: "UNSTAKE",
+                callback: () => {
+                    this.unstakeMonsterFlow(monster);
+                },
+                color: 0xff3b30
+            });
+        } else {
+            buttons.push({
+                label: inTeam ? "OUT TEAM" : "IN TEAM",
+                callback: () => {
+                    if (inTeam) {
+                        this.removeFromTeam(monster);
+                    } else {
+                        this.addToTeam(monster);
+                    }
+                },
+                color: inTeam ? 0xff9500 : 0x34c759
+            });
+
+            if (isEligible) {
+                buttons.push({
+                    label: "STAKE",
+                    callback: () => {
+                        this.stakeMonsterFlow(monster);
+                    },
+                    color: 0x00c7be
+                });
+            }
+        }
+
+        const btnHeight = 26;
+        if (buttons.length === 1) {
+            const btnX = cardX + slotWidth / 2;
+            const btnY = cardY - 14;
+            const b = buttons[0];
+            const container = this.createSingleButton(btnX, btnY, 110, btnHeight, b.label, b.color, b.callback);
+            this.actionBtn.add(container);
+        } else if (buttons.length === 2) {
+            const btnWidth = 75;
+            const btnY = cardY - 14;
+
+            const btn1X = cardX + slotWidth / 2 - 40;
+            const b1 = buttons[0];
+            const container1 = this.createSingleButton(btn1X, btnY, btnWidth, btnHeight, b1.label, b1.color, b1.callback);
+
+            const btn2X = cardX + slotWidth / 2 + 40;
+            const b2 = buttons[1];
+            const container2 = this.createSingleButton(btn2X, btnY, btnWidth, btnHeight, b2.label, b2.color, b2.callback);
+
+            this.actionBtn.add([container1, container2]);
+        }
+    }
+
+    createSingleButton(x, y, width, height, label, color, callback) {
+        const btn = this.add.container(x, y);
+
         const bg = this.add.graphics();
 
-        if (label === "OUT TEAM") {
-            // Out Team: Red/Orange warning theme with outer glow
-            bg.lineStyle(3, 0xff3b30, 0.4);
-            bg.strokeRoundedRect(-width / 2 - 1, -height / 2 - 1, width + 2, height + 2, 7);
+        bg.lineStyle(3, color, 0.4);
+        bg.strokeRoundedRect(-width / 2 - 1, -height / 2 - 1, width + 2, height + 2, 7);
 
-            bg.lineStyle(1.5, 0xffffff, 0.9);
-            bg.strokeRoundedRect(-width / 2, -height / 2, width, height, 6);
+        bg.lineStyle(1.5, 0xffffff, 0.9);
+        bg.strokeRoundedRect(-width / 2, -height / 2, width, height, 6);
 
-            bg.fillStyle(0xff3b30, 1);
-            bg.fillRoundedRect(-width / 2, -height / 2, width, height, 6);
+        bg.fillStyle(color, 1);
+        bg.fillRoundedRect(-width / 2, -height / 2, width, height, 6);
 
-            bg.fillStyle(0xffffff, 0.2);
-            bg.fillRoundedRect(-width / 2, -height / 2, width, height / 2, 4);
-        } else {
-            // In Team: Green/Cyan positive theme with outer glow
-            bg.lineStyle(3, 0x00c7be, 0.4);
-            bg.strokeRoundedRect(-width / 2 - 1, -height / 2 - 1, width + 2, height + 2, 7);
-
-            bg.lineStyle(1.5, 0xffffff, 0.9);
-            bg.strokeRoundedRect(-width / 2, -height / 2, width, height, 6);
-
-            bg.fillStyle(0x34c759, 1);
-            bg.fillRoundedRect(-width / 2, -height / 2, width, height, 6);
-
-            bg.fillStyle(0xffffff, 0.2);
-            bg.fillRoundedRect(-width / 2, -height / 2, width, height / 2, 4);
-        }
+        bg.fillStyle(0xffffff, 0.2);
+        bg.fillRoundedRect(-width / 2, -height / 2, width, height / 2, 4);
 
         const btnText = this.add.text(0, 0, label, {
             fontFamily: "Lilita One, sans-serif",
-            fontSize: "13px",
+            fontSize: width < 90 ? "10px" : "13px",
             color: "#ffffff",
             fontStyle: "bold"
         }).setOrigin(0.5);
@@ -499,13 +723,11 @@ export class InventoryScene extends Phaser.Scene {
         const hitArea = this.add.rectangle(0, 0, width, height, 0x000000, 0)
             .setInteractive({ useHandCursor: true });
 
-        this.actionBtn.add([bg, btnText, hitArea]);
-        this.actionBtn.setScale(0.7);
-        this.tweens.add({ targets: this.actionBtn, scale: 1, duration: 150, ease: "Back.Out" });
+        btn.add([bg, btnText, hitArea]);
 
         hitArea.on("pointerover", () => {
             this.tweens.add({
-                targets: this.actionBtn,
+                targets: btn,
                 scale: 1.1,
                 duration: 100,
                 ease: "Power1"
@@ -513,7 +735,7 @@ export class InventoryScene extends Phaser.Scene {
         });
         hitArea.on("pointerout", () => {
             this.tweens.add({
-                targets: this.actionBtn,
+                targets: btn,
                 scale: 1.0,
                 duration: 100,
                 ease: "Power1"
@@ -521,7 +743,7 @@ export class InventoryScene extends Phaser.Scene {
         });
         hitArea.on("pointerdown", () => {
             this.tweens.add({
-                targets: this.actionBtn,
+                targets: btn,
                 scale: 0.9,
                 duration: 50,
                 ease: "Power1"
@@ -532,10 +754,279 @@ export class InventoryScene extends Phaser.Scene {
             if (this.actionBtn) { this.actionBtn.destroy(); this.actionBtn = null; }
             callback();
         });
+
+        return btn;
     }
 
     dismissActionBtn() {
         if (this.actionBtn) { this.actionBtn.destroy(); this.actionBtn = null; }
+    }
+
+    stakeMonsterFlow(monster) {
+        const rarity = (monster.rarity || monster.Rarity || "common").toLowerCase();
+
+        function getCollectorLevelMultiplier(level) {
+            if (level <= 3) return 1.0;
+            if (level <= 5) return 1.1;
+            if (level <= 8) return 1.2;
+            if (level <= 10) return 1.3;
+            if (level <= 15) return 1.4;
+            if (level <= 20) return 1.5;
+            if (level <= 25) return 1.7;
+            return 2.0;
+        }
+
+        function getBaseCollectorRates(rText) {
+            const r = (rText || "common").toLowerCase().trim();
+            if (r === "rare") return { gold: 5, crystal: 0 };
+            if (r === "epic") return { gold: 5, crystal: 2 };
+            if (r === "legendary") return { gold: 10, crystal: 3 };
+            return { gold: 3, crystal: 0 };
+        }
+
+        const base = getBaseCollectorRates(monster.rarity || monster.Rarity);
+        const levelVal = monster.level || monster.Level || 1;
+        const mult = getCollectorLevelMultiplier(levelVal);
+        const goldRate = base.gold * mult;
+        const crystalRate = base.crystal * mult;
+
+        const goldRateStr = goldRate.toFixed(1).replace(/\.0$/, "") + "/H";
+        const crystalRateStr = crystalRate.toFixed(1).replace(/\.0$/, "") + "/H";
+
+        const blocker = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.6)
+            .setOrigin(0)
+            .setInteractive()
+            .setDepth(150);
+
+        const modalContainer = this.add.container(0, 0).setDepth(200);
+
+        const modalW = 280;
+        const modalH = 220;
+        const modalX = this.width / 2;
+        const modalY = this.height / 2;
+
+        const card = this.add.graphics();
+        card.fillStyle(0x000000, 0.35);
+        card.fillRoundedRect(modalX - modalW / 2 + 4, modalY - modalH / 2 + 4, modalW, modalH, 16);
+
+        card.fillStyle(0x1a1a2e, 1);
+        card.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
+
+        card.lineStyle(2, 0x00e1ff, 0.8);
+        card.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
+
+        modalContainer.add(card);
+
+        const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 25, "STAKE MONSTER", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "22px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        titleTxt.setStroke("#000000", 4);
+        modalContainer.add(titleTxt);
+
+        const bodyTxt = this.add.text(modalX, modalY - 20, `Do you want to stake this\nmonster in the collector\nto farm rewards?`, {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "14px",
+            color: "#ffffff",
+            align: "center"
+        }).setOrigin(0.5);
+        modalContainer.add(bodyTxt);
+
+        if (crystalRate > 0) {
+            const goldIcon = this.add.image(modalX - 65, modalY + 22, "item_gold").setOrigin(0.5).setDisplaySize(20, 20);
+            const goldTxt = this.add.text(modalX - 50, modalY + 22, goldRateStr, {
+                fontFamily: "Lilita One, sans-serif",
+                fontSize: "13px",
+                color: "#ffcc00"
+            }).setOrigin(0, 0.5);
+
+            const crystalIcon = this.add.image(modalX + 25, modalY + 22, "item_dust").setOrigin(0.5).setDisplaySize(20, 20);
+            const crystalTxt = this.add.text(modalX + 40, modalY + 22, crystalRateStr, {
+                fontFamily: "Lilita One, sans-serif",
+                fontSize: "13px",
+                color: "#c084fc"
+            }).setOrigin(0, 0.5);
+
+            modalContainer.add([goldIcon, goldTxt, crystalIcon, crystalTxt]);
+        } else {
+            const goldIcon = this.add.image(modalX - 35, modalY + 22, "item_gold").setOrigin(0.5).setDisplaySize(20, 20);
+            const goldTxt = this.add.text(modalX - 20, modalY + 22, goldRateStr, {
+                fontFamily: "Lilita One, sans-serif",
+                fontSize: "13px",
+                color: "#ffcc00"
+            }).setOrigin(0, 0.5);
+
+            modalContainer.add([goldIcon, goldTxt]);
+        }
+
+        const btnConfirm = this.add.graphics();
+        btnConfirm.fillStyle(0x34c759, 1);
+        btnConfirm.fillRoundedRect(modalX - 105, modalY + 50, 90, 32, 6);
+        btnConfirm.lineStyle(1.5, 0xffffff, 0.9);
+        btnConfirm.strokeRoundedRect(modalX - 105, modalY + 50, 90, 32, 6);
+
+        const confirmText = this.add.text(modalX - 60, modalY + 66, "CONFIRM", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "13px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        confirmText.setStroke("#000000", 3);
+
+        const hitConfirm = this.add.rectangle(modalX - 60, modalY + 66, 90, 32, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+
+        const btnCancel = this.add.graphics();
+        btnCancel.fillStyle(0xff3b30, 1);
+        btnCancel.fillRoundedRect(modalX + 15, modalY + 50, 90, 32, 6);
+        btnCancel.lineStyle(1.5, 0xffffff, 0.9);
+        btnCancel.strokeRoundedRect(modalX + 15, modalY + 50, 90, 32, 6);
+
+        const cancelText = this.add.text(modalX + 60, modalY + 66, "CANCEL", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "13px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        cancelText.setStroke("#000000", 3);
+
+        const hitCancel = this.add.rectangle(modalX + 60, modalY + 66, 90, 32, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+
+        modalContainer.add([btnConfirm, confirmText, hitConfirm, btnCancel, cancelText, hitCancel]);
+
+        hitConfirm.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            blocker.destroy();
+            modalContainer.destroy();
+            utility.createloadingOverlay(this);
+            api.stakeMonster(monster.instanceId).then(result => {
+                utility.destroyloadingOverlay(this);
+                if (result && result.success) {
+                    showNotification(this, "Staked successfully!");
+                    this.removeFromTeam(monster);
+                    this.updateInventory();
+                } else {
+                    showNotification(this, result?.reason || "Failed to stake.");
+                }
+            }).catch(err => {
+                utility.destroyloadingOverlay(this);
+                console.error(err);
+                showNotification(this, "Connection error.");
+            });
+        });
+
+        hitCancel.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            blocker.destroy();
+            modalContainer.destroy();
+        });
+    }
+
+    unstakeMonsterFlow(monster) {
+        const blocker = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.6)
+            .setOrigin(0)
+            .setInteractive()
+            .setDepth(150);
+
+        const modalContainer = this.add.container(0, 0).setDepth(200);
+
+        const modalW = 280;
+        const modalH = 220;
+        const modalX = this.width / 2;
+        const modalY = this.height / 2;
+
+        const card = this.add.graphics();
+        card.fillStyle(0x000000, 0.35);
+        card.fillRoundedRect(modalX - modalW / 2 + 4, modalY - modalH / 2 + 4, modalW, modalH, 16);
+
+        card.fillStyle(0x1a1a2e, 1);
+        card.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
+
+        card.lineStyle(2, 0xff3b30, 0.8);
+        card.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
+
+        modalContainer.add(card);
+
+        const titleTxt = this.add.text(modalX, modalY - modalH / 2 + 25, "UNSTAKE MONSTER", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "22px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        titleTxt.setStroke("#000000", 4);
+        modalContainer.add(titleTxt);
+
+        const remainingCapacity = monster.collectionHourCap !== undefined ? monster.collectionHourCap : 24;
+        const msg = remainingCapacity > 0
+            ? `Do you want to unstake this\nmonster? It has ${remainingCapacity} hours of\ncapacity left, which will\nbe preserved.`
+            : `Do you want to unstake this\nmonster? Its capacity is\nexhausted and it will go\non a 24-hour cooldown.`;
+
+        const bodyTxt = this.add.text(modalX, modalY - 15, msg, {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "13px",
+            color: "#ffffff",
+            align: "center"
+        }).setOrigin(0.5);
+        modalContainer.add(bodyTxt);
+
+        const btnConfirm = this.add.graphics();
+        btnConfirm.fillStyle(0xff3b30, 1);
+        btnConfirm.fillRoundedRect(modalX - 105, modalY + 50, 90, 32, 6);
+        btnConfirm.lineStyle(1.5, 0xffffff, 0.9);
+        btnConfirm.strokeRoundedRect(modalX - 105, modalY + 50, 90, 32, 6);
+
+        const confirmText = this.add.text(modalX - 60, modalY + 66, "UNSTAKE", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "13px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        confirmText.setStroke("#000000", 3);
+
+        const hitConfirm = this.add.rectangle(modalX - 60, modalY + 66, 90, 32, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+
+        const btnCancel = this.add.graphics();
+        btnCancel.fillStyle(0x8e8e93, 1);
+        btnCancel.fillRoundedRect(modalX + 15, modalY + 50, 90, 32, 6);
+        btnCancel.lineStyle(1.5, 0xffffff, 0.9);
+        btnCancel.strokeRoundedRect(modalX + 15, modalY + 50, 90, 32, 6);
+
+        const cancelText = this.add.text(modalX + 60, modalY + 66, "CANCEL", {
+            fontFamily: "Lilita One, sans-serif",
+            fontSize: "13px",
+            color: "#ffffff"
+        }).setOrigin(0.5);
+        cancelText.setStroke("#000000", 3);
+
+        const hitCancel = this.add.rectangle(modalX + 60, modalY + 66, 90, 32, 0x000000, 0)
+            .setInteractive({ useHandCursor: true });
+
+        modalContainer.add([btnConfirm, confirmText, hitConfirm, btnCancel, cancelText, hitCancel]);
+
+        hitConfirm.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            blocker.destroy();
+            modalContainer.destroy();
+            utility.createloadingOverlay(this);
+            api.unstakeMonster(monster.instanceId).then(result => {
+                utility.destroyloadingOverlay(this);
+                if (result && result.success) {
+                    showNotification(this, "Unstaked successfully!");
+                    this.updateInventory();
+                } else {
+                    showNotification(this, result?.reason || "Failed to unstake.");
+                }
+            }).catch(err => {
+                utility.destroyloadingOverlay(this);
+                console.error(err);
+                showNotification(this, "Connection error.");
+            });
+        });
+
+        hitCancel.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            blocker.destroy();
+            modalContainer.destroy();
+        });
     }
 
     // ─── Team logic ───────────────────────────────────────────────────────────
@@ -582,20 +1073,7 @@ export class InventoryScene extends Phaser.Scene {
     // ─── Card tap ─────────────────────────────────────────────────────────────
 
     onCardTap(monster, x, y) {
-        // Always update the big preview
-        //this.updateSelectedMonster(monster);
-
-        if (this.isInTeam(monster)) {
-            // Show "Out Team" button
-            this.showActionButton(x, y, "OUT TEAM", () => {
-                this.removeFromTeam(monster);
-            });
-        } else {
-            // Show "In Team" button
-            this.showActionButton(x, y, "IN TEAM", () => {
-                this.addToTeam(monster);
-            });
-        }
+        this.showMonsterInfo(monster);
     }
 
     // ─── Inventory list ───────────────────────────────────────────────────────
@@ -606,6 +1084,16 @@ export class InventoryScene extends Phaser.Scene {
             this.inventoryContainer.removeAll(true);
             this.cardMap = {};
             this.dismissActionBtn();
+
+            this.eligibleSpecies = [];
+            try {
+                const colStatus = await api.getCollectorStatus();
+                if (colStatus && colStatus.success && colStatus.eligibleMonsters) {
+                    this.eligibleSpecies = colStatus.eligibleMonsters.map(id => id.toLowerCase());
+                }
+            } catch (e) {
+                console.error("Failed to load collector status for eligibility", e);
+            }
 
             const result = await api.loadInventory(this.pageIndex);
             this.maxIndex = Math.ceil(result.totalMonsters / 6);
@@ -670,14 +1158,49 @@ export class InventoryScene extends Phaser.Scene {
                 rarityText.setStroke("#000000", 2.5);
 
                 const objects = [paneThumb, icon, lv, hpBg, hpBar, rarityText, ...letters, ...levArray];
+
+                // Draw a badge for Eligible or Staked
+                const isStaked = monster.stakedInCollector || monster.StakedInCollector;
+                const isEligible = this.eligibleSpecies.includes(monster.id.toLowerCase());
+
+                if (isStaked) {
+                    const badge = this.add.graphics();
+                    badge.fillStyle(0xef4444, 1); // red
+                    badge.fillRoundedRect(x + slotWidth - 55, y + 6, 50, 14, 4);
+                    badge.lineStyle(1, 0xffffff, 1);
+                    badge.strokeRoundedRect(x + slotWidth - 55, y + 6, 50, 14, 4);
+
+                    const badgeTxt = this.add.text(x + slotWidth - 30, y + 13, "STAKED", {
+                        fontFamily: "Lilita One, sans-serif",
+                        fontSize: "8px",
+                        color: "#ffffff"
+                    }).setOrigin(0.5);
+
+                    objects.push(badge, badgeTxt);
+                } else if (isEligible) {
+                    const badge = this.add.graphics();
+                    badge.fillStyle(0x10b981, 1); // emerald green
+                    badge.fillRoundedRect(x + slotWidth - 60, y + 6, 55, 14, 4);
+                    badge.lineStyle(1, 0xffffff, 1);
+                    badge.strokeRoundedRect(x + slotWidth - 60, y + 6, 55, 14, 4);
+
+                    const badgeTxt = this.add.text(x + slotWidth - 32, y + 13, "ELIGIBLE", {
+                        fontFamily: "Lilita One, sans-serif",
+                        fontSize: "8px",
+                        color: "#ffffff"
+                    }).setOrigin(0.5);
+
+                    objects.push(badge, badgeTxt);
+                }
+
                 this.cardMap[monster.instanceId] = { pane: paneThumb, objects, x, y };
 
                 // Add flat to container
                 objects.forEach(o => this.inventoryContainer.add(o));
 
-                // Dim if already in team on this page load
-                if (this.isInTeam(monster)) {
-                    objects.forEach(o => o.setAlpha(0.45));
+                // Dim if already in team on this page load or if staked
+                if (this.isInTeam(monster) || isStaked) {
+                    objects.forEach(o => o.setAlpha(isStaked ? 0.6 : 0.45));
                 }
 
                 // ALL cards are always clickable
@@ -747,29 +1270,6 @@ export class InventoryScene extends Phaser.Scene {
             });
         });
     }
-
-    // updateMonsterPane(monster) {
-    //     this.titleContainer.removeAll(true);
-    //     this.titleContainer.setPosition(10, -100);
-    //     this.updateMonsterHp(this.hpBar, monster);
-
-    // let lastTokenWidth = 0;
-    // Array.from(monster.title, chr => chr.charCodeAt(0)).forEach(token => {
-    //     const letter = this.add.image(lastTokenWidth, 0, `c${token}`).setOrigin(0);
-    //     letter.setDisplaySize(letter.displayWidth / 2, letter.displayHeight / 2);
-    //     lastTokenWidth += letter.displayWidth;
-    //     this.titleContainer.add(letter);
-    // });
-
-    // const level = "LV " + monster.level;
-    // let levelWidth = 0;
-    // Array.from(level, chr => chr.charCodeAt(0)).forEach(token => {
-    //     const letter = this.add.image(levelWidth, -30, `c${token}`).setOrigin(0);
-    //     letter.setDisplaySize(letter.displayWidth / 2, letter.displayHeight / 2);
-    //     levelWidth += letter.displayWidth;
-    //     this.titleContainer.add(letter);
-    // });
-    // }
 
     updateMonsterHp(hpBar, monster) {
         const cropWidth = (monster.hp / (monster.maxHP || 100)) * hpBar.width;

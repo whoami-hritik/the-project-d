@@ -63,7 +63,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.on("progress", (value) => {
             percentText.setText(parseInt(value * 100) + "%");
             progressBar.clear();
-            progressBar.fillStyle(0xd97706, 1); // Amber 600
+            progressBar.fillStyle(0x6D3BFF, 1); // Amber 600
             progressBar.fillRoundedRect(
                 width / 2 - 136,
                 height - 101,
@@ -94,6 +94,8 @@ export class PreloadScene extends Phaser.Scene {
         });
 
         this.load.image("world-bg", "images/hub/worldbg.png");
+
+        this.load.image("world_bg", "images/hub/bg.jpg");
         // world icons
         this.load.image("world-bootcamp-icon", "images/hub/bootcamp-icon.png");
         this.load.image("world-riverfall-icon", "images/hub/icon_cave.png");
@@ -120,6 +122,75 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("volcano-bg-2", "images/map/area_volcano/bg2.jpg");
 
 
+
+        //collector background
+        this.load.image("collector-bg-1", "images/map/area_collector/bg1.jpg");
+        this.load.image("collector-bg-2", "images/map/area_collector/bg2.jpg");
+
+        this.load.image("collector_panel", "images/collector/collector_bg.png");
+        this.load.image("collector_icon2", "images/collector/collector_icon2.png");
+        this.load.image("collector_panel_2", "images/collector/collector_panel_bg.png");
+
+        this.load.image("empty_slot", "images/collector/empty_slot.png");
+        this.load.image("slot_common", "images/collector/common_slot.png");
+        this.load.image("slot_rare", "images/collector/rare_slot.png");
+        this.load.image("slot_epic", "images/collector/epic_slot.png");
+        this.load.image("slot_legendary", "images/collector/legendary_slot.png");
+        this.load.image("species_info", "images/collector/species_info.png");
+        this.load.image("add_slot", "images/collector/add_slot.png");
+        this.load.image("btn_blank_collector", "images/collector/btn_blank_collector.png");
+        this.load.image("btn_claimall", "images/collector/btn_claimall.png");
+
+
+
+        //monster info and marketplace
+        this.load.image("marketplace_bg", "images/marketplace/bg.png");
+        this.load.image("btn_list_market", "images/marketplace/btn_list_market.png");
+        this.load.image("btn_list_market_crystal", "images/marketplace/btn_list_market_crystal.png");
+        this.load.image("btn_ton_pricetag", "images/marketplace/btn_tonpricetag.png");
+        this.load.image("btn_stake", "images/marketplace/btn_stake.png");
+        this.load.image("btn_in_team", "images/marketplace/btn_team.png");
+        this.load.image("hud_crystal", "images/marketplace/hud_crystal.png");
+        this.load.image("hud_gold", "images/marketplace/hud_gold.png");
+        this.load.image("icon_filter", "images/marketplace/icon_filter.png");
+        this.load.image("icon_wishlist", "images/marketplace/icon_wishlist.png");
+        this.load.image("info_common_panel", "images/marketplace/info_common_panel.png");
+        this.load.image("info_rare_panel", "images/marketplace/info_rare_panel.png");
+        this.load.image("info_epic_panel", "images/marketplace/info_epic_panel.png");
+        this.load.image("info_legendary_panel", "images/marketplace/info_legendary_panel.png");
+        this.load.image("info_hashbar", "images/marketplace/info_hashbar.png");
+        this.load.image("slot_common_market", "images/marketplace/slot_common.png");
+        this.load.image("slot_rare_market", "images/marketplace/slot_rare.png");
+        this.load.image("slot_epic_market", "images/marketplace/slot_epic.png");
+        this.load.image("slot_legendary_market", "images/marketplace/slot_legendary.png");
+        this.load.image("btn_out_team", "images/marketplace/btn_outteam.png");
+        this.load.image("btn_buy", "images/marketplace/btn_buy.png");
+        this.load.image("btn_wishlist", "images/marketplace/btn_wishlist.png");
+        this.load.image("btn_remove", "images/marketplace/btn_remove.png");
+        this.load.image("btn_unstake", "images/marketplace/btn_unstake.png");
+        this.load.image("btn_mylistings", "images/marketplace/btn_mylistings.png");
+        this.load.image("btn_monsters_market", "images/marketplace/btn_monsters.png");
+        this.load.image("btn_items_market", "images/marketplace/btn_items.png");
+        this.load.image("symbol_fire", "images/marketplace/symbol_fire.png");
+        this.load.image("symbol_water", "images/marketplace/symbol_water.png");
+        this.load.image("symbol_earth", "images/marketplace/symbol_earth.png");
+        this.load.image("symbol_electric", "images/marketplace/symbol_elec.png");
+        this.load.image("symbol_dark", "images/marketplace/symbol_dark.png");
+        this.load.image("btn_gold_pay", "images/marketplace/btn_gold_pay.png");
+        this.load.image("btn_ton_pay", "images/marketplace/btn_ton_pay.png");
+        this.load.image("btn_crystal_pay", "images/marketplace/btn_crystal_pay.png");
+        this.load.image("btn_crystal_buy", "images/marketplace/btn_crystal_buy.png");
+        this.load.image("btn_gold_buy", "images/marketplace/btn_gold_buy.png");
+        this.load.image("info_items_panel", "images/marketplace/info_items_panel.png");
+        this.load.image("market_item_monstaBall", "images/marketplace/discatch_set.png");
+        this.load.image("slot_items", "images/marketplace/slot_items.png");
+        this.load.image("slot_add", "images/marketplace/slot_add.png");
+        this.load.image("list_now", "images/marketplace/list_now.png");
+        this.load.image("btn_use_items", "images/marketplace/btn_use_items.png");
+        this.load.image("btn_sell_items", "images/marketplace/btn_sell_items.png");
+        this.load.image("marketplace_title", "images/marketplace/marketplace_title.png");
+
+
         //battle map backgrounds
         this.load.image("bgs_camp", "images/map/area_bootcamp/camp.png");
         this.load.image("bgs_riverfall_water", "images/map/area_cave/water.jpg");
@@ -138,6 +209,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("btn_items", "images/buttons/btn_items.png");
         this.load.image("btn_missions", "images/buttons/btn_missions.png");
         this.load.image("btn_referral", "images/buttons/btn_referral.png");
+        this.load.image("btn_market", "images/buttons/btn_market.png");
 
 
         //character icons
@@ -146,6 +218,31 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("boris-icon", "images/char_icons/boris_icon.png");
         this.load.image("bradley-icon", "images/char_icons/bradley_icon.png");
         this.load.image("cable-icon", "images/char_icons/cable_icon.png");
+
+        //character avatar
+        this.load.image("fang_avatar", "images/characters/fang_avatar.png");
+        this.load.image("jenni_avatar", "images/characters/jenni_avatar.png");
+        this.load.image("lily_avatar", "images/characters/lily_avatar.png");
+        this.load.image("nora_avatar", "images/characters/nora_avatar.png");
+
+
+
+        //characters img
+        this.load.image("fang", "images/characters/img/fang.png");
+        this.load.image("jenni", "images/characters/img/jenni.png");
+        this.load.image("lily", "images/characters/img/lily.png");
+        this.load.image("nora", "images/characters/img/nora.png");
+        this.load.image("jovani", "images/characters/img/jovani.png");
+        this.load.image("jovani_hand", "images/characters/img/jovani-hand.png");
+        this.load.image("jovani_types", "images/characters/img/jovani-types.png");
+
+
+
+
+        this.load.image("speech_bubble", "images/characters/img/speech_bubble.png");
+
+
+
 
 
         //fonts (white_stroked_big)
@@ -180,8 +277,8 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("hud_profile", "images/modals/hud_profile.png");
         this.load.image("item_coin", "images/items/icons/coins.png");
         this.load.image("item_ton", "images/items/icons/ton.png");
-        this.load.image("item_gold", "images/items/icons/item_gold.png");
-        this.load.image("item_crystal", "images/items/icons/diamond_sacred_crystal.png");
+        this.load.image("item_gold", "images/general/coin.png");
+        this.load.image("item_crystal", "images/items/icons/dust.png");
         this.load.image("mission_battle", "images/items/icons/mission_battle.png");
         this.load.image("mission_heal", "images/items/icons/mission_heal.png");
         this.load.image("mission_chest", "images/items/icons/mission_chest.png");
@@ -211,7 +308,6 @@ export class PreloadScene extends Phaser.Scene {
         //general
 
         this.load.image("map-info", "images/general/map_info/bg.png");
-        this.load.image("go-button", "images/general/btn_go.png");
         this.load.image("close-button", "images/general/btn_close.png");
         this.load.image("go-button", "images/general/btn_go.png");
         this.load.image("ton-icon", "images/general/ton.png");
@@ -275,6 +371,10 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("pane_tooltip_earth", "images/general/hud/pane_tooltip_earth.png");
         this.load.image("loading_buffer", "images/general/loading_buffer.png");
 
+
+        this.load.image("progressbar_bg", "images/general/progbar_bg.png");
+        this.load.image("progressbar_fill", "images/general/progbar_fill.png");
+
         this.load.image("btn_withdraw", "images/general/btn_withdraw.png");
         this.load.image("btn_deposit", "images/general/btn_deposit.png");
 
@@ -283,7 +383,7 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("bootcamp-header", "images/general/map_info/headers/bootcamp.png");
         this.load.image("riverfall-header", "images/general/map_info/headers/cave.png");
         this.load.image("ruins-header", "images/general/map_info/headers/ruins.png");
-        this.load.image("costa-header", "images/general/map_info/headers/costa.png");
+        this.load.image("costa-gueta-header", "images/general/map_info/headers/costa.png");
         this.load.image("castle-header", "images/general/map_info/headers/castle.png");
         this.load.image("winterdale-header", "images/general/map_info/headers/festive.png");
         this.load.image("volcano-header", "images/general/map_info/headers/volcano.png");
@@ -319,6 +419,10 @@ export class PreloadScene extends Phaser.Scene {
         this.load.image("skills_bg", "images/general/inventory/skills_bg.png");
         this.load.image("skill_lock", "images/general/inventory/skill_lock.png");
         this.load.image("btn_release", "images/general/inventory/btn_release.png");
+
+
+        this.load.image("marker_info", "images/general/marker_quest.png");
+
 
 
         //onboarding
@@ -398,6 +502,7 @@ export class PreloadScene extends Phaser.Scene {
         //collector
         this.load.image("collector_icon", "images/collector/collector_icon_transparent.png");
         this.load.image("collector_character", "images/collector/collector_character.png");
+        this.load.image("collector_title", "images/collector/collector_title.png");
 
 
 
@@ -447,7 +552,6 @@ export class PreloadScene extends Phaser.Scene {
             "blazik",
             "quabble",
             "grunko",
-            "torky",
             "slumbo",
             "cobrix",
             "chompy",
@@ -469,7 +573,13 @@ export class PreloadScene extends Phaser.Scene {
             "xomox",
             "kitine",
             "groffy",
-            "peblo"
+            "peblo",
+            "quacko",
+            "jeempy",
+            "lavapede",
+            "kitnex",
+            "rexaroo",
+            "menza"
         ]
         monsters.forEach(key => {
             //monster icon

@@ -81,6 +81,81 @@ namespace monster_world.Models
 
         [JsonPropertyName("missionToSeed")]
         public List<Mission> MissionsToSeed { get; set; } = new();
+
+        [JsonPropertyName("collector_rarity")]
+        public Dictionary<string, SlotPrice> CollectorRarityConfig { get; set; } = new();
+
+        [JsonPropertyName("collectorLevelMultiplier")]
+        public Dictionary<string, double> CollectorLevelMultiplier { get; set; } = new();
+
+        [JsonPropertyName("marketplace")]
+        public MarketplaceConfig Marketplace { get; set; } = new();
+
+        [JsonPropertyName("levelUp")]
+        public LevelUpConfig LevelUp { get; set; } = new();
+
+        [JsonPropertyName("withdrawalFee")]
+        public WithdrawalFeeConfig WithdrawalFee { get; set; } = new();
+    }
+
+    public class WithdrawalFeeConfig
+    {
+        [JsonPropertyName("percentage")]
+        public double Percentage { get; set; } = 0.05;
+
+        [JsonPropertyName("minFee")]
+        public double MinFee { get; set; } = 0.1;
+
+        [JsonPropertyName("maxFee")]
+        public double MaxFee { get; set; } = 1.0;
+
+        [JsonPropertyName("minWithdrawalAmount")]
+        public double MinWithdrawalAmount { get; set; } = 1.0;
+    }
+
+    public class LevelUpConfig
+    {
+        [JsonPropertyName("goldCostMultiplier")]
+        public double GoldCostMultiplier { get; set; } = 100.0;
+
+        [JsonPropertyName("crystalFarmingHoursRequirement")]
+        public double CrystalFarmingHoursRequirement { get; set; } = 24.0;
+    }
+
+    public class MarketplaceConfig
+    {
+        [JsonPropertyName("basePrices")]
+        public Dictionary<string, double> BasePrices { get; set; } = new();
+
+        [JsonPropertyName("goldToTonRatio")]
+        public double GoldToTonRatio { get; set; } = 10000.0;
+
+        [JsonPropertyName("crystalToTonRatio")]
+        public double CrystalToTonRatio { get; set; } = 200.0;
+
+        [JsonPropertyName("levelPremiumDiscountFactor")]
+        public double LevelPremiumDiscountFactor { get; set; } = 0.15;
+
+        [JsonPropertyName("baseFormulaWeight")]
+        public double BaseFormulaWeight { get; set; } = 0.6;
+
+        [JsonPropertyName("marketAverageWeight")]
+        public double MarketAverageWeight { get; set; } = 0.4;
+
+        [JsonPropertyName("marketAverageHistoryLimit")]
+        public int MarketAverageHistoryLimit { get; set; } = 5;
+
+        [JsonPropertyName("commissionFactor")]
+        public double CommissionFactor { get; set; } = 0.20;
+    }
+
+    public class SlotPrice
+    {
+        [JsonPropertyName("unlockCost")]
+        public Dictionary<string, double> UnlockCost { get; set; }
+
+        [JsonPropertyName("farm")]
+        public Dictionary<string, string> Farm { get; set; }
     }
 
     public class Team
@@ -378,6 +453,9 @@ namespace monster_world.Models
 
         [JsonPropertyName("itemsDrop")]
         public Dictionary<string, string> ItemsDrop { get; set; }
+
+        [JsonPropertyName("maxMonsterLevel")]
+        public int MaxMonsterLevel { get; set; } = 30;
     }
 
 

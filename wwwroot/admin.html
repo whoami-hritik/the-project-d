@@ -747,7 +747,9 @@
                 <span class="badge">ADMIN CORE</span>
             </div>
             
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <button class="logout-btn" style="border-color: #a855f7; color: #a855f7;" onmouseover="this.style.backgroundColor='rgba(168,85,247,0.1)'" onmouseout="this.style.backgroundColor='transparent'" onclick="triggerPlayerLevelAdjust()">👤 Adjust Player Levels</button>
+                <button class="logout-btn" style="border-color: #ec4899; color: #ec4899;" onmouseover="this.style.backgroundColor='rgba(236,72,153,0.1)'" onmouseout="this.style.backgroundColor='transparent'" onclick="triggerMonsterLevelAdjust()">🦖 Adjust Monster Levels</button>
                 <button class="logout-btn" style="border-color: #f59e0b; color: #f59e0b;" onmouseover="this.style.backgroundColor='rgba(245,158,11,0.1)'" onmouseout="this.style.backgroundColor='transparent'" onclick="triggerLevelReset()">🛠️ Reset Levels > 30</button>
                 <button class="logout-btn" onclick="handleLogout()">Disconnect</button>
             </div>
@@ -791,6 +793,8 @@
             <button class="nav-tab active" id="btn-users-view" onclick="switchView('users')">👥 User Search</button>
             <button class="nav-tab" id="btn-leaderboard-view" onclick="switchView('leaderboard')">💎 Crystal Leaderboard</button>
             <button class="nav-tab" id="btn-collector-view" onclick="switchView('collector')">⚡ Collector Overview</button>
+            <button class="nav-tab" id="btn-withdrawals-view" onclick="switchView('withdrawals')">📥 Withdrawal Requests</button>
+            <button class="nav-tab" id="btn-marketplace-view" onclick="switchView('marketplace')">🛍️ Marketplace History</button>
         </div>
 
         <div class="workspace" id="users-workspace">
@@ -1067,6 +1071,74 @@
                 </div>
             </div>
         </div>
+        
+        <!-- WITHDRAWALS WORKSPACE -->
+        <div class="workspace-scrollable" id="withdrawals-workspace" style="display: none;">
+            <div class="section-card" style="width: 100%; max-width: 1200px; margin: 0 auto;">
+                <h3 class="section-title">
+                    <span>📥 Pending & Historical Withdrawal Requests</span>
+                    <button class="tab-btn" onclick="fetchAdminWithdrawals()">🔄 Refresh</button>
+                </h3>
+                <div class="data-table-container" style="max-height: 75vh;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Player Details</th>
+                                <th>Amount</th>
+                                <th>Wallet Address</th>
+                                <th>Player Stats Snapshot</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-withdrawals-table-body">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- MARKETPLACE WORKSPACE -->
+        <div class="workspace-scrollable" id="marketplace-workspace" style="display: none;">
+            <div class="section-card" style="width: 100%; max-width: 1200px; margin: 0 auto;">
+                <h3 class="section-title">
+                    <span>🛍️ Marketplace Transaction History</span>
+                    <button class="tab-btn" onclick="fetchMarketplaceHistory()">🔄 Refresh</button>
+                </h3>
+                <div class="data-table-container" id="marketplace-history-container" style="max-height: 75vh;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Activity</th>
+                                <th>Type</th>
+                                <th>Details</th>
+                                <th>Seller Details</th>
+                                <th>Buyer Details</th>
+                                <th>Price</th>
+                                <th>Qty</th>
+                            </tr>
+                        </thead>
+                        <tbody id="marketplace-history-table-body">
+                            <!-- Dynamic -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- INSPECT SNAPSHOT MODAL -->
+    <div id="inspect-snapshot-modal" class="modal">
+        <div class="modal-content" style="width: 600px; max-width: 95%;">
+            <span class="close-btn" onclick="closeInspectSnapshotModal()">&times;</span>
+            <h2 style="font-weight: 700; color: var(--text-primary); margin: 0;" id="inspect-snapshot-title">Player Stats Snapshot</h2>
+            <div id="inspect-snapshot-body" style="display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; max-height: 70vh; overflow-y: auto; padding-right: 8px;">
+                <!-- Filled dynamically -->
+            </div>
+        </div>
     </div>
 
     <!-- EDIT USER MODAL -->
@@ -1254,6 +1326,11 @@
         let currentUserDetails = null;
         let currentUserMonsters = [];
 
+        let marketplacePageIndex = 0;
+        let marketplacePageSize = 100;
+        let marketplaceLoading = false;
+        let marketplaceHasMore = true;
+
         // --- Lifecycle hook ---
         window.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('adminToken');
@@ -1261,6 +1338,15 @@
                 showDashboard();
             } else {
                 showAuth();
+            }
+
+            const mktContainer = document.getElementById('marketplace-history-container');
+            if (mktContainer) {
+                mktContainer.addEventListener('scroll', () => {
+                    if (mktContainer.scrollHeight - mktContainer.scrollTop <= mktContainer.clientHeight + 80) {
+                        fetchMarketplaceHistory(true);
+                    }
+                });
             }
         });
 
@@ -1301,6 +1387,8 @@
             document.getElementById('users-workspace').style.display = 'none';
             document.getElementById('leaderboard-workspace').style.display = 'none';
             document.getElementById('collector-workspace').style.display = 'none';
+            document.getElementById('withdrawals-workspace').style.display = 'none';
+            document.getElementById('marketplace-workspace').style.display = 'none';
 
             if (view === 'users') {
                 document.getElementById('btn-users-view').classList.add('active');
@@ -1314,7 +1402,199 @@
                 document.getElementById('btn-collector-view').classList.add('active');
                 document.getElementById('collector-workspace').style.display = 'flex';
                 fetchCollectorOverview();
+            } else if (view === 'withdrawals') {
+                document.getElementById('btn-withdrawals-view').classList.add('active');
+                document.getElementById('withdrawals-workspace').style.display = 'flex';
+                fetchAdminWithdrawals();
+            } else if (view === 'marketplace') {
+                document.getElementById('btn-marketplace-view').classList.add('active');
+                document.getElementById('marketplace-workspace').style.display = 'flex';
+                fetchMarketplaceHistory();
             }
+        }
+
+        async function fetchAdminWithdrawals() {
+            const tableBody = document.getElementById('admin-withdrawals-table-body');
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted)">Loading withdrawal requests...</td></tr>';
+
+            try {
+                const response = await fetch(`${API_BASE}/withdrawals`, {
+                    headers: getHeaders()
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        handleLogout();
+                        return;
+                    }
+                    throw new Error('Failed to fetch withdrawals');
+                }
+
+                const withdrawals = await response.json();
+                tableBody.innerHTML = '';
+
+                if (withdrawals.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: var(--text-muted)">No withdrawal requests found.</td></tr>';
+                    return;
+                }
+
+                withdrawals.forEach(w => {
+                    const tr = document.createElement('tr');
+                    
+                    const dateStr = w.createdAt ? new Date(w.createdAt).toLocaleString() : 'N/A';
+                    
+                    let parsedStats = null;
+                    try {
+                        if (w.playerStatsJson) {
+                            parsedStats = JSON.parse(w.playerStatsJson);
+                        }
+                    } catch(e) {
+                        console.error('Failed to parse snapshot JSON', e);
+                    }
+
+                    const name = parsedStats ? `${parsedStats.firstName || ''} ${parsedStats.lastName || ''}`.trim() : 'N/A';
+                    const username = parsedStats?.username ? `@${parsedStats.username}` : 'N/A';
+                    const playerLvl = parsedStats?.level ?? 'N/A';
+
+                    const playerDetails = `
+                        <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+                            <span style="font-weight: 700; color: var(--text-primary);">UID: ${w.userID}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-secondary);">${name} (${username})</span>
+                            <span style="font-size: 0.75rem; color: var(--accent-primary);">Level: ${playerLvl}</span>
+                        </div>
+                    `;
+
+                    let statusClass = 'text-muted';
+                    if (w.status === 'Pending') statusClass = 'gold-color';
+                    else if (w.status === 'Completed') statusClass = 'text-success';
+                    else if (w.status === 'Declined') statusClass = 'text-danger';
+
+                    let actionsHtml = '';
+                    if (w.status === 'Pending') {
+                        actionsHtml = `
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background-color: #10b981; color: white;" onclick="processWithdrawal('${w.id}', 'approve')">Confirm</button>
+                                <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background-color: #ef4444; color: white;" onclick="processWithdrawal('${w.id}', 'decline')">Decline</button>
+                            </div>
+                        `;
+                    } else {
+                        actionsHtml = `<span style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">Processed</span>`;
+                    }
+
+                    const escapedJson = w.playerStatsJson ? encodeURIComponent(w.playerStatsJson) : '';
+                    const inspectBtn = w.playerStatsJson ? `
+                        <button class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.75rem; background-color: #3b82f6; color: white;" onclick="inspectSnapshot('${escapedJson}', '${w.userID}', '${username}')">🔍 Inspect Snapshot</button>
+                    ` : '<span style="font-size: 0.8rem; color: var(--text-muted);">No Snapshot</span>';
+
+                    tr.innerHTML = `
+                        <td style="font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</td>
+                        <td>${playerDetails}</td>
+                        <td style="font-family: monospace;">
+                            <div style="display: flex; flex-direction: column; gap: 0.1rem;">
+                                <span style="font-weight: 800; color: var(--text-primary);">Req: ${w.amount.toFixed(4)} ${w.currency}</span>
+                                <span style="font-size: 0.75rem; color: #ef4444;">Fee: ${w.fee !== undefined && w.fee !== null ? w.fee.toFixed(4) : Math.min(w.amount * 0.05, 1.0).toFixed(4)} ${w.currency}</span>
+                                <span style="font-size: 0.75rem; color: #10b981; font-weight: 700;">Net: ${w.netAmount !== undefined && w.netAmount !== null ? w.netAmount.toFixed(4) : Math.max(0, w.amount - Math.min(w.amount * 0.05, 1.0)).toFixed(4)} ${w.currency}</span>
+                            </div>
+                        </td>
+                        <td style="font-family: monospace; font-size: 0.8rem; color: var(--text-secondary);">${w.walletAddress}</td>
+                        <td>${inspectBtn}</td>
+                        <td class="${statusClass}" style="font-weight: 700;">${w.status}</td>
+                        <td>${actionsHtml}</td>
+                    `;
+
+                    tableBody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error(err);
+                tableBody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #ef4444">Error loading withdrawal requests.</td></tr>';
+            }
+        }
+
+        async function processWithdrawal(id, action) {
+            if (!confirm(`Are you sure you want to ${action} this withdrawal request?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/withdrawals/${action}/${id}`, {
+                    method: 'POST',
+                    headers: getHeaders()
+                });
+
+                if (response.ok) {
+                    alert(`Withdrawal request successfully ${action}d!`);
+                    fetchAdminWithdrawals();
+                    loadOverviewStats();
+                } else {
+                    const data = await response.json();
+                    alert(`Error: ${data.message || 'Failed to process request.'}`);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Network error. Failed to process request.');
+            }
+        }
+
+        function inspectSnapshot(encodedJson, userId, username) {
+            try {
+                const jsonStr = decodeURIComponent(encodedJson);
+                const data = JSON.parse(jsonStr);
+                
+                document.getElementById('inspect-snapshot-title').innerText = `Player Stats Snapshot: ${username} (UID: ${userId})`;
+                
+                const body = document.getElementById('inspect-snapshot-body');
+                body.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                        <div>
+                            <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary);">Account Summary</h4>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Level:</b> ${data.level || 1}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Total Battles:</b> ${data.stats?.totalBattles ?? 0}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Wins:</b> ${data.stats?.totalVictory ?? 0}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Defeats:</b> ${data.stats?.totalDefeats ?? 0}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Monsters in Inventory:</b> ${data.stats?.totalMonsters ?? 0}</p>
+                        </div>
+                        <div>
+                            <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary);">Balances at Submit</h4>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #3b82f6;"><b>TON:</b> ${(data.balances?.ton ?? 0).toFixed(4)}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #eab308;"><b>GOLD:</b> ${(data.balances?.gold ?? 0).toFixed(2)}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #22c55e;"><b>EGGS:</b> ${(data.balances?.eggs ?? 0).toFixed(4)}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #a855f7;"><b>CRYSTAL:</b> ${(data.balances?.crystal ?? 0).toFixed(2)}</p>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                        <div>
+                            <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary);">Financial Flows</h4>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #4ade80;"><b>Total Deposit:</b> $${(data.stats?.totalDeposit ?? 0).toFixed(2)}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #f87171;"><b>Total Withdrawn:</b> $${(data.stats?.totalWithdrawn ?? 0).toFixed(2)}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>TON via EGGS:</b> ${(data.stats?.tonExchangedViaEggs ?? 0).toFixed(4)} TON</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>TON via CRYSTAL:</b> ${(data.stats?.tonExchangedViaCrystals ?? 0).toFixed(4)} TON</p>
+                        </div>
+                        <div>
+                            <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary);">Marketplace Activity</h4>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Buy Count:</b> ${data.stats?.totalMarketplaceBuyCount ?? 0}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Buy Volume:</b> ${(data.stats?.totalMarketplaceBuyAmount ?? 0).toFixed(2)}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Sale Count:</b> ${data.stats?.totalMarketplaceSaleCount ?? 0}</p>
+                            <p style="margin: 0.25rem 0; font-size: 0.85rem;"><b>Sale Volume:</b> ${(data.stats?.totalMarketplaceSaleAmount ?? 0).toFixed(2)}</p>
+                        </div>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                        <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary);">Collector Staking Revenue</h4>
+                        <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #fbbf24;"><b>GOLD Claimed:</b> ${(data.stats?.stakingRevenue?.gold ?? 0).toFixed(2)} GOLD</p>
+                        <p style="margin: 0.25rem 0; font-size: 0.85rem; color: #f472b6;"><b>CRYSTAL Claimed:</b> ${(data.stats?.stakingRevenue?.crystal ?? 0).toFixed(2)} CRYSTAL</p>
+                    </div>
+                `;
+
+                document.getElementById('inspect-snapshot-modal').style.display = 'flex';
+            } catch(e) {
+                console.error(e);
+                alert('Failed to display snapshot inspection.');
+            }
+        }
+
+        function closeInspectSnapshotModal() {
+            document.getElementById('inspect-snapshot-modal').style.display = 'none';
         }
 
         async function fetchCrystalLeaderboard() {
@@ -2249,6 +2529,161 @@
             } catch (err) {
                 console.error(err);
                 alert("Network error unstaking monster");
+            }
+        }
+
+        async function fetchMarketplaceHistory(loadMore = false) {
+            if (marketplaceLoading) return;
+            if (loadMore && !marketplaceHasMore) return;
+
+            marketplaceLoading = true;
+
+            const tableBody = document.getElementById('marketplace-history-table-body');
+            
+            if (!loadMore) {
+                marketplacePageIndex = 0;
+                marketplaceHasMore = true;
+                tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted)">Loading marketplace transaction history...</td></tr>';
+            } else {
+                const loadingRow = document.createElement('tr');
+                loadingRow.id = 'marketplace-history-loading-row';
+                loadingRow.innerHTML = '<td colspan="8" style="text-align: center; color: var(--text-muted)">Loading more records...</td>';
+                tableBody.appendChild(loadingRow);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/marketplace-history?pageIndex=${marketplacePageIndex}&pageSize=${marketplacePageSize}`, {
+                    headers: getHeaders()
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        handleLogout();
+                        return;
+                    }
+                    throw new Error('Failed to fetch marketplace history');
+                }
+
+                const logs = await response.json();
+                
+                const loadingRow = document.getElementById('marketplace-history-loading-row');
+                if (loadingRow) {
+                    loadingRow.remove();
+                }
+
+                if (!loadMore) {
+                    tableBody.innerHTML = '';
+                }
+
+                if (logs.length === 0) {
+                    marketplaceHasMore = false;
+                    if (!loadMore) {
+                        tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted)">No marketplace activity logged yet.</td></tr>';
+                    }
+                    return;
+                }
+
+                logs.forEach(log => {
+                    const tr = document.createElement('tr');
+                    const dateStr = log.timestamp ? new Date(log.timestamp).toLocaleString() : 'N/A';
+                    
+                    let activityClass = '';
+                    if (log.activityType === 'List') activityClass = 'color: #3b82f6; font-weight: 700;';
+                    else if (log.activityType === 'Buy') activityClass = 'color: #10b981; font-weight: 700;';
+                    else if (log.activityType === 'Delist') activityClass = 'color: #ef4444; font-weight: 700;';
+
+                    const seller = log.sellerUsername ? `${log.sellerUsername} (UID: ${log.sellerId})` : `UID: ${log.sellerId}`;
+                    const buyer = log.buyerId > 0 ? (log.buyerUsername ? `${log.buyerUsername} (UID: ${log.buyerId})` : `UID: ${log.buyerId}`) : '-';
+
+                    const currencyClass = log.currency === 'TON' ? 'gold-color' : 'crystal-color';
+
+                    tr.innerHTML = `
+                        <td style="font-size: 0.8rem; color: var(--text-secondary);">${dateStr}</td>
+                        <td style="${activityClass}">${log.activityType}</td>
+                        <td style="text-transform: capitalize;">${log.listingType}</td>
+                        <td>
+                            <div style="font-weight: 600;">${log.details}</div>
+                            ${log.monsterInstanceId ? `<span style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">Hash: ${log.monsterInstanceId}</span>` : ''}
+                        </td>
+                        <td style="font-size: 0.85rem;">${seller}</td>
+                        <td style="font-size: 0.85rem;">${buyer}</td>
+                        <td style="font-weight: 700;" class="${currencyClass}">${log.price} ${log.currency}</td>
+                        <td>${log.quantity}</td>
+                    `;
+
+                    tableBody.appendChild(tr);
+                });
+
+                if (logs.length < marketplacePageSize) {
+                    marketplaceHasMore = false;
+                } else {
+                    marketplacePageIndex++;
+                }
+            } catch (err) {
+                console.error(err);
+                const loadingRow = document.getElementById('marketplace-history-loading-row');
+                if (loadingRow) {
+                    loadingRow.remove();
+                }
+                if (!loadMore) {
+                    tableBody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #ef4444">Error loading marketplace history.</td></tr>';
+                }
+            } finally {
+                marketplaceLoading = false;
+            }
+        }
+
+        async function triggerPlayerLevelAdjust() {
+            if (!confirm("Are you sure you want to recalculate and adjust all players' levels and current XP relative to their cumulative XP?")) {
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE}/adjust-levels`, {
+                    method: 'POST',
+                    headers: getHeaders()
+                });
+                if (response.status === 401) {
+                    handleLogout();
+                    return;
+                }
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert(data.message || "Successfully adjusted player levels!");
+                    loadOverviewStats();
+                    if (typeof loadUsersList === 'function') loadUsersList();
+                } else {
+                    alert("Failed to adjust player levels: " + (data.message || "Unknown error"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error occurred while adjusting player levels.");
+            }
+        }
+
+        async function triggerMonsterLevelAdjust() {
+            if (!confirm("Are you sure you want to adjust all monster levels by rarity (Common: 7, Rare: 5, Epic: 3, Legendary: 1) and recalculate their stats?")) {
+                return;
+            }
+            try {
+                const response = await fetch(`${API_BASE}/adjust-monsters`, {
+                    method: 'POST',
+                    headers: getHeaders()
+                });
+                if (response.status === 401) {
+                    handleLogout();
+                    return;
+                }
+                const data = await response.json();
+                if (response.ok && data.success) {
+                    alert(data.message || "Successfully adjusted monster levels!");
+                    loadOverviewStats();
+                    if (typeof loadUsersList === 'function') loadUsersList();
+                } else {
+                    alert("Failed to adjust monster levels: " + (data.message || "Unknown error"));
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Network error occurred while adjusting monster levels.");
             }
         }
     </script>

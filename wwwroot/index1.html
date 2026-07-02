@@ -2,14 +2,86 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="
-    width=device-width,
-    height=device-height,
-    initial-scale=1,
-    maximum-scale=1,
-    user-scalable=no
-  ">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
     <title>Monster-World Text testing</title>
+    <script>
+        // Monkeypatch window.addEventListener globally to intercept and block 'resize' events when keyboard is open
+        const originalAddEventListener = window.addEventListener;
+        window.addEventListener = function(type, listener, options) {
+            if (type === 'resize') {
+                const wrappedListener = function(event) {
+                    const activeEl = document.activeElement;
+                    const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+                    if (isInput) {
+                        return; // Block event propagation to Phaser
+                    }
+                    listener.call(this, event);
+                };
+                listener.__wrappedResize = wrappedListener;
+                originalAddEventListener.call(this, type, wrappedListener, options);
+            } else {
+                originalAddEventListener.call(this, type, listener, options);
+            }
+        };
+
+        const originalRemoveEventListener = window.removeEventListener;
+        window.removeEventListener = function(type, listener, options) {
+            if (type === 'resize' && listener.__wrappedResize) {
+                originalRemoveEventListener.call(this, type, listener.__wrappedResize, options);
+            } else {
+                originalRemoveEventListener.call(this, type, listener, options);
+            }
+        };
+
+        let initialHeight = window.innerHeight;
+
+        function lockViewportHeight() {
+            initialHeight = window.innerHeight;
+            document.documentElement.style.height = `${initialHeight}px`;
+            document.body.style.height = `${initialHeight}px`;
+            const container = document.getElementById("game-container");
+            if (container) {
+                container.style.height = `${initialHeight}px`;
+                container.style.transform = 'none';
+            }
+        }
+
+        lockViewportHeight();
+
+        // Register our own internal resize listener using the original addEventListener so it is never blocked
+        originalAddEventListener.call(window, 'resize', () => {
+            const container = document.getElementById("game-container");
+            if (!container) return;
+
+            const activeEl = document.activeElement;
+            const isInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+
+            if (isInput) {
+                const currentHeight = window.innerHeight;
+                const keyboardHeight = initialHeight - currentHeight;
+                if (keyboardHeight > 0) {
+                    container.style.transform = `translateY(-${keyboardHeight}px)`;
+                } else {
+                    container.style.transform = 'none';
+                }
+            } else {
+                lockViewportHeight();
+            }
+        });
+
+        document.addEventListener('focusout', (e) => {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+                const container = document.getElementById("game-container");
+                if (container) {
+                    container.style.transform = 'none';
+                }
+            }
+        });
+
+        originalAddEventListener.call(window, 'orientationchange', () => {
+            setTimeout(lockViewportHeight, 200);
+        });
+    </script>
     <style>
         html, body {
         margin: 0;
@@ -44,7 +116,7 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/phaser3-rex-plugins/dist/rexvirtualjoystickplugin.min.js"></script>
 
-    <script src="js/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script type="module" src="frontend/game/testingScene.js"></script>
 </body>
 </html>

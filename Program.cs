@@ -38,7 +38,38 @@ string botToken = System.Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN"
     ?? "8859812843:AAEqhO8R6Q41uK3Qy8lJcQ_k3eS12j4T7pE";
 
 builder.Services.AddSingleton<ITelegramBotClient>( sp => {
-    var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(3) };
+    var handler = new System.Net.Http.SocketsHttpHandler
+    {
+        ConnectCallback = async (context, cancellationToken) =>
+        {
+            var ips = await System.Net.Dns.GetHostAddressesAsync(context.DnsEndPoint.Host, cancellationToken);
+            System.Net.IPAddress ipv4 = null;
+            foreach (var ip in ips)
+            {
+                if (ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                {
+                    ipv4 = ip;
+                    break;
+                }
+            }
+            if (ipv4 == null)
+            {
+                throw new System.Net.Sockets.SocketException((int)System.Net.Sockets.SocketError.HostNotFound);
+            }
+            var socket = new System.Net.Sockets.Socket(System.Net.Sockets.SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+            try
+            {
+                await socket.ConnectAsync(new System.Net.IPEndPoint(ipv4, context.DnsEndPoint.Port), cancellationToken);
+                return new System.Net.Sockets.NetworkStream(socket, ownsSocket: true);
+            }
+            catch
+            {
+                socket.Dispose();
+                throw;
+            }
+        }
+    };
+    var httpClient = new System.Net.Http.HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
     return new TelegramBotClient(botToken, httpClient);
 });
 
@@ -64,6 +95,13 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider
         .GetRequiredService<AppDbContext>();
+
+    // Repair null ListingType entries in Marketplace
+    var unclassifiedListings = await db.Marketplace.Where(x => x.ListingType == null || x.ListingType == "").ToListAsync();
+    foreach (var listing in unclassifiedListings)
+    {
+        listing.ListingType = "monster";
+    }
 
     foreach (var map in gameplay.Maps)
     {

@@ -1,6 +1,8 @@
+import { checkClick } from "./game.js";
 import * as api from "../webapp/api.js";
-import { showNotification } from "../utility.js";
+import { showNotification, createloadingOverlay, destroyloadingOverlay } from "../utility.js";
 import { t } from "../translations.js";
+import { state } from "../state.js";
 
 export class ItemScene extends Phaser.Scene {
     constructor() {
@@ -8,12 +10,14 @@ export class ItemScene extends Phaser.Scene {
     }
 
     init(data) {
-        this.inBattle = data.inBattle;
-        this.battle = data.battle;
+        this.inBattle = data ? data.inBattle : false;
+        this.battle = data ? data.battle : null;
     }
     create() {
         this.initializeBg();
+        createloadingOverlay(this);
         api.GetItems().then(result => {
+            destroyloadingOverlay(this);
             if (result.success) {
                 console.log(result);
                 this.items = result.items;
@@ -21,6 +25,9 @@ export class ItemScene extends Phaser.Scene {
             } else {
                 showNotification(this, result.reason);
             }
+        }).catch(err => {
+            destroyloadingOverlay(this);
+            showNotification(this, "Connection error.");
         });
 
         this.battleScene = this.scene.get("BattleScene");
@@ -42,6 +49,148 @@ export class ItemScene extends Phaser.Scene {
     destroyOverlay() {
         this.overlay.destroy();
     }
+
+
+    ListItems(listed_item, user, recommended_price) {
+        this.activeTab = "items";
+        if (this.contentContainer) this.contentContainer.destroy();
+        this.contentContainer = this.add.container(0, 0);
+        this.contentContainer.setDepth(150);
+
+        // overlay
+        const overlay = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.5).setOrigin(0).setInteractive({ useHandCursor: true });
+        this.contentContainer.add(overlay);
+
+        overlay.on("pointerup", () => {
+            this.contentContainer.destroy();
+        });
+
+        const items_info = this.add.image(0, 485, "info_items_panel").setOrigin(0);
+
+        let formattedKey = listed_item.id.charAt(0).toLowerCase() + listed_item.id.slice(1);
+        console.log(formattedKey);
+        const itemsImg = this.add.image(0, 0, `market_item_${formattedKey}`);
+        itemsImg.setPosition(225, 440 + itemsImg.displayHeight).setOrigin(0, 1);
+        const text = this.add.text(225, 565, listed_item.id.toUpperCase(), {
+            fontFamily: "Lilita One",
+            fontSize: "20px",
+            color: "#D5D5D5"
+        }).setOrigin(0);
+
+        const level = this.add.text(15, 520, `Lv ${user.level}`, {
+            fontFamily: "Lilita One",
+            fontSize: "16px",
+            color: "#000000ff"
+        }).setOrigin(0);
+
+        const username = this.add.text(15, 535, `@${user.username}`, {
+            fontFamily: "Lilita One",
+            fontSize: "22px",
+            color: "#ffffffff"
+        }).setOrigin(0);
+        username.setStroke("#000000", 1);
+
+        const recommendedPrice = this.add.text(20, 665, "Recommended Price: " + recommended_price.toFixed(1), {
+            fontFamily: "Nunito",
+            fontSize: "12px",
+            color: "#ffffffff"
+        }).setOrigin(0);
+
+        const crystalImg = this.add.image(20 + recommendedPrice.width + 2, 665, "item_dust").setOrigin(0);
+        crystalImg.setDisplaySize(15, 15);
+
+        this.contentContainer.add([items_info, itemsImg, text, level, username, recommendedPrice, crystalImg]);
+
+        let quantityVal = 1;
+        let priceVal = recommended_price;
+
+        const qtyGraphics = this.add.graphics();
+        qtyGraphics.fillStyle(0x000000, 0.4);
+        qtyGraphics.fillRoundedRect(20, 690, 171.8, 49, 10);
+
+        this.contentContainer.add(qtyGraphics);
+
+        const qtyText = this.add.text(30, 703, `${quantityVal}`, {
+            fontFamily: "Lilita One",
+            fontSize: "16px",
+            color: "#ffffff"
+        }).setOrigin(0);
+        this.contentContainer.add(qtyText);
+
+        const qtyHit = this.add.rectangle(20, 690, 171.8, 49).setOrigin(0).setInteractive({ useHandCursor: true });
+        qtyHit.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            this.scene.launch("KeyboardScene", {
+                type: "numeric",
+                value: String(quantityVal),
+                placeholder: "Quantity",
+                onCommit: (val) => {
+                    const parsed = parseInt(val);
+                    if (!isNaN(parsed) && parsed > 0) {
+                        quantityVal = parsed;
+                        qtyText.setText(`${quantityVal}`);
+                    }
+                }
+            });
+        });
+        this.contentContainer.add(qtyHit);
+
+        const priceGraphics = this.add.graphics();
+        priceGraphics.fillStyle(0x000000, 0.4);
+        priceGraphics.fillRoundedRect(205, 690, 171.8, 49, 10);
+        this.contentContainer.add(priceGraphics);
+
+        const priceText = this.add.text(215, 703, `${priceVal.toFixed(1)}`, {
+            fontFamily: "Lilita One",
+            fontSize: "16px",
+            color: "#ffffff"
+        }).setOrigin(0);
+        this.contentContainer.add(priceText);
+
+        const priceHit = this.add.rectangle(205, 690, 171.8, 49).setOrigin(0).setInteractive({ useHandCursor: true });
+        priceHit.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            this.scene.launch("KeyboardScene", {
+                type: "numeric",
+                value: String(priceVal.toFixed(1)),
+                placeholder: "Price CRY",
+                onCommit: (val) => {
+                    const parsed = parseFloat(val);
+                    if (!isNaN(parsed) && parsed > 0) {
+                        priceVal = parsed;
+                        priceText.setText(`${priceVal.toFixed(1)}`);
+                    }
+                }
+            });
+        });
+        this.contentContainer.add(priceHit);
+
+        const ListBtn = this.add.image(20, 745, "btn_list_market_crystal").setOrigin(0).setInteractive({ useHandCursor: true });
+        ListBtn.on("pointerup", async (pointer) => {
+            if (!checkClick(pointer)) return;
+
+            createloadingOverlay(this);
+            try {
+                const response = await api.listInMarketplace(listed_item.id, "item", priceVal, "CRYSTAL", quantityVal);
+                if (response && response.success) {
+                    showNotification(this, "Item listed successfully!");
+                    state.user = response.user;
+                    this.contentContainer.destroy();
+                    this.destroyOverlay();
+                    this.scene.stop("ItemScene");
+                } else {
+                    showNotification(this, response?.reason || "Failed to list item");
+                }
+            } catch (err) {
+                console.error(err);
+                showNotification(this, "Connection error.");
+            } finally {
+                destroyloadingOverlay(this);
+            }
+        });
+        this.contentContainer.add(ListBtn);
+    }
+
 
     updateItems() {
         const validItemKeys = Object.keys(this.items).filter(key => this.items[key] > 0);
@@ -91,7 +240,6 @@ export class ItemScene extends Phaser.Scene {
             item_img.setDisplaySize(item_img.displayWidth / 1.5, item_img.displayHeight / 1.5).setOrigin(0.5, 1).setInteractive({ useHandCursor: true });
             this.container.add(item_img);
 
-            // Add Quantity text in the bottom right of the slot with Lilita One font
             const qtyText = this.add.text(10 + j * SLOT_WIDTH + SLOT_WIDTH - 8, 60 + i * SLOT_HEIGHT + SLOT_HEIGHT - 6, quantity, {
                 fontFamily: "Lilita One, Coiny, sans-serif",
                 fontSize: "12px",
@@ -100,7 +248,8 @@ export class ItemScene extends Phaser.Scene {
             qtyText.setStroke("#0f172a", 3);
             this.container.add(qtyText);
 
-            item_img.on("pointerup", () => {
+            item_img.on("pointerup", (pointer) => {
+                if (!checkClick(pointer)) return;
                 item_selected_bg.setAlpha(1);
                 item_selected_bg.setPosition(10 + j * SLOT_WIDTH, 60 + i * SLOT_HEIGHT);
 
@@ -116,10 +265,7 @@ export class ItemScene extends Phaser.Scene {
                     if (this.useBtn) {
                         this.useBtn.destroy();
                     }
-                    const use_btn = this.add.image(0, 0, "btn_use");
-                    use_btn.setDisplaySize(use_btn.displayWidth / 2, use_btn.displayHeight / 2)
-                        .setOrigin(0).setInteractive({ useHandCursor: true });
-                    use_btn.setPosition(this.bg.displayWidth / 2 - use_btn.displayWidth / 2, 265);
+                    const use_btn = this.add.image(this.bg.displayWidth / 2, 290, "btn_use_items").setInteractive({ useHandCursor: true });
                     this.container.add(use_btn);
                     this.useBtn = use_btn;
 
@@ -127,6 +273,32 @@ export class ItemScene extends Phaser.Scene {
                         this.destroyOverlay();
                         this.battleScene.events.emit("useItem", key);
                         this.scene.stop("ItemScene");
+                    });
+                } else {
+                    if (this.useBtn) {
+                        this.useBtn.destroy();
+                    }
+                    const sell_btn = this.add.image(this.bg.displayWidth / 2, 290, "btn_sell_items").setInteractive({ useHandCursor: true });
+                    this.container.add(sell_btn);
+                    this.useBtn = sell_btn;
+
+                    sell_btn.on("pointerup", async (p) => {
+                        if (!checkClick(p)) return;
+                        if (key.toLowerCase() !== "monstaball") {
+                            showNotification(this, "Only MonstaBalls can be listed for now.");
+                            return;
+                        }
+                        createloadingOverlay(this);
+                        try {
+                            const res = await api.recommendMarketplaceItemPrice("MonstaBall");
+                            const recommendedPriceVal = res.success ? res.recommendedPrice : 3.0;
+                            this.ListItems({ id: key }, state.user, recommendedPriceVal);
+                        } catch (err) {
+                            console.error(err);
+                            showNotification(this, "Connection error.");
+                        } finally {
+                            destroyloadingOverlay(this);
+                        }
                     });
                 }
             });

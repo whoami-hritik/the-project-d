@@ -27,7 +27,7 @@ const MapUnlockCost = {
     "costa-gueta": {
         "ton": 1.5,
         "level": 5,
-        "active": false
+        "active": true
     },
     "volcano": {
         "ton": 3,
@@ -59,7 +59,7 @@ export class WorldScene extends Phaser.Scene {
             if (this.USER && !this.USER.tutorial) {
                 this.scene.launch("TutorialScene");
                 this.scene.pause();
-                
+
                 const tutorialScene = this.scene.get("TutorialScene");
                 if (tutorialScene) {
                     tutorialScene.events.once("shutdown", () => {
@@ -147,7 +147,7 @@ export class WorldScene extends Phaser.Scene {
 
         const goldCoinx = 105 + toncoin.displayWidth + tonCharsWidth + 10;
         const goldCoin = this.add.image(goldCoinx, 65, "item_gold");
-        goldCoin.setDisplaySize(goldCoin.displayWidth / 4, goldCoin.displayHeight / 4).setScrollFactor(0).setOrigin(0);
+        goldCoin.setDisplaySize(24, 24).setScrollFactor(0).setOrigin(0);
         this.profileContainer.add(goldCoin);
 
 
@@ -269,8 +269,8 @@ export class WorldScene extends Phaser.Scene {
 
     createMenu() {
         this.menu = this.add.container(20, BOTTOM);
-        const icons = ["btn_shop", "btn_referral", "btn_missions", "btn_items", "btn_team"]
-        const scenes = ["ShopScene", "ReferralScene", "MissionScene", "ItemScene", "InventoryScene"]
+        const icons = ["btn_shop", "btn_referral", "btn_missions", "btn_market", "btn_team"]
+        const scenes = ["ShopScene", "ReferralScene", "MissionScene", "MarketplaceScene", "InventoryScene"]
 
         icons.forEach((e, i) => {
             const icon = this.add.image(20 + (i * ICONWIDTH), 0, e);
@@ -368,10 +368,10 @@ export class WorldScene extends Phaser.Scene {
     }
 
     initializeBG() {
-        const bg = this.add.image(0, 0, "world-bg");
+        const bg = this.add.image(0, 0, "world_bg");
         bg.setOrigin(0);
 
-        const texture = this.textures.get("world-bg").getSourceImage();
+        const texture = this.textures.get("world_bg").getSourceImage();
 
 
         const scale = (this.height + 100) / bg.height;
@@ -380,23 +380,23 @@ export class WorldScene extends Phaser.Scene {
         // Collector Icon Container (x: 110, y: 310 centers a 120x120 icon in the 50-170 / 250-370 box)
         const collectorContainer = this.add.container(110, 310);
 
-        const collector = this.add.image(0, 0, "collector_icon").setOrigin(0.5);
-        collector.setDisplaySize(120, 120);
+        const collector = this.add.image(0, 0, "collector_icon2").setOrigin(0.5);
+        collector.setDisplaySize(collector.displayWidth / 1.5, collector.displayHeight / 1.5);
 
         // Ornate "COLLECTOR" title text with gold-to-orange gradient
-        const collectorTitle = this.add.text(0, 68, "COLLECTOR", {
-            fontFamily: "Lilita One, sans-serif",
-            fontSize: "18px",
-            stroke: "#000000",
-            strokeThickness: 5,
-            align: "center"
-        }).setOrigin(0.5);
+        // const collectorTitle = this.add.text(0, 68, "COLLECTOR", {
+        //     fontFamily: "Lilita One, sans-serif",
+        //     fontSize: "18px",
+        //     stroke: "#000000",
+        //     strokeThickness: 5,
+        //     align: "center"
+        // }).setOrigin(0.5);
 
         // Apply linear gradient fill
-        const titleGrad = collectorTitle.context.createLinearGradient(0, 0, 0, collectorTitle.height);
-        titleGrad.addColorStop(0, '#ffe066'); // Light gold
-        titleGrad.addColorStop(1, '#f5a623'); // Gold-orange
-        collectorTitle.setFill(titleGrad);
+        // const titleGrad = collectorTitle.context.createLinearGradient(0, 0, 0, collectorTitle.height);
+        // titleGrad.addColorStop(0, '#ffe066'); // Light gold
+        // titleGrad.addColorStop(1, '#f5a623'); // Gold-orange
+        // collectorTitle.setFill(titleGrad);
 
 
 
@@ -417,18 +417,18 @@ export class WorldScene extends Phaser.Scene {
         }).setOrigin(0.5);
         infoBadge.add(badgeTxt);
 
-        // Subtitle explaining the collector
-        const collectorSubtitle = this.add.text(0, 85, "STAKE & YIELD", {
-            fontFamily: "Nunito, sans-serif",
-            fontSize: "10px",
-            fontWeight: "800",
-            color: "#94a3b8",
-            stroke: "#000000",
-            strokeThickness: 3.5,
-            align: "center"
-        }).setOrigin(0.5);
+        // // Subtitle explaining the collector
+        // const collectorSubtitle = this.add.text(0, 85, "STAKE & YIELD", {
+        //     fontFamily: "Nunito, sans-serif",
+        //     fontSize: "10px",
+        //     fontWeight: "800",
+        //     color: "#94a3b8",
+        //     stroke: "#000000",
+        //     strokeThickness: 3.5,
+        //     align: "center"
+        // }).setOrigin(0.5);
 
-        collectorContainer.add([collector, collectorTitle, infoBadge, collectorSubtitle]);
+        collectorContainer.add([collector, infoBadge]);
         collectorContainer.setSize(120, 120);
         collectorContainer.setInteractive({ useHandCursor: true });
         collectorContainer.on("pointerup", (pointer) => {
@@ -655,254 +655,17 @@ export class WorldScene extends Phaser.Scene {
                             return;
                         }
 
+
+
                         const uniqueMapMonsters = res.monsters || [];
                         const capturedMonsters = res.capturedMonsters || [];
                         const capturedCount = capturedMonsters.length;
                         const totalMapMonster = uniqueMapMonsters.length;
                         const isBossDefeated = res.isBossDefeated || false;
+                        const bossTime = res.bossTime || "";
 
-                        this.createOverlay();
-                        const info_container = this.add.container(200, 400).setDepth(101).setScrollFactor(0);
+                        this.showMapInfo(w.name, uniqueMapMonsters, capturedMonsters, totalMapMonster, capturedCount, isBossDefeated, bossTime);
 
-                        // Custom Vector Background Card with Gradient Glow and Shadow (Light Theme)
-                        const cardBg = this.add.graphics();
-                        cardBg.fillStyle(0x020617, 0.4); // Shadow
-                        cardBg.fillRoundedRect(-183, -223, 366, 446, 24);
-
-                        cardBg.fillStyle(0xf8fafc, 0.98); // Main card base (slate-50 interior)
-                        cardBg.fillRoundedRect(-180, -220, 360, 440, 20);
-
-                        cardBg.lineStyle(3.5, 0x0f172a, 1); // Dark Slate outline
-                        cardBg.strokeRoundedRect(-180, -220, 360, 440, 20);
-
-                        cardBg.lineStyle(1.5, 0x94a3b8, 0.6); // Slate 400 inner border frame
-                        cardBg.strokeRoundedRect(-176, -216, 352, 432, 16);
-
-                        // Title Ribbon Banner (Sky Blue themed)
-                        const ribbonW = 240;
-                        const ribbonH = 40;
-                        cardBg.fillStyle(0x0369a1, 0.95); // sky-700
-                        cardBg.lineStyle(2, 0x0ea5e9, 1); // sky-500 border
-                        cardBg.fillRoundedRect(-ribbonW / 2, -220 - 12, ribbonW, ribbonH, 10);
-                        cardBg.strokeRoundedRect(-ribbonW / 2, -220 - 12, ribbonW, ribbonH, 10);
-                        info_container.add(cardBg);
-
-                        // Header Title
-                        const titleText = this.add.text(0, -220 + 8, w.name.toUpperCase(), {
-                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                            fontSize: "20px",
-                            color: "#ffffff"
-                        }).setOrigin(0.5);
-                        titleText.setStroke("#0284c7", 3);
-                        info_container.add(titleText);
-
-                        // Custom Vector Close Button (Light Theme)
-                        const btn_close = this.add.container(155, -196).setScrollFactor(0);
-                        const closeBg = this.add.graphics();
-                        closeBg.fillStyle(0xe2e8f0, 1); // slate-200
-                        closeBg.fillCircle(0, 0, 16);
-                        closeBg.lineStyle(2.5, 0x0f172a, 1); // slate-900 border
-                        closeBg.strokeCircle(0, 0, 16);
-                        const closeText = this.add.text(0, 0, "×", {
-                            fontFamily: "Outfit, Arial",
-                            fontSize: "22px",
-                            color: "#0f172a",
-                            fontWeight: "bold"
-                        }).setOrigin(0.5, 0.55);
-                        btn_close.add([closeBg, closeText]);
-                        btn_close.setSize(32, 32);
-                        btn_close.setInteractive({ useHandCursor: true });
-                        info_container.add(btn_close);
-
-                        // Capture Progress Labels (Light Theme)
-                        const lblCaptured = this.add.text(-150, -135, t("captured_species"), {
-                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                            fontSize: "14px",
-                            color: "#334155"
-                        }).setOrigin(0, 0.5);
-                        lblCaptured.setStroke("#ffffff", 3);
-                        info_container.add(lblCaptured);
-
-                        const valCaptured = this.add.text(150, -135, `${capturedCount} / ${totalMapMonster}`, {
-                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                            fontSize: "16px",
-                            color: "#059669"
-                        }).setOrigin(1, 0.5);
-                        valCaptured.setStroke("#ffffff", 3);
-                        info_container.add(valCaptured);
-
-                        // Custom Vector Progress Bar (Light Theme)
-                        const progressBarBg = this.add.graphics();
-                        progressBarBg.fillStyle(0xe2e8f0, 1); // slate-200
-                        progressBarBg.fillRoundedRect(-150, -118, 300, 20, 10);
-                        progressBarBg.lineStyle(1.5, 0xcbd5e1, 1); // slate-300
-                        progressBarBg.strokeRoundedRect(-150, -118, 300, 20, 10);
-                        info_container.add(progressBarBg);
-
-                        const pct = totalMapMonster > 0 ? capturedCount / totalMapMonster : 0;
-                        if (pct > 0) {
-                            const progressBarFill = this.add.graphics();
-                            progressBarFill.fillStyle(0x10b981, 1); // emerald-500
-                            progressBarFill.fillRoundedRect(-150, -118, 300 * pct, 20, 10);
-
-                            // Highlighting overlay
-                            progressBarFill.fillStyle(0xffffff, 0.25);
-                            progressBarFill.fillRoundedRect(-150, -118, 300 * pct, 8, { tl: 10, tr: 10, bl: 0, br: 0 });
-                            info_container.add(progressBarFill);
-                        }
-
-                        // Boss Status Section (Light Theme)
-                        const lblBoss = this.add.text(-150, -65, t("boss_status"), {
-                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                            fontSize: "14px",
-                            color: "#334155"
-                        }).setOrigin(0, 0.5);
-                        lblBoss.setStroke("#ffffff", 3);
-                        info_container.add(lblBoss);
-
-                        const valBoss = this.add.text(150, -65, isBossDefeated ? t("defeated") : t("active"), {
-                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                            fontSize: "14px",
-                            color: isBossDefeated ? "#059669" : "#d97706"
-                        }).setOrigin(1, 0.5);
-                        valBoss.setStroke("#ffffff", 3);
-                        info_container.add(valBoss);
-
-                        // Divider Line
-                        const sepLine = this.add.graphics();
-                        sepLine.lineStyle(1.5, 0xe2e8f0, 1);
-                        sepLine.lineBetween(-150, -35, 150, -35);
-                        info_container.add(sepLine);
-
-                        // Area monsters list header
-                        const areaText = this.add.text(-150, -15, t("monsters_in_area"), {
-                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                            fontSize: "14px",
-                            color: "#0284c7"
-                        }).setOrigin(0, 0.5);
-                        areaText.setStroke("#ffffff", 3);
-                        info_container.add(areaText);
-
-                        // Scroll viewport setup
-                        const monsterContainer = this.add.container(0, 0);
-                        info_container.add(monsterContainer);
-
-                        const maskShape = this.make.graphics();
-                        maskShape.fillStyle(0xffffff);
-                        maskShape.fillRect(50, 405, 300, 100);
-                        maskShape.setScrollFactor(0);
-                        const mask = maskShape.createGeometryMask();
-
-                        const scrollContainer = this.add.container(0, 0);
-                        scrollContainer.setMask(mask);
-                        monsterContainer.add(scrollContainer);
-
-                        let monsterWidth = 75;
-                        uniqueMapMonsters.forEach((m, index) => {
-                            const mX = -150 + (index * monsterWidth) + 37;
-                            const mY = 50;
-
-                            const slot = this.add.graphics();
-                            slot.fillStyle(0xf1f5f9, 0.85); // Slate 100
-                            slot.fillRoundedRect(mX - 32, mY - 32, 64, 64, 12);
-                            slot.lineStyle(1.5, capturedMonsters.includes(m) ? 0x10b981 : 0xcbd5e1, 1);
-                            slot.strokeRoundedRect(mX - 32, mY - 32, 64, 64, 12);
-                            scrollContainer.add(slot);
-
-                            const monsterImg = this.add.image(mX, mY, `front_${m}`);
-                            monsterImg.setDisplaySize(60, 60);
-                            if (!capturedMonsters.includes(m)) {
-                                monsterImg.setAlpha(0.35); // Semi-transparent silhouette on light theme
-                            }
-                            scrollContainer.add(monsterImg);
-
-                            const rarity = this.getRarityByMonsterId(m);
-                            const nameColor = this.getRarityColor(rarity);
-
-                            const nameText = this.add.text(mX, mY + 42, m.toUpperCase(), {
-                                fontFamily: "Lilita One, Coiny, sans-serif",
-                                fontSize: "9px",
-                                color: nameColor
-                            }).setOrigin(0.5);
-                            nameText.setStroke("#0f172a", 2.5);
-                            scrollContainer.add(nameText);
-                        });
-
-                        const dragZone = this.add.zone(0, 50, 300, 100).setInteractive({ useHandCursor: true });
-                        dragZone.setScrollFactor(0);
-                        info_container.add(dragZone);
-
-                        let startX = 0;
-                        let isDragging = false;
-                        let scrollX = 0;
-
-                        const totalContentWidth = uniqueMapMonsters.length * monsterWidth + 10;
-                        const minScrollX = Math.min(0, 300 - totalContentWidth);
-                        const maxScrollX = 0;
-
-                        dragZone.on("pointerdown", (pointer) => {
-                            startX = pointer.x;
-                            isDragging = true;
-                            this.isModalDragging = true;
-                        });
-
-                        const onPointerMove = (pointer) => {
-                            if (!isDragging) return;
-                            const deltaX = pointer.x - startX;
-                            startX = pointer.x;
-                            scrollX += deltaX;
-                            if (scrollX < minScrollX) scrollX = minScrollX;
-                            if (scrollX > maxScrollX) scrollX = maxScrollX;
-                            scrollContainer.x = scrollX;
-                        };
-
-                        const onPointerUp = () => {
-                            isDragging = false;
-                            this.isModalDragging = false;
-                        };
-
-                        this.input.on("pointermove", onPointerMove);
-                        this.input.on("pointerup", onPointerUp);
-
-                        // Go / Enter Map Button (Premium Amber Gold Theme)
-                        const btn_go = this.add.container(0, 160).setScrollFactor(0);
-                        const goBg = this.add.graphics();
-                        goBg.fillStyle(0xd97706, 1);
-                        goBg.fillRoundedRect(-80, -22, 160, 44, 12);
-                        goBg.lineStyle(2.5, 0xf59e0b, 1);
-                        goBg.strokeRoundedRect(-80, -22, 160, 44, 12);
-                        goBg.fillStyle(0xffffff, 0.2);
-                        goBg.fillRoundedRect(-80, -22, 160, 20, { tl: 12, tr: 12, bl: 0, br: 0 });
-
-                        const goText = this.add.text(0, 0, t("enter_map"), {
-                            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                            fontSize: "18px",
-                            color: "#ffffff"
-                        }).setOrigin(0.5);
-                        goText.setStroke("#78350f", 3.5);
-
-                        btn_go.add([goBg, goText]);
-                        btn_go.setSize(160, 44);
-                        btn_go.setInteractive({ useHandCursor: true });
-                        info_container.add(btn_go);
-
-                        btn_go.on("pointerup", (pointer) => {
-                            if (!checkClick(pointer)) return;
-                            this.isModalDragging = false;
-                            this.input.off("pointermove", onPointerMove);
-                            this.input.off("pointerup", onPointerUp);
-                            this.scene.stop();
-                            this.scene.start("MapScene", { map: w.name });
-                        });
-
-                        btn_close.on("pointerup", (pointer) => {
-                            if (!checkClick(pointer)) return;
-                            this.isModalDragging = false;
-                            this.input.off("pointermove", onPointerMove);
-                            this.input.off("pointerup", onPointerUp);
-                            this.destroyOverlay();
-                            info_container.destroy();
-                        });
                     }).catch(err => {
                         console.error(err);
                         utlity.destroyloadingOverlay(this);
@@ -953,6 +716,161 @@ export class WorldScene extends Phaser.Scene {
                 }
             });
         });
+    }
+
+    showMapInfo(mapid, uniqueMapMonsters, capturedMonsters, totalMapMonster, capturedCount, isBossDefeated = false, bossTime = "") {
+        totalMapMonster = totalMapMonster || 0;
+        capturedCount = capturedCount || 0;
+
+        utlity.createOverlay(this);
+        const info_container = this.add.container(0, 0).setScrollFactor(0);
+        info_container.setDepth(200);
+
+        const infoBg = this.add.image(0, 180, "map-info").setOrigin(0);
+        infoBg.setDepth(200).setDisplaySize(infoBg.displayWidth / 1.6, infoBg.displayHeight / 1.6);
+
+        const header = this.add.image(0, 180, `${mapid}-header`).setOrigin(0);
+        header.setDepth(200);
+        header.setDisplaySize(header.displayWidth / 1.6, header.displayHeight / 1.6);
+
+        const closeBtn = this.add.image(360, 180, "close-button").setOrigin(0);
+        closeBtn.setDepth(200).setScrollFactor(0);
+        closeBtn.setDisplaySize(closeBtn.displayWidth / 2, closeBtn.displayHeight / 2).setInteractive({ useHandCursor: true });
+
+        const goBtn = this.add.image(280, 320, "go-button").setOrigin(0)
+        goBtn.setDepth(200).setScrollFactor(0);
+        goBtn.setDisplaySize(goBtn.displayWidth / 2, goBtn.displayHeight / 2).setInteractive({ useHandCursor: true });
+
+        const progressBarBg = this.add.image(80, 340, "progressbar_bg").setOrigin(0)
+        progressBarBg.setDepth(200);
+        progressBarBg.setDisplaySize(progressBarBg.displayWidth / 2, progressBarBg.displayHeight / 2);
+
+        const progressBarFill = this.add.image(80, 340, "progressbar_fill").setOrigin(0)
+        progressBarFill.setDepth(200);
+        progressBarFill.setDisplaySize(progressBarFill.displayWidth / 2, progressBarFill.displayHeight / 2);
+
+        const ratio = totalMapMonster > 0 ? (capturedCount / totalMapMonster) : 0;
+        const clampedRatio = Math.max(0, Math.min(1, ratio));
+        const progCropWidth = Math.trunc(progressBarFill.width * clampedRatio);
+        progressBarFill.setCrop(0, 0, progCropWidth, progressBarFill.height);
+
+        const capturedPercent = totalMapMonster > 0 ? Math.trunc((capturedCount / totalMapMonster * 100)) : 0;
+
+        const progressText = this.add.text(80, 315, `${capturedPercent}% COMPLETED`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "18px",
+            color: "#ffffff"
+        }).setOrigin(0);
+        progressText.setStroke("#0d0602ff", 3.5);
+        progressText.setDepth(200);
+
+        const bossBattleTextStr = isBossDefeated ? "DEFEATED" : (bossTime ? bossTime : "CLOSED");
+        const bossBattle = this.add.text(80, 418, bossBattleTextStr, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "13px",
+            color: "#ffffff"
+        }).setOrigin(0);
+        bossBattle.setStroke("#0d0602ff", 3.5);
+        bossBattle.setDepth(200);
+
+        const areaMonster = this.add.text(275, 415, `${capturedCount}/${totalMapMonster}`, {
+            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
+            fontSize: "21px",
+            color: "#ffffff"
+        }).setOrigin(0);
+        areaMonster.setStroke("#0d0602ff", 3.5);
+        areaMonster.setDepth(200);
+
+        info_container.add([infoBg, header, goBtn, progressBarBg, progressBarFill, progressText, bossBattle, areaMonster, closeBtn]);
+
+
+
+
+        const maskShape = this.make.graphics();
+        maskShape.fillStyle(0xffffff);
+        maskShape.fillRect(0, 485, 400, 200);
+        maskShape.setScrollFactor(0);
+        const mask = maskShape.createGeometryMask();
+
+        const scrollContainer = this.add.container(0, 0);
+        scrollContainer.setMask(mask).setDepth(200);
+        info_container.add(scrollContainer);
+
+        let monsterWidth = 0;
+        uniqueMapMonsters.forEach((m, index) => {
+            const mX = 20 + monsterWidth + 37;
+            const mY = 615;
+
+            const monsterImg = this.add.image(mX, mY, `front_${m}`);
+            monsterImg.setDisplaySize(monsterImg.displayWidth / 2.3, monsterImg.displayHeight / 2.3).setOrigin(0, 1);
+            monsterWidth += monsterImg.displayWidth;
+
+            if (!capturedMonsters.includes(m)) {
+                monsterImg.setAlpha(0.35); // Semi-transparent silhouette on light theme
+            }
+            scrollContainer.add(monsterImg);
+
+        });
+
+
+        const dragZone = this.add.zone(0, 485, 400, 200).setInteractive({ useHandCursor: true });
+        dragZone.setScrollFactor(0).setOrigin(0);
+        info_container.add(dragZone);
+
+        let startX = 0;
+        let isDragging = false;
+        let scrollX = 0;
+
+        const totalContentWidth = monsterWidth;
+        const minScrollX = Math.min(0, 300 - totalContentWidth);
+        const maxScrollX = 0;
+
+        dragZone.on("pointerdown", (pointer) => {
+            startX = pointer.x;
+            isDragging = true;
+            this.isModalDragging = true;
+        });
+
+        const onPointerMove = (pointer) => {
+            if (!isDragging) return;
+            const deltaX = pointer.x - startX;
+            startX = pointer.x;
+            scrollX += deltaX;
+            if (scrollX < minScrollX) scrollX = minScrollX;
+            if (scrollX > maxScrollX) scrollX = maxScrollX;
+            scrollContainer.x = scrollX;
+        };
+
+        const onPointerUp = () => {
+            isDragging = false;
+            this.isModalDragging = false;
+        };
+
+        this.input.on("pointermove", onPointerMove);
+        this.input.on("pointerup", onPointerUp);
+
+        goBtn.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            this.isModalDragging = false;
+            this.input.off("pointermove", onPointerMove);
+            this.input.off("pointerup", onPointerUp);
+            this.scene.stop();
+            this.scene.start("MapScene", { map: mapid });
+        });
+
+        closeBtn.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            utlity.destroyOverlay(this);
+            this.isModalDragging = false;
+            this.input.off("pointermove", onPointerMove);
+            this.input.off("pointerup", onPointerUp);
+            info_container.destroy();
+        });
+
+
+
+        info_container.add(scrollContainer);
+
     }
 
     showPrelaunchCongratulations(prelaunchReward) {

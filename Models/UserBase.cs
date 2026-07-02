@@ -51,18 +51,14 @@ namespace monster_world.Models
         public long ReferrerID { get; set; }
         public bool ReferrerRewarded { get; set; } = false;
         public List<string> UnlockedWorlds { get; set; }
-        private int _unlockedSlots = 1;
-        public int UnlockedSlots
-        {
-            get => System.Math.Max(1, _unlockedSlots);
-            set => _unlockedSlots = System.Math.Max(1, value);
-        }
-        private int _unlockedCollectorSlots = 1;
-        public int UnlockedCollectorSlots
-        {
-            get => System.Math.Max(1, _unlockedCollectorSlots);
-            set => _unlockedCollectorSlots = System.Math.Max(1, value);
-        }
+        public int UnlockedSlots { get; set; } = 1;
+        public int UnlockedCollectorSlots { get; set; } = 0;
+        public int UnlockedCommonSlots { get; set; } = 1;
+        public int UnlockedRareSlots { get; set; } = 0;
+        public int UnlockedEpicSlots { get; set; } = 0;
+        public int UnlockedLegendarySlots { get; set; } = 0;
+        public List<string> StakedMonsters { get; set; } = new();
+        public List<string> ListedMonsters { get; set; } = new();
         public List<string> Monsters { get; set; }
         public Items Items { get; set; }
         public List<string> Transactions { get; set; }
@@ -75,6 +71,8 @@ namespace monster_world.Models
         public bool Tutorial { get; set; }
         public bool HasAcceptedAgreement { get; set; } = false;
         public int Level { get; set; } = 1;
+        public int MaxXP { get; set; } = 100;
+        public int XP { get; set; } = 0;
         public DateTime RegistrationDate { get; set; }
         public int LoginStreak { get; set; } = 0;
         public DateTime? LastLoginDate { get; set; } = null;
@@ -92,6 +90,7 @@ namespace monster_world.Models
             Deposits = new List<Deposit>();
             Withdraws = new List<Withdraw>();
             Missions = new List<string>();
+            StakedMonsters = new List<string>();
             Balance = new Balance();
             Items = new Items();
             RegistrationDate = DateTime.UtcNow;
@@ -133,6 +132,40 @@ namespace monster_world.Models
 
             Transactions.Add(DateTime.UtcNow+"|"+Item+"|"+Quantity+"|"+Action);
         }
+
+        public void AddXP(int xpAmount)
+        {
+            if (Level >= 30)
+            {
+                Level = 30;
+                XP = MaxXP;
+                return;
+            }
+
+            XP += xpAmount;
+            while (XP >= MaxXP)
+            {
+                XP -= MaxXP;
+                Level++;
+                if (Level >= 30)
+                {
+                    Level = 30;
+                    XP = MaxXP;
+                    break;
+                }
+                MaxXP = (int)(Math.Round((100 * Math.Pow(Level, 1.5)) / 100.0) * 100);
+            }
+        }
+    }
+
+    public class Collector
+    {
+        public int Id { get; set; } = 1;
+        public List<string> CommonSpecies { get; set; } = new();
+        public List<string> RareSpecies { get; set; } = new();
+        public List<string> EpicSpecies { get; set; } = new();
+        public List<string> LegendarySpecies { get; set; } = new();
+        public DateTime LastEligibleTime { get; set; } = DateTime.UtcNow;
     }
 
 
@@ -239,10 +272,16 @@ namespace monster_world.Models
         public Guid ID { get; set; }
         public long UserID { get; set; }
         public double Amount { get; set; }
+        public double Fee { get; set; }
+        public double NetAmount { get; set; }
         public string Currency { get; set; }
         public string Hash { get; set; }
         public bool Processing { get; set; }
         public bool Completed { get; set; }
+        public string WalletAddress { get; set; }
+        public string Status { get; set; } = "Pending";
+        public string PlayerStatsJson { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 
    

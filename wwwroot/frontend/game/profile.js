@@ -340,10 +340,8 @@ export class ProfileScene extends Phaser.Scene {
         }
 
         // EXP Bar using graphics and gradients
-        const activeMonster = state.selectedMonsters && state.selectedMonsters[0] || {};
-        const monsterLvl = activeMonster.level || this.USER.level || 1;
-        const currentXP = activeMonster.xp || 0;
-        const maxXP = activeMonster.maxXP || 500;
+        const currentXP = this.USER.xp || 0;
+        const maxXP = this.USER.maxXP || 100;
 
         const expY = cardTop + 184;
 
@@ -418,7 +416,7 @@ export class ProfileScene extends Phaser.Scene {
             { label: t("battles_lost"), val: String(Math.max(0, (this.USER.totalBattles || 0) - (this.USER.totalVictory || 0))) },
             { label: t("win_rate"), val: `${this.USER.totalBattles > 0 ? Math.round(((this.USER.totalVictory || 0) / this.USER.totalBattles) * 100) : 0}%` },
             { label: t("total_captured"), val: String(this.USER.totalCaptured || 0) },
-            { label: t("player_level"), val: String(monsterLvl) }
+            { label: t("player_level"), val: String(this.USER.level || 1) }
         ];
 
         stats.forEach((item, index) => {
@@ -553,7 +551,7 @@ export class ProfileScene extends Phaser.Scene {
         witZone.on("pointerup", (pointer) => {
             this.tweens.add({ targets: witBtnContainer, scaleX: 1.0, scaleY: 1.0, duration: 50 });
             if (!checkClick(pointer)) return;
-            showNotification(this, t("withdraw_soon"));
+            this.scene.launch("WithdrawalScene");
         });
 
         // --- PREMIUM LANGUAGE TOGGLE PILL ---
@@ -958,6 +956,8 @@ export class ProfileScene extends Phaser.Scene {
             }
         });
     }
+
+
 
     async loadProfileData() {
         try {

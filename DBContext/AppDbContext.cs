@@ -22,6 +22,9 @@ namespace monster_world.DBContext
         public DbSet<POOL> Pool { get; set; }
         public DbSet<MapBase> MapLiquidity { get; set; }
         public DbSet<BattleService.BossBattle> BossBattleData { get; set; }
+        public DbSet<Collector> Collectors { get; set; }
+        public DbSet<MarketplaceBase> Marketplace { get; set; }
+        public DbSet<MarketplaceLog> MarketplaceLogs { get; set; }
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
@@ -44,11 +47,11 @@ namespace monster_world.DBContext
                     }
                     else
                     {
-                        if (entry.Entity.HP <= 0)
+                        if (entry.Entity.HP < entry.Entity.MaxHP)
                         {
                             entry.Entity.IsRegenerating = true;
                         }
-                        else if (entry.Entity.HP >= entry.Entity.MaxHP)
+                        else
                         {
                             entry.Entity.IsRegenerating = false;
                         }
@@ -61,7 +64,7 @@ namespace monster_world.DBContext
                 }
                 else if (entry.State == EntityState.Added)
                 {
-                    if (entry.Entity.HP <= 0 && !entry.Entity.IsFighting)
+                    if (entry.Entity.HP < entry.Entity.MaxHP && !entry.Entity.IsFighting)
                     {
                         entry.Entity.IsRegenerating = true;
                     }

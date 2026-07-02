@@ -52,7 +52,34 @@ const locations = {
         { name: "O", x: 804, y: 239, active: false, bgs: "bgs_riverfall_cave" },
         { name: "BOSS", x: 828, y: 528, active: false, bgs: "bgs_castle" }
     ],
-    "costa-gueta": [],
+    "costa-gueta": [
+        { name: "A", x: 119, y: 199, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "B", x: 267, y: 212, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "C", x: 32, y: 272, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "D", x: 5, y: 376, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "E", x: 234, y: 283, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "F", x: 395, y: 307, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "G", x: 389, y: 403, active: false, bgs: "bgs_costa" },
+        { name: "H", x: 490, y: 248, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "I", x: 611, y: 231, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "J", x: 737, y: 206, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "K", x: 779, y: 134, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "L", x: 678, y: 76, active: false, bgs: "bgs_riverfall_tall_pine" },
+        { name: "BOSS", x: 600, y: 135, active: false, bgs: "bgs_castle" },
+        { name: "N", x: 325, y: 471, active: false, bgs: "bgs_costa" },
+        { name: "O", x: 178, y: 456, active: false, bgs: "bgs_costa" },
+        { name: "P", x: 39, y: 511, active: false, bgs: "bgs_costa" },
+        { name: "Q", x: 515, y: 349, active: false, bgs: "bgs_costa" },
+        { name: "R", x: 673, y: 348, active: false, bgs: "bgs_costa" },
+        { name: "S", x: 841, y: 349, active: false, bgs: "bgs_costa" },
+        { name: "T", x: 851, y: 233, active: false, bgs: "bgs_costa" },
+        { name: "U", x: 965, y: 229, active: false, bgs: "bgs_costa" },
+        { name: "V", x: 935, y: 117, active: false, bgs: "bgs_costa" },
+        { name: "W", x: 664, y: 465, active: false, bgs: "bgs_costa" },
+        { name: "X", x: 738, y: 553, active: false, bgs: "bgs_costa" },
+        { name: "Y", x: 491, y: 465, active: false, bgs: "bgs_costa" },
+
+    ],
     "volcano": []
 
 }
@@ -100,14 +127,40 @@ const graphs = {
         "O": ["N"],
         "BOSS": ["M"]
     },
-    "costa-gueta": {}
+    "costa-gueta": {
+        "A": ["B", "C"],
+        "B": ["A", "E"],
+        "C": ["A", "D"],
+        "D": ["C"],
+        "E": ["B", "F"],
+        "F": ["E", "H", "G", "Q"],
+        "G": ["F", "Y", "N", "Q"],
+        "H": ["F", "I"],
+        "I": ["H", "J"],
+        "J": ["I", "K"],
+        "K": ["J", "L"],
+        "L": ["K", "BOSS"],
+        "BOSS": ["L"],
+        "N": ["G", "Y", "O"],
+        "O": ["P", "N"],
+        "P": ["O"],
+        "Q": ["F", "G", "Y", "R"],
+        "R": ["Q", "W", "S"],
+        "S": ["R", "T"],
+        "T": ["S", "U"],
+        "U": ["T", "V"],
+        "V": ["U"],
+        "W": ["R", "Y", "X"],
+        "X": ["W"],
+        "Y": ["N", "G", "Q", "W"]
+    }
 }
 
 
 const MAPS = [
     { name: "bootcamp", backgrounds: ["bootcamp-bg-1", "bootcamp-bg-2"] },
     { name: "riverfall", backgrounds: ["riverfall-bg-1", "riverfall-bg-2", "riverfall-bg-3"] },
-    { name: "costa-gueta", backgrounds: ["costa-gueta-bg-1", "costa-gueta-bg-2", "costa-gueta-bg-3", "costa-gueta-bg-4", "costa-gueta-bg-5", "costa-gueta-bg-6"] },
+    { name: "costa-gueta", backgrounds: ["costa-gueta-bg-1", "costa-gueta-bg-2", "costa-gueta-bg-3", "costa-gueta-bg-4", "costa-gueta-bg-5"] },
     { name: "volcano", backgrounds: ["volcano-bg-1", "volcano-bg-2"] }
 ]
 
@@ -268,7 +321,7 @@ export class MapScene extends Phaser.Scene {
 
         const goldCoinx = 105 + toncoin.displayWidth + tonCharsWidth + 10;
         const goldCoin = this.add.image(goldCoinx, 65, "item_gold");
-        goldCoin.setDisplaySize(goldCoin.displayWidth / 4, goldCoin.displayHeight / 4).setScrollFactor(0).setOrigin(0);
+        goldCoin.setDisplaySize(24, 24).setScrollFactor(0).setOrigin(0);
         this.profileContainer.add(goldCoin);
 
 

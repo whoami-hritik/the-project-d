@@ -41,6 +41,19 @@ namespace monster_world.Services
                 }
 
                 UserBase user = await _dbContext.Users.FirstOrDefaultAsync(x => x.ID == User.ID);
+                if (user != null)
+                {
+                    user.UnlockedWorlds ??= new List<string>();
+                    user.Monsters ??= new List<string>();
+                    user.Transactions ??= new List<string>();
+                    user.Payloads ??= new List<string>();
+                    user.Missions ??= new List<string>();
+                    user.StakedMonsters ??= new List<string>();
+
+                    user.Username = User.Username;
+                    user.FirstName = User.FirstName;
+                    user.LastName = User.LastName;
+                }
                 if (user == null)
                 {
                     long validReferrerId = 0;
@@ -84,6 +97,8 @@ namespace monster_world.Services
                         TotalVictory = 0,
                         Bonus = false,
                         Level = 1,
+                        XP = 0,
+                        MaxXP = 100,
                         Balance = new()
                         {
                             TON = 0,
@@ -190,15 +205,15 @@ namespace monster_world.Services
                         user.Level = 1;
                     }
 
-                    // Synchronize user level with the maximum monster level owned
-                    int maxMonsterLevel = await _dbContext.Monsters
-                        .Where(m => m.OwnerID == user.ID)
-                        .Select(m => (int?)m.Level)
-                        .MaxAsync() ?? 1;
-                    if (maxMonsterLevel > user.Level)
-                    {
-                        user.Level = maxMonsterLevel;
-                    }
+                    // // Synchronize user level with the maximum monster level owned
+                    // int maxMonsterLevel = await _dbContext.Monsters
+                    //     .Where(m => m.OwnerID == user.ID)
+                    //     .Select(m => (int?)m.Level)
+                    //     .MaxAsync() ?? 1;
+                    // if (maxMonsterLevel > user.Level)
+                    // {
+                    //     user.Level = maxMonsterLevel;
+                    // }
 
                     var today = DateTime.UtcNow.Date;
                     if (user.LastLoginDate == null)

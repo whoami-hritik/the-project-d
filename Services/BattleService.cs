@@ -21,7 +21,9 @@ namespace monster_world.Services
         public bool RewardProcessed { get; set; } = false;
         public bool Victory { get; set; } = false;
         public Items BattleConusmable = new();
-    
+        
+        [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+        public string ExtraRewardMessage { get; set; }
     }
 
     public class MonsterState

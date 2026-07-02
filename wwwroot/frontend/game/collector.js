@@ -1,1539 +1,964 @@
-import * as api from "../webapp/api.js";
-import { state } from "../state.js";
+import { WorldScene } from "./game.js";
 import { checkClick } from "./game.js";
-import { showNotification, createloadingOverlay, destroyloadingOverlay } from "../utility.js";
-import { t } from "../translations.js";
+import * as utility from "../utility.js";
+import * as api from "../webapp/api.js";
+
+const MAPS = [
+    {
+        name: "collector",
+        backgrounds: ["collector-bg-1", "collector-bg-2"],
+        spawnPoint: { x: 40, y: 277 }
+    }
+]
+
+const locations = {
+    "collector": [
+        { name: "A", x: 40, y: 277, collector: false },
+        { name: "B", x: 151, y: 286, collector: false },
+        { name: "C", x: 253, y: 257, collector: true, collectorRarity: "rare", info: { x: 210, y: 197, text: "I am Lily, a lover of rare monsters.\nIf you find any rare monsters, rent them to me.\nIn return, I'll pay you rewards regularly." }, avatar: "lily" },
+        { name: "D", x: 350, y: 217, collector: false },
+        { name: "E", x: 475, y: 214, collector: true, collectorRarity: "common", info: { x: 500, y: 157, text: "I'm Jenni, the keeper of common monsters.\nEveryone ignores them, but I treasure them.\nRent them to me and I'll reward you regularly." }, avatar: "jenni" },
+        { name: "F", x: 525, y: 277, collector: false },
+        { name: "G", x: 461, y: 342, collector: false },
+        { name: "H", x: 267, y: 342, collector: false },
+        { name: "I", x: 138, y: 404, collector: true, collectorRarity: "epic", info: { x: 65, y: 380, text: "I'm Fang. Only Epic monsters catch my eye.\nStrength is all that matters.\nRent them to me and earn great rewards." }, avatar: "fang" },
+        { name: "J", x: 151, y: 522, collector: false },
+        { name: "K", x: 253, y: 549, collector: false },
+        { name: "L", x: 411, y: 549, collector: false },
+        { name: "M", x: 411, y: 494, collector: true, collectorRarity: "legendary", info: { x: 403, y: 424, text: "I'm Nora. I seek only Legendary monsters.\nNothing else compares to their greatness.\nRent them to me for the highest rewards." }, avatar: "nora" }
+    ],
+}
+
+const graph = {
+    "A": ['B'],
+    'B': ['A', 'C'],
+    'C': ['B', 'D'],
+    'D': ['C', 'E'],
+    'E': ['D', 'F'],
+    'F': ['E', 'G'],
+    'G': ['F', 'H'],
+    'H': ['G', 'I'],
+    'I': ['H', 'J'],
+    'J': ['I', 'K'],
+    'K': ['J', 'L'],
+    'L': ['K', 'M'],
+    'M': ['L']
+}
+
+const rarityMap = {
+    lily: "rare",
+    jenni: "common",
+    fang: "epic",
+    nora: "legendary"
+};
 
 export class CollectorScene extends Phaser.Scene {
     constructor() {
         super({ key: "CollectorScene" });
     }
 
-    getSafeMonsterIconKey(spriteKey) {
-        try {
-            if (this.textures.exists(spriteKey)) {
-                const tex = this.textures.get(spriteKey);
-                if (tex && tex.source && tex.source[0] && tex.source[0].image && tex.source[0].width > 0) {
-                    return spriteKey;
-                }
-            }
-        } catch (e) {
-            console.error("Error checking texture:", spriteKey, e);
-        }
-
-        const fallback = "icon_kikflick";
-        try {
-            if (this.textures.exists(fallback)) {
-                const tex = this.textures.get(fallback);
-                if (tex && tex.source && tex.source[0] && tex.source[0].image && tex.source[0].width > 0) {
-                    return fallback;
-                }
-            }
-        } catch (e) {
-            console.error("Error checking fallback:", e);
-        }
-        return null;
-    }
-
     create() {
-        this.width = this.scale.width;
-        this.height = this.scale.height;
-
-        this.statusData = null;
-        this.stakedMonstersInfo = []; // cache for real-time tickers
-        this.statusLoadTime = 0;
-
-        this.createOverlay();
-        this.createDialog();
-        this.loadCollectorData();
+        this.initializeBg();
     }
 
-    createOverlay() {
-        this.overlay = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.65)
-            .setOrigin(0)
-            .setDepth(200)
-            .setScrollFactor(0)
-            .setInteractive();
-    }
+    initializeBg() {
+        const mapConfig = MAPS.find(m => m.name === this.world) ?? MAPS[0];
+        const bgKeys = mapConfig.backgrounds;
 
-    createDialog() {
-        this.container = this.add.container(0, 0).setDepth(201);
+        this.edgePadding = 40;
 
-        const modalW = 360;
-        const modalH = 585;
-        const modalX = this.width / 2;
-        const modalY = this.height / 2;
-        const cardTop = modalY - modalH / 2;
-
-        // Shadow background panel
-        const shadow = this.add.graphics();
-        shadow.fillStyle(0x020617, 0.4);
-        shadow.fillRoundedRect(modalX - modalW / 2 + 5, cardTop + 5, modalW, modalH, 18);
-        this.container.add(shadow);
-
-        // Main outer dialog card - Premium Bright Light Theme matching Profile
-        const card = this.add.graphics();
-        card.fillStyle(0xf8fafc, 0.98); // Slate 50 (bright light interior)
-        card.lineStyle(3.5, 0x0f172a, 1);  // Slate 900 outer outline (dark)
-        card.fillRoundedRect(modalX - modalW / 2, cardTop, modalW, modalH, 18);
-        card.strokeRoundedRect(modalX - modalW / 2, cardTop, modalW, modalH, 18);
-
-        // Inner frame line
-        card.lineStyle(1.5, 0x94a3b8, 0.6); // Slate 400 inner border
-        card.strokeRoundedRect(modalX - modalW / 2 + 4, cardTop + 4, modalW - 8, modalH - 8, 14);
-        this.container.add(card);
-
-        // Ribbon Banner for Title
-        const ribbonW = 240;
-        const ribbonH = 40;
-        const ribbonX = modalX;
-        const ribbonY = cardTop + 15;
-
-        const ribbon = this.add.graphics();
-        ribbon.fillStyle(0x0f172a, 0.95); // Dark ribbon for contrast
-        ribbon.lineStyle(2, 0xf59e0b, 1); // Amber 500 border
-        ribbon.fillRoundedRect(ribbonX - ribbonW / 2, ribbonY, ribbonW, ribbonH, 8);
-        ribbon.strokeRoundedRect(ribbonX - ribbonW / 2, ribbonY, ribbonW, ribbonH, 8);
-        this.container.add(ribbon);
-
-        // Title Text
-        const titleText = this.add.text(ribbonX, ribbonY + ribbonH / 2, t("collector_title"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "20px"
-        }).setOrigin(0.5);
-        const titleGrad = titleText.context.createLinearGradient(0, 0, 0, titleText.height);
-        titleGrad.addColorStop(0, '#fbbf24'); // Amber 300
-        titleGrad.addColorStop(1, '#f59e0b'); // Amber 500
-        titleText.setFill(titleGrad);
-        titleText.setStroke("#020617", 4.5);
-        titleText.setShadow(1, 1, "#000000", 1, true, true);
-        this.container.add(titleText);
-
-        // Info Button [!]
-        const infoBtn = this.add.container(modalX + modalW / 2 - 62, ribbonY + ribbonH / 2);
-        const infoCircle = this.add.graphics();
-        infoCircle.fillStyle(0x3b82f6, 1); // Premium Blue
-        infoCircle.lineStyle(1.5, 0x0f172a, 1);
-        infoCircle.fillCircle(0, 0, 12);
-        infoCircle.strokeCircle(0, 0, 12);
-        infoBtn.add(infoCircle);
-
-        const infoTxt = this.add.text(0, 0, "i", {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "14px",
-            color: "#ffffff"
-        }).setOrigin(0.5);
-        infoBtn.add(infoTxt);
-
-        const infoHit = this.add.circle(0, 0, 12, 0, 0).setInteractive({ useHandCursor: true });
-        infoBtn.add(infoHit);
-        this.container.add(infoBtn);
-
-        infoHit.on("pointerover", () => infoBtn.setScale(1.1));
-        infoHit.on("pointerout", () => infoBtn.setScale(1.0));
-        infoHit.on("pointerdown", () => infoBtn.setScale(0.95));
-        infoHit.on("pointerup", (pointer) => {
-            infoBtn.setScale(1.0);
-            if (!checkClick(pointer)) return;
-            this.showCollectorInfoModal();
+        this.panels = bgKeys.map((key, i) => {
+            const img = this.add.image(0, 0, key).setOrigin(0);
+            const scale = this.scale.height / img.height;
+            img.setScale(scale);
+            img.displayWidth = Math.round(img.displayWidth);
+            return img;
         });
 
-        // Close Button
-        const mainCloseBtnKey = this.getSafeMonsterIconKey("close-button") || "icon_kikflick";
-        const closeBtn = this.add.image(modalX + modalW / 2 - 25, ribbonY + ribbonH / 2, mainCloseBtnKey)
-            .setDisplaySize(28, 28)
-            .setInteractive({ useHandCursor: true });
-        this.container.add(closeBtn);
-
-        closeBtn.on("pointerup", (pointer) => {
-            if (!checkClick(pointer)) return;
-            this.closeCollector();
+        let currentX = 0;
+        this.panels.forEach((img) => {
+            img.x = currentX;
+            currentX += img.displayWidth;
         });
 
-        // Setup scrollable view area for slots
-        this.listContainer = this.add.container(modalX, modalY - modalH / 2 + 195).setDepth(202);
-        this.viewY = modalY - modalH / 2 + 195;
-        this.viewWidth = modalW - 24;
-        this.viewHeight = modalH - 220;
+        const totalWidth = currentX;
+        this.minScroll = 0;
+        this.maxScroll = Math.max(0, totalWidth - this.scale.width);
+        this.cameras.main.setBounds(0, 0, totalWidth, this.scale.height);
 
-        // Mask
-        const maskGraphics = this.make.graphics({ add: false });
-        maskGraphics.fillRect(modalX - this.viewWidth / 2, this.viewY, this.viewWidth, this.viewHeight);
-        const mask = maskGraphics.createGeometryMask();
-        this.listContainer.setMask(mask);
+        this.dragStartX = 0;
+        this.startScrollX = 0;
 
-        this.enableListScrolling();
-    }
-
-    closeCollector() {
-        if (this.infoModal) {
-            this.infoModal.destroy();
-            this.infoModal = null;
-        }
-        this.overlay.destroy();
-        this.scene.stop("CollectorScene");
-    }
-
-    showCollectorInfoModal() {
-        if (this.infoModal) {
-            this.infoModal.destroy();
-        }
-
-        const modalW = 320;
-        const modalH = 430;
-        const modalX = this.width / 2;
-        const modalY = this.height / 2;
-
-        this.infoModal = this.add.container(0, 0).setDepth(230);
-
-        // Dim background
-        const dim = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.8)
-            .setOrigin(0)
-            .setInteractive();
-        this.infoModal.add(dim);
-
-        // Card Shadow
-        const shadow = this.add.graphics();
-        shadow.fillStyle(0x020617, 0.4);
-        shadow.fillRoundedRect(modalX - modalW / 2 + 4, modalY - modalH / 2 + 4, modalW, modalH, 16);
-        this.infoModal.add(shadow);
-
-        // Card
-        const card = this.add.graphics();
-        card.fillStyle(0xf8fafc, 0.98);
-        card.lineStyle(3, 0x0f172a, 1);
-        card.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
-        card.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
-        this.infoModal.add(card);
-
-        // Header Title
-        const titleText = this.add.text(modalX, modalY - modalH / 2 + 25, t("collector_info_title"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "16px",
-            color: "#0f172a"
-        }).setOrigin(0.5);
-        this.infoModal.add(titleText);
-
-        // Close Button [x]
-        const closeBtnKey = this.getSafeMonsterIconKey("close-button") || "icon_kikflick";
-        const closeBtn = this.add.image(modalX + modalW / 2 - 25, modalY - modalH / 2 + 25, closeBtnKey)
-            .setDisplaySize(20, 20)
-            .setInteractive({ useHandCursor: true });
-        this.infoModal.add(closeBtn);
-        closeBtn.on("pointerup", (pointer) => {
-            if (!checkClick(pointer)) return;
-            this.infoModal.destroy();
-            this.infoModal = null;
+        this.input.on('pointerdown', (pointer) => {
+            this.dragStartX = pointer.x;
+            this.startScrollX = this.cameras.main.scrollX;
         });
 
-        let currentY = modalY - modalH / 2 + 55;
-
-        // Rules Section Header
-        const rulesTitle = this.add.text(modalX - modalW / 2 + 20, currentY, t("collector_info_rules"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "12px",
-            color: "#475569"
-        });
-        this.infoModal.add(rulesTitle);
-        currentY += 20;
-
-        // Rules list
-        const rules = [
-            t("collector_info_rule1"),
-            t("collector_info_rule2"),
-            t("collector_info_rule3"),
-            t("collector_info_rule4"),
-            t("collector_info_rule5")
-        ];
-
-        rules.forEach(rule => {
-            const txt = this.add.text(modalX - modalW / 2 + 20, currentY, rule, {
-                fontFamily: "Nunito, sans-serif",
-                fontSize: "11px",
-                fontWeight: "800",
-                color: "#1e293b",
-                wordWrap: { width: modalW - 40 }
-            });
-            this.infoModal.add(txt);
-            currentY += txt.height + 6;
+        this.input.on('pointermove', (pointer) => {
+            if (!pointer.isDown) return;
+            let dx = pointer.x - this.dragStartX;
+            let newScroll = this.startScrollX - dx;
+            newScroll = Phaser.Math.Clamp(newScroll, this.minScroll, this.maxScroll);
+            this.cameras.main.scrollX = Math.round(newScroll);
         });
 
-        currentY += 10;
+        const player = this.add.image(MAPS[0].spawnPoint.x, MAPS[0].spawnPoint.y, "player").setDepth(5).setOrigin(0, 0.5);
+        player.setDisplaySize(player.displayWidth / 1.5, player.displayHeight / 1.5);
+        player.position = "A";
 
-        // Divider
-        const divider = this.add.graphics();
-        divider.lineStyle(1.5, 0xe2e8f0, 1);
-        divider.lineBetween(modalX - modalW / 2 + 20, currentY, modalX + modalW / 2 - 20, currentY);
-        this.infoModal.add(divider);
-        currentY += 15;
+        locations["collector"].forEach((l, i) => {
+            const node = this.add.image(l.x, l.y, "node").setOrigin(0).setInteractive({ useHandCursor: true });
+            node.setDisplaySize(node.displayWidth / 2, node.displayHeight / 2);
 
-        // Eligible Monsters Section Header
-        const eligibleTitle = this.add.text(modalX - modalW / 2 + 20, currentY, t("collector_eligible_species"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "12px",
-            color: "#475569"
-        });
-        this.infoModal.add(eligibleTitle);
-        currentY += 20;
+            if (l.collector) {
+                const avatar = this.add.image(l.x + node.displayWidth, l.y, l.avatar + "_avatar").setOrigin(1, 0.5).setInteractive({ useHandCursor: true });
+                avatar.setDisplaySize(avatar.displayWidth / 1.5, avatar.displayHeight / 1.5);
 
-        // Render eligible monster species
-        const eligibleList = this.statusData.eligibleMonsters || [];
-        
-        // Let's draw them in a nice grid! 2 columns, say.
-        const startX = modalX - modalW / 2 + 25;
-        const colWidth = 135;
-        const rowHeight = 36;
-        
-        eligibleList.forEach((monId, index) => {
-            const col = index % 2;
-            const row = Math.floor(index / 2);
-            
-            const x = startX + col * colWidth;
-            const y = currentY + row * rowHeight;
-            
-            // Container for this species
-            const monContainer = this.add.container(x, y);
-            
-            // Icon
-            const spriteKey = `icon_${monId.toLowerCase()}`;
-            const safeKey = this.getSafeMonsterIconKey(spriteKey);
-            if (safeKey) {
-                const portrait = this.add.image(12, 12, safeKey);
-                portrait.setDisplaySize(24, 24);
-                monContainer.add(portrait);
-            } else {
-                const placeholder = this.add.graphics();
-                placeholder.fillStyle(0xcbd5e1, 1);
-                placeholder.fillCircle(12, 12, 12);
-                monContainer.add(placeholder);
-            }
-            
-            // Name
-            const name = this.add.text(28, 6, monId.toUpperCase(), {
-                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                fontSize: "10px",
-                color: "#0f172a"
-            });
-            monContainer.add(name);
-            
-            this.infoModal.add(monContainer);
-        });
-    }
+                const info = this.add.image(l.info.x, l.info.y, "marker_info").setOrigin(0).setInteractive({ useHandCursor: true });
+                info.setDisplaySize(info.displayWidth / 2, info.displayHeight / 2);
 
-    async loadCollectorData() {
-        createloadingOverlay(this);
-        try {
-            const res = await api.getCollectorStatus();
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-
-            if (res && res.success) {
-                this.statusData = res;
-                this.statusLoadTime = Date.now();
-                this.farmingCapHours = res.farmingCapHours || 1.0;
-
-                // Sync user state
-                if (res.user) {
-                    state.user = res.user;
-                } else if (res.User) {
-                    state.user = res.User;
-                }
-
-                this.renderUI();
-            } else {
-                showNotification(this, res?.reason || "Failed to load collector status");
-                this.closeCollector();
-            }
-        } catch (err) {
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-            console.error("Error loading collector data:", err);
-            showNotification(this, "Network error loading collector data");
-            this.closeCollector();
-        }
-    }
-
-    renderUI() {
-        // Clear old dynamically generated objects inside container (excluding background & layout)
-        if (this.uiGroup) {
-            this.uiGroup.forEach(obj => obj.destroy());
-        }
-        this.uiGroup = [];
-
-        if (this.listObjects) {
-            this.listObjects.forEach(obj => obj.destroy());
-        }
-        this.listObjects = [];
-
-        const modalW = 360;
-        const modalH = 585;
-        const modalX = this.width / 2;
-        const modalY = this.height / 2;
-        const cardTop = modalY - modalH / 2;
-
-        this.USER = state.user || {};
-
-        // --- top resource / balance panel ---
-        const balanceY = cardTop + 70;
-        const formatNumber = (num) => {
-            if (num === undefined || num === null || isNaN(num)) return "0";
-            return new Intl.NumberFormat('en', {
-                notation: 'compact',
-                maximumFractionDigits: 2
-            }).format(num);
-        };
-
-        const drawBalancePill = (x, y, iconKey, value, textFillColor) => {
-            const pillW = 75;
-            const pillH = 24;
-
-            const box = this.add.graphics();
-            box.fillStyle(0xe2e8f0, 0.95);
-            box.lineStyle(1.5, 0x94a3b8, 1);
-            box.fillRoundedRect(x, y, pillW, pillH, 6);
-            box.strokeRoundedRect(x, y, pillW, pillH, 6);
-            this.container.add(box);
-            this.uiGroup.push(box);
-
-            const icon = this.add.image(x + 12, y + pillH / 2, iconKey).setDisplaySize(18, 18);
-            this.container.add(icon);
-            this.uiGroup.push(icon);
-
-            const valText = this.add.text(x + 25, y + pillH / 2, formatNumber(value), {
-                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                fontSize: "11px",
-                color: textFillColor
-            }).setOrigin(0, 0.5);
-            valText.setStroke("#ffffff", 2.5);
-            this.container.add(valText);
-            this.uiGroup.push(valText);
-
-            return pillW;
-        };
-
-        const pillSpacing = 8;
-        let currentPillX = modalX - (3 * 75 + 2 * pillSpacing) / 2;
-        currentPillX += drawBalancePill(currentPillX, balanceY, "item_ton", this.USER.ton || 0, "#2563eb") + pillSpacing;
-        currentPillX += drawBalancePill(currentPillX, balanceY, "item_gold", this.USER.gold || 0, "#d97706") + pillSpacing;
-        drawBalancePill(currentPillX, balanceY, "item_crystal", this.USER.crystal || 0, "#8b5cf6");
-
-        // --- exhibition / countdown card ---
-        const exY = cardTop + 105;
-        const exW = modalW - 40;
-        const exH = 75;
-
-        const exG = this.add.graphics();
-        exG.fillStyle(0x0f172a, 0.95); // Dark Slate
-        exG.lineStyle(2, 0xf59e0b, 1);   // Amber outline
-        exG.fillRoundedRect(modalX - exW / 2, exY, exW, exH, 10);
-        exG.strokeRoundedRect(modalX - exW / 2, exY, exW, exH, 10);
-        this.container.add(exG);
-        this.uiGroup.push(exG);
-
-        const exTitle = this.statusData.activeExhibitionTitle || "COLLECTION EXHIBITION";
-        const mapText = this.add.text(modalX, exY + 18, exTitle, {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "14px",
-            color: "#fbbf24"
-        }).setOrigin(0.5);
-        mapText.setShadow(1, 1, "#000000", 1, true, true);
-        this.container.add(mapText);
-        this.uiGroup.push(mapText);
-
-        const bonusText = this.add.text(modalX, exY + 36, t("match_bonus"), {
-            fontFamily: "Nunito, sans-serif",
-            fontSize: "11px",
-            fontWeight: "800",
-            color: "#10b981"
-        }).setOrigin(0.5);
-        this.container.add(bonusText);
-        this.uiGroup.push(bonusText);
-
-        // Expiry countdown timer text
-        this.timerText = this.add.text(modalX, exY + 54, "Resets in: 00:00:00", {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "11px",
-            color: "#94a3b8"
-        }).setOrigin(0.5);
-        this.container.add(this.timerText);
-        this.uiGroup.push(this.timerText);
-
-        this.countdownSec = this.statusData.countdownSeconds || 0;
-
-        // --- Render slots list ---
-        this.stakedMonstersInfo = [];
-        this.renderSlots();
-    }
-
-    renderSlots() {
-        const slotsCount = this.statusData.unlockedSlots || 1;
-        const maxSlots = this.statusData.maxSlots || 5;
-        const stakedList = this.statusData.stakedMonsters || [];
-
-        let currentY = 10;
-        const itemW = this.viewWidth - 10;
-        const itemH = 92;
-        const spacing = 10;
-
-        // Slots we show: unlocked slots, plus 1 locked slot if unlocked < maxSlots
-        const totalSlotsToShow = Math.min(maxSlots, slotsCount + 1);
-
-        for (let i = 0; i < totalSlotsToShow; i++) {
-            const isLocked = i >= slotsCount;
-            const slotStaked = !isLocked ? stakedList[i] : null;
-
-            const slotContainer = this.add.container(-this.viewWidth / 2 + 5, currentY);
-
-            // Slot Background Panel
-            const panel = this.add.graphics();
-            if (isLocked) {
-                panel.fillStyle(0xe2e8f0, 0.4); // Greyed out locked slot
-                panel.lineStyle(1.5, 0x94a3b8, 0.5);
-            } else if (!slotStaked) {
-                panel.fillStyle(0xf1f5f9, 0.9);  // Clean unoccupied slot
-                panel.lineStyle(2, 0x94a3b8, 1);
-            } else {
-                panel.fillStyle(0xffffff, 0.98); // Solid white occupied slot
-                panel.lineStyle(2.5, this.getRarityColorHex(slotStaked.monster.rarity), 1); // Rarity border
-            }
-            panel.fillRoundedRect(0, 0, itemW, itemH, 12);
-            panel.strokeRoundedRect(0, 0, itemW, itemH, 12);
-            slotContainer.add(panel);
-
-            if (isLocked) {
-                // Locked layout
-                const lockIcon = this.add.text(45, itemH / 2, "🔒", { fontSize: "28px" }).setOrigin(0.5);
-                slotContainer.add(lockIcon);
-
-                const lockTitle = this.add.text(90, 22, t("unlock_slot"), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "14px",
-                    color: "#475569"
-                });
-                slotContainer.add(lockTitle);
-
-                const costVal = this.statusData.nextSlotCost || 100;
-                // Wait! Is cost in GOLD or TON? Default to GOLD unless specified.
-                const currency = "GOLD";
-                const lockDescText = t("unlock_slot_desc", { cost: costVal, currency: currency });
-                const lockDesc = this.add.text(90, 42, lockDescText, {
-                    fontFamily: "Nunito, sans-serif",
-                    fontSize: "11px",
-                    fontWeight: "800",
-                    color: "#64748b"
-                });
-                slotContainer.add(lockDesc);
-
-                // Buy button
-                const btnW = 100;
-                const btnH = 26;
-                const buyBtn = this.add.container(itemW - btnW / 2 - 15, itemH / 2);
-
-                const btnBg = this.add.graphics();
-                btnBg.fillStyle(0x2563eb, 1);
-                btnBg.lineStyle(1.5, 0x0f172a, 1);
-                btnBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-                btnBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-                buyBtn.add(btnBg);
-
-                const btnTxt = this.add.text(0, 0, t("buy"), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "12px",
-                    color: "#ffffff"
-                }).setOrigin(0.5);
-                btnTxt.setStroke("#1e3a8a", 2);
-                buyBtn.add(btnTxt);
-
-                const hitZone = this.add.rectangle(0, 0, btnW, btnH, 0, 0).setInteractive({ useHandCursor: true });
-                buyBtn.add(hitZone);
-                slotContainer.add(buyBtn);
-
-                hitZone.on("pointerover", () => buyBtn.setScale(1.05));
-                hitZone.on("pointerout", () => buyBtn.setScale(1.0));
-                hitZone.on("pointerdown", () => buyBtn.setScale(0.95));
-                hitZone.on("pointerup", async (pointer) => {
-                    buyBtn.setScale(1.0);
+                info.on("pointerup", (pointer) => {
                     if (!checkClick(pointer)) return;
-                    this.unlockSlot();
-                });
 
-            } else if (!slotStaked) {
-                // Empty stake slot layout
-                const plusIcon = this.add.text(45, itemH / 2, "➕", { fontSize: "24px" }).setOrigin(0.5);
-                slotContainer.add(plusIcon);
+                    showAvtarInfo(this, l.avatar, l.info.text);
 
-                const emptyTitle = this.add.text(90, 26, t("empty_slot_title"), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "14px",
-                    color: "#64748b"
-                });
-                slotContainer.add(emptyTitle);
-
-                const emptyDesc = this.add.text(90, 46, t("empty_slot_desc"), {
-                    fontFamily: "Nunito, sans-serif",
-                    fontSize: "11px",
-                    fontWeight: "800",
-                    color: "#94a3b8"
-                });
-                slotContainer.add(emptyDesc);
-
-                // Click overlay on the entire slot
-                const slotHit = this.add.rectangle(itemW / 2, itemH / 2, itemW, itemH, 0x000000, 0)
-                    .setInteractive({ useHandCursor: true });
-                slotContainer.add(slotHit);
-
-                slotHit.on("pointerover", () => panel.lineStyle(2.5, 0x3b82f6, 1).strokeRoundedRect(0, 0, itemW, itemH, 12));
-                slotHit.on("pointerout", () => panel.lineStyle(2, 0x94a3b8, 1).strokeRoundedRect(0, 0, itemW, itemH, 12));
-                slotHit.on("pointerup", (pointer) => {
-                    if (!checkClick(pointer)) return;
-                    this.showMonsterSelectionPanel();
-                });
-
-            } else {
-                // Staked occupied monster layout
-                const mon = slotStaked.monster;
-                const rarityColor = this.getRarityColor(mon.rarity);
-
-                // Monster Image
-                const spriteKey = `icon_${(mon.id || "").toLowerCase()}`;
-                const safeKey = this.getSafeMonsterIconKey(spriteKey);
-                if (safeKey) {
-                    const monImg = this.add.image(42, itemH / 2 - 5, safeKey);
-                    monImg.setDisplaySize(54, 54);
-                    slotContainer.add(monImg);
-                } else {
-                    const placeholder = this.add.graphics();
-                    placeholder.fillStyle(0xcbd5e1, 1);
-                    placeholder.fillCircle(42, itemH / 2 - 5, 27);
-                    slotContainer.add(placeholder);
-                }
-
-                // Level Badge
-                const lvlBox = this.add.graphics();
-                lvlBox.fillStyle(0x0f172a, 1);
-                lvlBox.fillRoundedRect(18, 64, 48, 16, 4);
-                slotContainer.add(lvlBox);
-
-                const lvlTxt = this.add.text(42, 72, `Lv.${mon.level}`, {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "10px",
-                    color: "#ffffff"
-                }).setOrigin(0.5);
-                slotContainer.add(lvlTxt);
-
-                // Monster Name & Rarity
-                const nameTxt = this.add.text(82, 12, (mon.nickname || mon.title || mon.id || "").toUpperCase(), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "13px",
-                    color: "#0f172a"
-                });
-                slotContainer.add(nameTxt);
-
-                const rarityTxt = this.add.text(82, 28, mon.rarity.toUpperCase(), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "9px",
-                    color: rarityColor
-                });
-                slotContainer.add(rarityTxt);
-
-                // Farming yield indicators
-                const yieldY = 44;
-                const goldYield = slotStaked.goldRate || 0;
-                const crystalYield = slotStaked.crystalRate || 0;
-
-                let rateDesc = "";
-                if (goldYield > 0 && crystalYield > 0) {
-                    rateDesc = `💎+${goldYield}G • +${crystalYield}C/hr`;
-                } else if (crystalYield > 0) {
-                    rateDesc = `💎+${crystalYield} Crystal/hr`;
-                } else {
-                    rateDesc = `💎+${goldYield} Gold/hr`;
-                }
-
-                const yieldRateTxt = this.add.text(82, yieldY, rateDesc, {
-                    fontFamily: "Nunito, sans-serif",
-                    fontSize: "10px",
-                    fontWeight: "800",
-                    color: "#475569"
-                });
-                slotContainer.add(yieldRateTxt);
-
-                // Progress bar for the 1-hour cycle
-                const pBarBg = this.add.graphics();
-                pBarBg.fillStyle(0xe2e8f0, 1);
-                pBarBg.fillRoundedRect(82, yieldY + 14, 110, 5, 2.5);
-                slotContainer.add(pBarBg);
-
-                const pBarFill = this.add.graphics();
-                slotContainer.add(pBarFill);
-
-                // Real-time ticking accumulation text
-                const tickerText = this.add.text(82, yieldY + 22, "Accumulating...", {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "9px",
-                    color: "#2563eb"
-                });
-                slotContainer.add(tickerText);
-
-                // Total duration text (24 hours cap indicator)
-                const durationTxt = this.add.text(82, yieldY + 33, "Farmed: 0h / 24h", {
-                    fontFamily: "Nunito, sans-serif",
-                    fontSize: "8.5px",
-                    fontWeight: "800",
-                    color: "#64748b"
-                });
-                slotContainer.add(durationTxt);
-
-                // Parse deposit time safely
-                const depositTime = mon.collectorDepositTime ? new Date(mon.collectorDepositTime).getTime() : Date.now();
-
-                // Cache ticker calculations
-                this.stakedMonstersInfo.push({
-                    monsterId: mon.instanceId,
-                    goldRate: goldYield,
-                    crystalRate: crystalYield,
-                    initialGold: slotStaked.goldEarned || 0,
-                    initialCrystal: slotStaked.crystalEarned || 0,
-                    elapsedHoursAtLoad: slotStaked.elapsedHours || 0,
-                    depositTimeMs: depositTime,
-                    tickerTextObj: tickerText,
-                    pBarFillObj: pBarFill,
-                    durationTextObj: durationTxt,
-                    xOffset: 82,
-                    yOffset: yieldY + 14
-                });
-
-                // CLAIM & RETRIEVE buttons
-                const btnW = 100;
-                const btnH = 22;
-
-                // --- CLAIM BUTTON ---
-                const claimBtn = this.add.container(itemW - btnW / 2 - 15, 24);
-
-                const claimBg = this.add.graphics();
-                claimBg.fillStyle(0x10b981, 1);
-                claimBg.lineStyle(1.5, 0x0f172a, 1);
-                claimBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-                claimBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-                claimBtn.add(claimBg);
-
-                const claimTxt = this.add.text(0, 0, t("claim_rewards"), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "10px",
-                    color: "#ffffff"
-                }).setOrigin(0.5);
-                claimTxt.setStroke("#064e3b", 2);
-                claimBtn.add(claimTxt);
-
-                const claimHit = this.add.rectangle(0, 0, btnW, btnH, 0, 0).setInteractive({ useHandCursor: true });
-                claimBtn.add(claimHit);
-                slotContainer.add(claimBtn);
-
-                claimHit.on("pointerover", () => claimBtn.setScale(1.05));
-                claimHit.on("pointerout", () => claimBtn.setScale(1.0));
-                claimHit.on("pointerdown", () => claimBtn.setScale(0.95));
-                claimHit.on("pointerup", async (pointer) => {
-                    claimBtn.setScale(1.0);
-                    if (!checkClick(pointer)) return;
-                    this.claimRewards(mon.instanceId);
-                });
-
-                // --- RETRIEVE / UNSTAKE BUTTON ---
-                const unstakeBtn = this.add.container(itemW - btnW / 2 - 15, 58);
-
-                const unstakeBg = this.add.graphics();
-                unstakeBg.fillStyle(0xef4444, 1);
-                unstakeBg.lineStyle(1.5, 0x0f172a, 1);
-                unstakeBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-                unstakeBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-                unstakeBtn.add(unstakeBg);
-
-                const unstakeTxt = this.add.text(0, 0, t("unstake"), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "10px",
-                    color: "#ffffff"
-                }).setOrigin(0.5);
-                unstakeTxt.setStroke("#7f1d1d", 2);
-                unstakeBtn.add(unstakeTxt);
-
-                const unstakeHit = this.add.rectangle(0, 0, btnW, btnH, 0, 0).setInteractive({ useHandCursor: true });
-                unstakeBtn.add(unstakeHit);
-                slotContainer.add(unstakeBtn);
-
-                unstakeHit.on("pointerover", () => unstakeBtn.setScale(1.05));
-                unstakeHit.on("pointerout", () => unstakeBtn.setScale(1.0));
-                unstakeHit.on("pointerdown", () => unstakeBtn.setScale(0.95));
-                unstakeHit.on("pointerup", async (pointer) => {
-                    unstakeBtn.setScale(1.0);
-                    if (!checkClick(pointer)) return;
-                    this.unstakeMonster(mon.instanceId);
                 });
             }
 
-            this.listContainer.add(slotContainer);
-            this.listObjects.push(slotContainer);
+            node.on("pointerup", (pointer) => {
+                if (!checkClick(pointer)) return;
+                const path = pathCalculator(player.position, l.name, graph);
+                if (path == null) return;
 
-            currentY += itemH + spacing;
-        }
+                this.tweens.killTweensOf(player);
 
-        this.listHeight = currentY;
-    }
-
-    async claimRewards(monsterId) {
-        createloadingOverlay(this);
-        try {
-            const res = await api.claimCollectorRewards(monsterId);
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-
-            if (res && res.success) {
-                const goldGained = res.goldGained || 0;
-                const crystalGained = res.crystalGained || 0;
-
-                let msg = "";
-                if (goldGained > 0 && crystalGained > 0) {
-                    msg = `Claimed: +${goldGained} Gold, +${crystalGained} Crystal!`;
-                } else if (crystalGained > 0) {
-                    msg = `Claimed: +${crystalGained} Crystal!`;
-                } else {
-                    msg = `Claimed: +${goldGained} Gold!`;
+                if (path.length > 0 && path[0] === player.position) {
+                    path.shift();
                 }
 
-                showNotification(this, msg);
-                this.loadCollectorData(); // Refresh state & UI
-            } else {
-                showNotification(this, res?.reason || t("claim_failed"));
-            }
-        } catch (err) {
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-            console.error("Error claiming rewards:", err);
-            showNotification(this, t("claim_failed"));
-        }
-    }
+                const moveNext = (index) => {
+                    if (index >= path.length) return;
+                    const nodeName = path[index];
+                    const g = locations["collector"].find(x => x.name == nodeName);
 
-    async unstakeMonster(monsterId) {
-        createloadingOverlay(this);
-        try {
-            const res = await api.unstakeMonster(monsterId);
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
+                    this.tweens.add({
+                        targets: player,
+                        x: g.x,
+                        y: g.y,
+                        duration: 400,
+                        ease: 'Linear',
+                        onComplete: () => {
+                            player.position = g.name;
+                            moveNext(index + 1);
 
-            if (res && res.success) {
-                showNotification(this, t("unstake_success"));
-                this.loadCollectorData();
-            } else {
-                showNotification(this, res?.reason || t("unstake_failed"));
-            }
-        } catch (err) {
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-            console.error("Error unstaking monster:", err);
-            showNotification(this, t("unstake_failed"));
-        }
-    }
-
-    async unlockSlot() {
-        createloadingOverlay(this);
-        try {
-            const res = await api.unlockCollectorSlot();
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-
-            if (res && res.success) {
-                showNotification(this, t("unlock_success"));
-                this.loadCollectorData();
-            } else {
-                showNotification(this, res?.reason || t("unlock_failed"));
-            }
-        } catch (err) {
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-            console.error("Error unlocking slot:", err);
-            showNotification(this, t("unlock_failed"));
-        }
-    }
-
-    // --- MONSTER STAKING LIST SELECTION PANEL ---
-    showMonsterSelectionPanel() {
-        if (this.monsterSelectOverlay) {
-            this.monsterSelectOverlay.destroy();
-        }
-
-        const modalW = 340;
-        const modalH = 460;
-        const modalX = this.width / 2;
-        const modalY = this.height / 2;
-
-        this.monsterSelectOverlay = this.add.container(0, 0).setDepth(210);
-
-        // Background Dim Overlay
-        const bgDim = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.75)
-            .setOrigin(0)
-            .setInteractive();
-        this.monsterSelectOverlay.add(bgDim);
-
-        // Dialog Card
-        const shadow = this.add.graphics();
-        shadow.fillStyle(0x020617, 0.4);
-        shadow.fillRoundedRect(modalX - modalW / 2 + 5, modalY - modalH / 2 + 5, modalW, modalH, 16);
-        this.monsterSelectOverlay.add(shadow);
-
-        const card = this.add.graphics();
-        card.fillStyle(0xf8fafc, 0.98); // Slate 50
-        card.lineStyle(3, 0x0f172a, 1);    // Slate 900
-        card.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
-        card.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
-        this.monsterSelectOverlay.add(card);
-
-        // Title
-        const titleY = modalY - modalH / 2 + 25;
-        const title = this.add.text(modalX, titleY, t("select_monster"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "18px",
-            color: "#0f172a"
-        }).setOrigin(0.5);
-        title.setStroke("#ffffff", 3.5);
-        this.monsterSelectOverlay.add(title);
-
-        // Close Button [x]
-        const selectCloseBtnKey = this.getSafeMonsterIconKey("close-button") || "icon_kikflick";
-        const closeBtn = this.add.image(modalX + modalW / 2 - 25, titleY, selectCloseBtnKey)
-            .setDisplaySize(24, 24)
-            .setInteractive({ useHandCursor: true });
-        this.monsterSelectOverlay.add(closeBtn);
-        closeBtn.on("pointerup", (pointer) => {
-            if (!checkClick(pointer)) return;
-            this.monsterSelectOverlay.destroy();
-            this.monsterSelectOverlay = null;
-        });
-
-        // Scrollable List of Available Monsters
-        const listContainer = this.add.container(modalX, modalY - modalH / 2 + 65);
-        this.monsterSelectOverlay.add(listContainer);
-
-        const viewW = modalW - 20;
-        const viewH = modalH - 85;
-
-        // Mask
-        const maskG = this.make.graphics({ add: false });
-        maskG.fillRect(modalX - viewW / 2, modalY - modalH / 2 + 65, viewW, viewH);
-        const mask = maskG.createGeometryMask();
-        listContainer.setMask(mask);
-
-        // Populate available monsters
-        const availList = this.statusData.availableMonsters || [];
-        const itemW = viewW - 10;
-        const itemH = 68;
-        const spacing = 8;
-        let currentY = 5;
-
-        if (availList.length === 0) {
-            const noText = this.add.text(0, viewH / 2, t("no_monsters_stake"), {
-                fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                fontSize: "14px",
-                color: "#64748b",
-                align: "center"
-            }).setOrigin(0.5);
-            listContainer.add(noText);
-        } else {
-            availList.forEach((mon) => {
-                const row = this.add.container(-viewW / 2 + 5, currentY);
-
-                const cooldownEnd = mon.collectorDepositTime ? new Date(mon.collectorDepositTime).getTime() : 0;
-                const isOnCooldown = cooldownEnd > Date.now();
-
-                const rowBg = this.add.graphics();
-                if (isOnCooldown) {
-                    rowBg.fillStyle(0xe2e8f0, 0.7); // Greyed out cooldown
-                    rowBg.lineStyle(1.5, 0x94a3b8, 0.5);
-                } else {
-                    rowBg.fillStyle(0xffffff, 0.95);
-                    rowBg.lineStyle(1.5, this.getRarityColorHex(mon.rarity), 0.8);
-                }
-                rowBg.fillRoundedRect(0, 0, itemW, itemH, 10);
-                rowBg.strokeRoundedRect(0, 0, itemW, itemH, 10);
-                row.add(rowBg);
-
-                // Portrait
-                const spriteKey = `icon_${(mon.id || "").toLowerCase()}`;
-                const safeKey = this.getSafeMonsterIconKey(spriteKey);
-                if (safeKey) {
-                    const portrait = this.add.image(30, itemH / 2, safeKey);
-                    portrait.setDisplaySize(44, 44);
-                    if (isOnCooldown) portrait.setAlpha(0.55);
-                    row.add(portrait);
-                } else {
-                    const placeholder = this.add.graphics();
-                    placeholder.fillStyle(0xcbd5e1, 1);
-                    placeholder.fillCircle(30, itemH / 2, 22);
-                    row.add(placeholder);
-                }
-
-                // Name & level & rarity
-                const nameTxt = this.add.text(65, 8, (mon.nickname || mon.title || mon.id || "").toUpperCase(), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "12px",
-                    color: isOnCooldown ? "#64748b" : "#0f172a"
-                });
-                row.add(nameTxt);
-
-                const detailsTxt = this.add.text(65, 23, `Lv.${mon.level} • ${mon.rarity.toUpperCase()}`, {
-                    fontFamily: "Nunito, sans-serif",
-                    fontSize: "9px",
-                    fontWeight: "800",
-                    color: isOnCooldown ? "#94a3b8" : this.getRarityColor(mon.rarity)
-                });
-                row.add(detailsTxt);
-
-                if (isOnCooldown) {
-                    // Show cooldown countdown & progress bar
-                    const remainingSec = Math.max(0, Math.ceil((cooldownEnd - Date.now()) / 1000));
-                    const hours = Math.floor(remainingSec / 3600);
-                    const minutes = Math.floor((remainingSec % 3600) / 60);
-                    const cdTextStr = `Cooldown: ${hours}h ${minutes}m left`;
-
-                    const cdText = this.add.text(65, 36, cdTextStr, {
-                        fontFamily: "Nunito, sans-serif",
-                        fontSize: "9px",
-                        fontWeight: "800",
-                        color: "#ef4444"
+                            if (player.position == l.name && l.collector) {
+                                // showAvtarInfo(this, l.avatar, l.info.text);
+                                showCollectorPanel(this, l.collectorRarity);
+                            }
+                        }
                     });
-                    row.add(cdText);
+                };
+                moveNext(0);
+            });
+        });
 
-                    // Progress bar for cooldown
-                    const totalCooldownMs = 24 * 3600 * 1000;
-                    const remainingMs = cooldownEnd - Date.now();
-                    const progressRatio = Math.max(0, Math.min(1, 1 - (remainingMs / totalCooldownMs)));
+        const title = this.add.image(110, 30, "collector_title").setOrigin(0);
 
-                    const barW = 120;
-                    const barH = 5;
-                    const barX = 65;
-                    const barY = 49;
+        const btnBack = this.add
+            .image(20, 35, "btn-back-map")
+            .setDisplaySize(80, 35)
+            .setOrigin(0).setScrollFactor(0)
+            .setInteractive({ useHandCursor: true });
 
-                    const barBg = this.add.graphics();
-                    barBg.fillStyle(0xe2e8f0, 1);
-                    barBg.fillRoundedRect(barX, barY, barW, barH, 2.5);
-                    row.add(barBg);
+        btnBack.on("pointerup", (pointer) => {
+            if (!checkClick(pointer)) return;
+            this.scene.stop("CollectorScene");
+            this.scene.resume("WorldScene");
+        });
 
-                    const barFill = this.add.graphics();
-                    barFill.fillStyle(0xef4444, 1);
-                    barFill.fillRoundedRect(barX, barY, barW * progressRatio, barH, 2.5);
-                    row.add(barFill);
+        this.input.on('pointerup', (pointer) => {
+            let dx = pointer.x - this.dragStartX;
+            let finalScroll = this.startScrollX - dx;
+            finalScroll = Phaser.Math.Clamp(finalScroll, this.minScroll, this.maxScroll);
 
-                } else {
-                    // Yield Preview Details
-                    // Let's compute rate using similar formula preview
-                    const baseScale = Math.ceil(mon.level / 5.0);
-                    const isMatch = mon.capturedMap?.toLowerCase() === this.statusData.activeExhibitionMap?.toLowerCase();
-                    const matchBonus = isMatch ? 0.2 : 0.0;
-                    const mult = this.getRarityMult(mon.rarity) + matchBonus;
+            let closestPanelIndex = 0;
+            let minDiff = Infinity;
+            this.panels.forEach((img, i) => {
+                let diff = Math.abs(img.x - finalScroll);
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    closestPanelIndex = i;
+                }
+            });
 
-                    let previewText = "";
-                    const r = mon.rarity?.toLowerCase() || "common";
-                    if (r === "common") {
-                        previewText = `Yield: +${Math.round(baseScale * 1.0 * mult * 100) / 100} Gold/hr`;
-                    } else if (r === "rare") {
-                        previewText = `Yield: +${Math.round(baseScale * 1.0 * mult * 100) / 100} Gold OR +${Math.round(baseScale * 0.5 * mult * 100) / 100} Crystal/hr`;
+            const snappedScroll = Phaser.Math.Clamp(this.panels[closestPanelIndex].x, this.minScroll, this.maxScroll);
+            this.tweens.add({
+                targets: this.cameras.main,
+                scrollX: snappedScroll,
+                duration: 300,
+                ease: 'Power2'
+            });
+        });
+    }
+}
+
+function pathCalculator(starting, target, graph) {
+    let queue = [[starting]]
+    let visited = new Set();
+    while (queue.length > 0) {
+        const path = queue.shift();
+        const node = path[path.length - 1];
+        if (node === target) return path;
+        if (!visited.has(node)) {
+            visited.add(node);
+            let neighbour = graph[node];
+            for (let i = 0; i < neighbour.length; i++) {
+                queue.push([...path, neighbour[i]]);
+            }
+        }
+    }
+    return null;
+}
+
+function showAvtarInfo(scene, character, dialouge) {
+    utility.createOverlay(scene);
+
+    const avatarImg = scene.add.image(20, 800, character).setOrigin(0, 1).setScrollFactor(0);
+    avatarImg.setDisplaySize(avatarImg.displayWidth / 1.5, avatarImg.displayHeight / 1.5);
+
+    const speechInfo = scene.add.image(avatarImg.x + 30, avatarImg.y - avatarImg.displayHeight - 50, "speech_bubble").setOrigin(0).setScrollFactor(0);
+    speechInfo.setDisplaySize(speechInfo.displayWidth / 1.8, speechInfo.displayHeight / 1.8);
+
+    const close = scene.add.image(speechInfo.x + speechInfo.displayWidth - 10, speechInfo.y + 20, "close-button").setOrigin(1).setInteractive({ useHandCursor: true }).setScrollFactor(0);
+    close.setDisplaySize(close.displayWidth / 2.5, close.displayHeight / 2.5);
+
+    const speech = scene.add.text(speechInfo.x + 20, speechInfo.y + 15, dialouge, {
+        fontFamily: "Nunito, sans-serif",
+        fontSize: "12px",
+        fontWeight: "800",
+        color: "#000000",
+    }).setScrollFactor(0);
+
+
+    const info_container = scene.add.container(0, 0);
+    info_container.add([avatarImg, speechInfo, speech, close]);
+    info_container.setDepth(200).setScrollFactor(0);
+
+    close.on("pointerup", (pointer) => {
+        if (!checkClick(pointer)) return;
+        info_container.destroy();
+        utility.destroyOverlay(scene);
+    });
+}
+
+function showCollectorPanel(scene, rarity) {
+    const collectorContainer = scene.add.container(0, 0).setScrollFactor(0).setDepth(10);
+    const bg = scene.add.image(0, 0, "collector_panel").setOrigin(0).setScrollFactor(0);
+    bg.setDisplaySize(scene.scale.width, scene.scale.height);
+
+
+    const btnBack = scene.add
+        .image(20, 35, "btn-back-map")
+        .setDisplaySize(80, 35)
+        .setOrigin(0).setScrollFactor(0)
+        .setInteractive({ useHandCursor: true });
+
+    btnBack.on("pointerup", (pointer) => {
+        if (!checkClick(pointer)) return;
+        collectorContainer.destroy();
+    });
+
+    const species_info = scene.add.image(22, 110, "species_info").setOrigin(0).setScrollFactor(0);
+
+    const btnClaimAll = scene.add.image(0, 0, "btn_claimall").setOrigin(0.5).setScrollFactor(0);
+    btnClaimAll.setPosition(scene.scale.width / 2, 235);
+    btnClaimAll.setInteractive({ useHandCursor: true });
+
+    const rotationTimerText = scene.add.text(scene.scale.width - 30, species_info.y + 10, "Rotation: --", {
+        fontFamily: "Lilita One",
+        fontSize: "14px",
+        color: "#facc15",
+    }).setOrigin(1, 0.5).setScrollFactor(0);
+    rotationTimerText.setStroke("#000000", 3);
+
+
+    collectorContainer.add([bg, btnBack, species_info, btnClaimAll, rotationTimerText]);
+
+    let slotsContainer = scene.add.container(0, 0);
+    collectorContainer.add(slotsContainer);
+
+    let activeTimers = [];
+
+    function formatTime(totalSeconds) {
+        const hrs = Math.floor(totalSeconds / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = totalSeconds % 60;
+        const pad = (num) => String(num).padStart(2, '0');
+        return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+    }
+
+    function formatRotationTime(totalSeconds) {
+        if (totalSeconds <= 0) return "00:00:00";
+        const days = Math.floor(totalSeconds / 86400);
+        const hrs = Math.floor((totalSeconds % 86400) / 3600);
+        const mins = Math.floor((totalSeconds % 3600) / 60);
+        const secs = Math.floor(totalSeconds % 60);
+        const pad = (num) => String(num).padStart(2, '0');
+        if (days > 0) {
+            return `${days}d ${pad(hrs)}h ${pad(mins)}m`;
+        }
+        return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
+    }
+
+    function getSlotCosts(rarity, totalSlots) {
+        const r = rarity.toLowerCase();
+        if (r === "common") {
+            return [
+                { currency: "GOLD", cost: (totalSlots - 1) * 500, icon: "item_gold" },
+                { currency: "TON", cost: (totalSlots - 1) * 0.1, icon: "item_ton" }
+            ];
+        } else if (r === "rare") {
+            return [
+                { currency: "GOLD", cost: totalSlots * 1000, icon: "item_gold" },
+                { currency: "TON", cost: totalSlots * 0.2, icon: "item_ton" }
+            ];
+        } else if (r === "epic") {
+            return [
+                { currency: "TON", cost: 0.5 + totalSlots * 0.3, icon: "item_ton" }
+            ];
+        } else if (r === "legendary") {
+            return [
+                { currency: "TON", cost: 1.0 + totalSlots * 0.2, icon: "item_ton" }
+            ];
+        }
+        return [];
+    }
+
+    function buySlotAction(rarity, currency) {
+        utility.createloadingOverlay(scene);
+        api.unlockCollectorSlot(rarity, currency).then(result => {
+            utility.destroyloadingOverlay(scene);
+            if (result && result.success) {
+                utility.showNotification(scene, `Successfully unlocked slot using ${currency}!`);
+                refresh();
+            } else {
+                utility.showNotification(scene, result?.reason || "Failed to unlock slot.");
+            }
+        }).catch(err => {
+            utility.destroyloadingOverlay(scene);
+            utility.showNotification(scene, "Connection error.");
+        });
+    }
+
+    function refresh() {
+        activeTimers.forEach(t => t.destroy());
+        activeTimers = [];
+
+        slotsContainer.destroy();
+        slotsContainer = scene.add.container(0, 0);
+        collectorContainer.add(slotsContainer);
+
+        api.GetCollectorRarityInfo(rarity).then(data => {
+            if (data.success) {
+                let rotationSeconds = data.countdownSeconds || 0;
+                rotationTimerText.setText(`Rotation: ${formatRotationTime(rotationSeconds)}`);
+
+                const rotTimerEvent = scene.time.addEvent({
+                    delay: 1000,
+                    callback: () => {
+                        rotationSeconds--;
+                        if (rotationSeconds <= 0) {
+                            rotTimerEvent.destroy();
+                            rotationTimerText.setText("Resetting...");
+                            refresh();
+                        } else {
+                            rotationTimerText.setText(`Rotation: ${formatRotationTime(rotationSeconds)}`);
+                        }
+                    },
+                    loop: true
+                });
+                activeTimers.push(rotTimerEvent);
+
+                const totalSlots = data.totalSlots;
+                const stakedCount = data.stakedCount;
+                const stakedMonsters = data.stakedMonsters;
+                const eligibleMonsters = data.eligibleMonsters;
+
+                let infoAvatarX = 35;
+                let infoAvatarY = 155;
+                eligibleMonsters.forEach((monsterId, index) => {
+                    const avatar = scene.add.image(infoAvatarX, infoAvatarY, `icon_${monsterId}`).setOrigin(0).setScrollFactor(0);
+                    avatar.setDisplaySize(31, 31);
+
+                    slotsContainer.add(avatar);
+
+                    infoAvatarX += avatar.displayWidth + 10;
+                });
+
+
+                let slotx = 24;
+                let sloty = 280;
+
+                for (let i = 0; i < totalSlots; i++) {
+                    const monster = stakedMonsters[i];
+                    const slot_container = scene.add.container(slotx, sloty);
+                    if (monster) {
+
+                        const slot_bg = scene.add.image(0, 0, `pane_thumb_${monster.element}`).setOrigin(0).setScrollFactor(0);
+                        slot_bg.setDisplaySize(178.3, 96.6);
+
+                        const avatar = scene.add.image(slot_bg.x + 10, slot_bg.y + 6, `icon_${monster.id}`).setOrigin(0).setScrollFactor(0);
+                        avatar.setDisplaySize(84, 84);
+
+                        const rStr = (monster.rarity || monster.Rarity || "common").toUpperCase();
+                        const rarityText = scene.add.text(slot_bg.x + 12, slot_bg.y - 8, rStr, {
+                            fontFamily: "Lilita One, Coiny, sans-serif",
+                            fontSize: "12px",
+                            color: getRarityColor(rStr)
+                        }).setOrigin(0, 0.5);
+                        rarityText.setStroke("#000000", 2.5);
+
+                        const title = scene.add.text(avatar.x + 5, avatar.y + avatar.displayHeight - 20, monster.title, {
+                            fontFamily: "Lilita One",
+                            fontSize: "18px",
+                            fontWeight: "800",
+                            color: "#FFFFFF",
+                        }).setScrollFactor(0);
+                        title.setStroke("#000000", 2.5);
+
+                        const goldIcon = scene.add.image(avatar.x + avatar.displayWidth + 3, avatar.y + 5, "item_gold").setOrigin(0).setScrollFactor(0);
+                        goldIcon.setDisplaySize(24, 24);
+
+                        const goldRate = scene.add.text(goldIcon.x + goldIcon.displayWidth, goldIcon.y + 5, monster.goldRate + "/H", {
+                            fontFamily: "Nunito, sans-serif",
+                            fontSize: "12px",
+                            color: "#000000ff",
+                        }).setScrollFactor(0);
+
+                        const crystalIcon = scene.add.image(avatar.x + avatar.displayWidth + 3, avatar.y + 30, "item_dust").setOrigin(0).setScrollFactor(0);
+                        crystalIcon.setDisplaySize(24, 24);
+
+                        const crystalRate = scene.add.text(crystalIcon.x + crystalIcon.displayWidth, crystalIcon.y + 5, monster.crystalRate + "/H", {
+                            fontFamily: "Nunito, sans-serif",
+                            fontSize: "12px",
+                            color: "#000000ff",
+                        }).setScrollFactor(0);
+
+
+                        const claimButton = scene.add.image(avatar.x + avatar.displayWidth, avatar.y + 55, "btn_blank").setOrigin(0).setScrollFactor(0);
+                        claimButton.setDisplaySize(74.5, 27.4);
+
+                        const btnClaim = scene.add.text(claimButton.x + claimButton.displayWidth / 2, claimButton.y + claimButton.displayHeight / 2, "CLAIM", {
+                            fontFamily: "Lilita One",
+                            fontSize: "12px",
+                            fontWeight: "800",
+                            color: "#FFFFFF",
+                        }).setOrigin(0.5).setScrollFactor(0);
+
+                        slot_bg.setInteractive({ useHandCursor: true });
+                        slot_bg.on("pointerup", (pointer) => {
+                            if (!checkClick(pointer)) return;
+                            showMonsterInfo(scene, monster, () => {
+                                refresh();
+                            });
+                        });
+
+                        let remainingCooldownSeconds = Math.max(0, Math.ceil(monster.cooldownRemainingSeconds || 0));
+                        if (remainingCooldownSeconds > 0) {
+                            claimButton.setTint(0xff3b30);
+                            btnClaim.setText(formatTime(remainingCooldownSeconds));
+
+                            const timerEvent = scene.time.addEvent({
+                                delay: 1000,
+                                callback: () => {
+                                    remainingCooldownSeconds--;
+                                    if (remainingCooldownSeconds <= 0) {
+                                        timerEvent.destroy();
+                                        refresh();
+                                    } else {
+                                        btnClaim.setText(formatTime(remainingCooldownSeconds));
+                                    }
+                                },
+                                loop: true
+                            });
+                            activeTimers.push(timerEvent);
+                        } else {
+                            let remainingSeconds = Math.max(0, Math.ceil(3600 - (monster.elapsedHours * 3600)));
+                            if (remainingSeconds > 0) {
+                                claimButton.setAlpha(0.6);
+                                btnClaim.setAlpha(0.8);
+                                btnClaim.setText(formatTime(remainingSeconds));
+
+                                const timerEvent = scene.time.addEvent({
+                                    delay: 1000,
+                                    callback: () => {
+                                        remainingSeconds--;
+                                        if (remainingSeconds <= 0) {
+                                            timerEvent.destroy();
+                                            claimButton.setAlpha(1.0);
+                                            btnClaim.setAlpha(1.0);
+                                            btnClaim.setText("CLAIM");
+                                            claimButton.setInteractive({ useHandCursor: true });
+                                        } else {
+                                            btnClaim.setText(formatTime(remainingSeconds));
+                                        }
+                                    },
+                                    loop: true
+                                });
+                                activeTimers.push(timerEvent);
+                            } else {
+                                claimButton.setAlpha(1.0);
+                                btnClaim.setAlpha(1.0);
+                                btnClaim.setText("CLAIM");
+                                claimButton.setInteractive({ useHandCursor: true });
+                            }
+
+                            claimButton.on("pointerup", (pointer) => {
+                                if (!checkClick(pointer)) return;
+                                if (remainingSeconds > 0) return;
+                                utility.createloadingOverlay(scene);
+                                api.claimCollectorRewards(monster.instanceId).then(result => {
+                                    utility.destroyloadingOverlay(scene);
+                                    if (result && result.success) {
+                                        utility.showNotification(scene, `Claimed +${result.goldClaimed.toFixed(2)} Gold & +${result.crystalClaimed.toFixed(2)} Crystal!`);
+                                        refresh();
+                                    } else {
+                                        utility.showNotification(scene, result?.reason || "Failed to claim.");
+                                    }
+                                }).catch(err => {
+                                    utility.destroyloadingOverlay(scene);
+                                    utility.showNotification(scene, "Connection error.");
+                                });
+                            });
+                        }
+
+                        slot_container.add([slot_bg, avatar, rarityText, title, goldIcon, goldRate, crystalIcon, crystalRate, claimButton, btnClaim]);
+                        slotsContainer.add(slot_container);
+
+                        slotx += slot_bg.displayWidth + 8;
+
+                        if ((i + 1) % 2 === 0) {
+                            slotx = 24;
+                            sloty += slot_bg.displayHeight + 15;
+                        }
+
                     } else {
-                        previewText = `Yield: +${Math.round(baseScale * 1.0 * mult * 100) / 100}G & +${Math.round(baseScale * 0.5 * mult * 100) / 100}C/hr`;
+                        const slot_bg = scene.add.image(0, 0, `empty_slot`).setOrigin(0).setScrollFactor(0);
+                        slot_bg.setDisplaySize(162, 96.6);
+
+                        const stakeBtn = scene.add.image(slot_bg.x + slot_bg.displayWidth / 2, slot_bg.y + slot_bg.displayHeight / 2, "btn_blank")
+                            .setOrigin(0.5)
+                            .setDisplaySize(110, 32)
+                            .setTint(0x22c55e)
+                            .setInteractive({ useHandCursor: true })
+                            .setVisible(false)
+                            .setScrollFactor(0);
+                        stakeBtn.isStakeOverlay = true;
+
+                        const stakeTxt = scene.add.text(stakeBtn.x, stakeBtn.y, "STAKE", {
+                            fontFamily: "Lilita One",
+                            fontSize: "14px",
+                            fontWeight: "800",
+                            color: "#FFFFFF",
+                        }).setOrigin(0.5).setVisible(false).setScrollFactor(0);
+                        stakeTxt.isStakeOverlay = true;
+
+                        slot_bg.setInteractive({ useHandCursor: true });
+                        slot_bg.on("pointerup", (pointer) => {
+                            if (!checkClick(pointer)) return;
+                            const nextVisible = !stakeBtn.visible;
+
+                            slotsContainer.list.forEach(c => {
+                                if (c.list) {
+                                    c.list.forEach(child => {
+                                        if (child.isUnstakeOverlay || child.isStakeOverlay || child.isBuyOverlay) {
+                                            child.setVisible(false);
+                                        }
+                                    });
+                                }
+                            });
+                            slotsContainer.list.forEach(child => {
+                                if (child.isBuyOverlay) {
+                                    child.setVisible(false);
+                                }
+                            });
+
+                            stakeBtn.setVisible(nextVisible);
+                            stakeTxt.setVisible(nextVisible);
+                        });
+
+                        stakeBtn.on("pointerup", (pointer) => {
+                            if (!checkClick(pointer)) return;
+                            scene.scene.launch("InventoryScene", { onlyItems: false });
+                            scene.scene.pause();
+                            const sub = scene.scene.get("InventoryScene");
+                            sub.events.once("shutdown", () => {
+                                scene.scene.resume();
+                                refresh();
+                            });
+                        });
+
+                        slot_container.add([slot_bg, stakeBtn, stakeTxt]);
+                        slotsContainer.add(slot_container);
+
+                        slotx += slot_bg.displayWidth + 18;
+
+                        if ((i + 1) % 2 === 0) {
+                            slotx = 24;
+                            sloty += slot_bg.displayHeight + 22;
+                        }
                     }
 
-                    const yieldPreview = this.add.text(65, 38, previewText, {
-                        fontFamily: "Nunito, sans-serif",
-                        fontSize: "9px",
-                        fontWeight: "800",
-                        color: "#475569"
-                    });
-                    row.add(yieldPreview);
                 }
+                const addSlot = scene.add.image(slotx, sloty, "add_slot").setOrigin(0).setScrollFactor(0);
+                addSlot.setDisplaySize(162, 96.6);
+                slotsContainer.add(addSlot);
 
-                // Select / Stake button
-                const btnW = 60;
-                const btnH = 22;
-                const stakeBtn = this.add.container(itemW - btnW - 10, itemH / 2);
+                const options = getSlotCosts(rarity, totalSlots);
+                const overlayElements = [];
 
-                const sBg = this.add.graphics();
-                const sTxt = this.add.text(0, 0, t("stake"), {
-                    fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-                    fontSize: "10px",
-                    color: "#ffffff"
-                }).setOrigin(0.5);
+                if (options.length === 1) {
+                    const opt = options[0];
+                    const btnX = addSlot.x + addSlot.displayWidth / 2;
+                    const btnY = addSlot.y + addSlot.displayHeight / 2;
 
-                const sHit = this.add.rectangle(0, 0, btnW, btnH, 0, 0);
+                    const btn = scene.add.image(btnX, btnY, "btn_blank")
+                        .setOrigin(0.5)
+                        .setDisplaySize(130, 32)
+                        .setTint(0x22c55e)
+                        .setInteractive({ useHandCursor: true })
+                        .setVisible(false)
+                        .setScrollFactor(0);
+                    btn.isBuyOverlay = true;
 
-                if (isOnCooldown) {
-                    sBg.fillStyle(0xcbd5e1, 1); // Disabled slate
-                    sBg.lineStyle(1, 0x94a3b8, 1);
-                    sTxt.setStroke("#94a3b8", 2);
-                    sTxt.setColor("#94a3b8");
-                } else {
-                    sBg.fillStyle(0x3b82f6, 1); // Active blue
-                    sBg.lineStyle(1, 0x0f172a, 1);
-                    sTxt.setStroke("#1d4ed8", 2);
-                    sHit.setInteractive({ useHandCursor: true });
-                    sHit.on("pointerover", () => stakeBtn.setScale(1.05));
-                    sHit.on("pointerout", () => stakeBtn.setScale(1.0));
-                    sHit.on("pointerdown", () => stakeBtn.setScale(0.95));
-                    sHit.on("pointerup", (pointer) => {
-                        stakeBtn.setScale(1.0);
+                    const icon = scene.add.image(btnX - 45, btnY, opt.icon)
+                        .setOrigin(0.5)
+                        .setDisplaySize(20, 20)
+                        .setVisible(false)
+                        .setScrollFactor(0);
+                    icon.isBuyOverlay = true;
+
+                    const textVal = opt.currency === "TON" ? opt.cost.toFixed(1) : opt.cost.toString();
+                    const txt = scene.add.text(btnX + 10, btnY, `${textVal} ${opt.currency}`, {
+                        fontFamily: "Lilita One",
+                        fontSize: "12px",
+                        fontWeight: "800",
+                        color: "#FFFFFF",
+                    }).setOrigin(0.5).setVisible(false).setScrollFactor(0);
+                    txt.isBuyOverlay = true;
+
+                    overlayElements.push(btn, icon, txt);
+
+                    btn.on("pointerup", (pointer) => {
                         if (!checkClick(pointer)) return;
-                        this.onMonsterSelectedForStaking(mon);
+                        buySlotAction(rarity, opt.currency);
+                    });
+                } else if (options.length === 2) {
+                    options.forEach((opt, idx) => {
+                        const btnX = addSlot.x + addSlot.displayWidth / 2;
+                        const btnY = addSlot.y + 25 + (idx * 45);
+
+                        const btn = scene.add.image(btnX, btnY, "btn_blank")
+                            .setOrigin(0.5)
+                            .setDisplaySize(130, 32)
+                            .setTint(0x22c55e)
+                            .setInteractive({ useHandCursor: true })
+                            .setVisible(false)
+                            .setScrollFactor(0);
+                        btn.isBuyOverlay = true;
+
+                        const icon = scene.add.image(btnX - 45, btnY, opt.icon)
+                            .setOrigin(0.5)
+                            .setDisplaySize(20, 20)
+                            .setVisible(false)
+                            .setScrollFactor(0);
+                        icon.isBuyOverlay = true;
+
+                        const textVal = opt.currency === "TON" ? opt.cost.toFixed(1) : opt.cost.toString();
+                        const txt = scene.add.text(btnX + 10, btnY, `${textVal} ${opt.currency}`, {
+                            fontFamily: "Lilita One",
+                            fontSize: "12px",
+                            fontWeight: "800",
+                            color: "#FFFFFF",
+                        }).setOrigin(0.5).setVisible(false).setScrollFactor(0);
+                        txt.isBuyOverlay = true;
+
+                        overlayElements.push(btn, icon, txt);
+
+                        btn.on("pointerup", (pointer) => {
+                            if (!checkClick(pointer)) return;
+                            buySlotAction(rarity, opt.currency);
+                        });
                     });
                 }
-                sBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-                sBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-                stakeBtn.add(sBg);
-                stakeBtn.add(sTxt);
-                stakeBtn.add(sHit);
-                row.add(stakeBtn);
 
-                listContainer.add(row);
-                currentY += itemH + spacing;
-            });
-        }
+                addSlot.setInteractive({ useHandCursor: true });
+                addSlot.on("pointerup", (pointer) => {
+                    if (!checkClick(pointer)) return;
+                    const nextVisible = overlayElements.length > 0 && !overlayElements[0].visible;
 
-        // Custom dragging for available monsters list
-        let isDragging = false;
-        let startY = 0;
-        const listMinY = modalY - modalH / 2 + 65;
-        const listMaxY = modalY + modalH / 2 - 20;
+                    slotsContainer.list.forEach(c => {
+                        if (c.list) {
+                            c.list.forEach(child => {
+                                if (child.isUnstakeOverlay || child.isStakeOverlay || child.isBuyOverlay) {
+                                    child.setVisible(false);
+                                }
+                            });
+                        }
+                    });
+                    slotsContainer.list.forEach(child => {
+                        if (child.isBuyOverlay) {
+                            child.setVisible(false);
+                        }
+                    });
 
-        bgDim.on("pointerdown", (pointer) => {
-            if (pointer.y >= listMinY && pointer.y <= listMaxY) {
-                isDragging = true;
-                startY = pointer.y;
-            }
-        });
-        bgDim.on("pointermove", (pointer) => {
-            if (!isDragging) return;
-            const deltaY = pointer.y - startY;
-            startY = pointer.y;
-            listContainer.y += deltaY;
+                    overlayElements.forEach(el => el.setVisible(nextVisible));
+                });
 
-            const minY = (modalY - modalH / 2 + 65) - Math.max(0, currentY - viewH);
-            listContainer.y = Phaser.Math.Clamp(listContainer.y, minY, modalY - modalH / 2 + 65);
-        });
-        bgDim.on("pointerup", () => isDragging = false);
-    }
-
-    onMonsterSelectedForStaking(monster) {
-        this.showStakingWarningModal(monster, () => {
-            const rarity = monster.rarity?.toLowerCase() || "common";
-            if (rarity === "rare") {
-                // Rare rarity allows focus choice modal (GOLD or CRYSTAL)
-                this.showFocusChoiceModal(monster);
-            } else {
-                // Common default to GOLD focus, Epic/Legendary default to GOLD (they farm both anyways)
-                this.stakeMonster(monster.instanceId, "GOLD");
+                slotsContainer.add(overlayElements);
             }
         });
     }
 
-    showStakingWarningModal(monster, onConfirm) {
-        if (this.warningModal) {
-            this.warningModal.destroy();
-        }
+    collectorContainer.on("destroy", () => {
+        activeTimers.forEach(t => t.destroy());
+    });
 
-        const modalW = 280;
-        const modalH = 180;
-        const modalX = this.width / 2;
-        const modalY = this.height / 2;
-
-        this.warningModal = this.add.container(0, 0).setDepth(215);
-
-        // Dimmer overlay
-        const dim = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.8)
-            .setOrigin(0)
-            .setInteractive();
-        this.warningModal.add(dim);
-
-        // Card
-        const shadow = this.add.graphics();
-        shadow.fillStyle(0x020617, 0.4);
-        shadow.fillRoundedRect(modalX - modalW / 2 + 4, modalY - modalH / 2 + 4, modalW, modalH, 14);
-        this.warningModal.add(shadow);
-
-        const card = this.add.graphics();
-        card.fillStyle(0xf8fafc, 0.98);
-        card.lineStyle(2.5, 0x0f172a, 1);
-        card.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 14);
-        card.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 14);
-        this.warningModal.add(card);
-
-        // Title
-        const titleText = this.add.text(modalX, modalY - modalH / 2 + 20, t("stake_warning_title"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "14px",
-            color: "#ef4444"
-        }).setOrigin(0.5);
-        this.warningModal.add(titleText);
-
-        // Description/Warning text
-        const descText = this.add.text(modalX, modalY - modalH / 2 + 50, t("stake_warning_desc"), {
-            fontFamily: "Nunito, sans-serif",
-            fontSize: "11px",
-            fontWeight: "800",
-            color: "#475569",
-            align: "center",
-            wordWrap: { width: modalW - 40 }
-        }).setOrigin(0.5, 0);
-        this.warningModal.add(descText);
-
-        // Action Buttons: Cancel and Confirm
-        const btnW = 100;
-        const btnH = 26;
-
-        // Cancel Button (Red outline / Grey fill)
-        const cancelBtn = this.add.container(modalX - 60, modalY + modalH / 2 - 30);
-        const cancelBg = this.add.graphics();
-        cancelBg.fillStyle(0x64748b, 1); // slate grey
-        cancelBg.lineStyle(1.5, 0x0f172a, 1);
-        cancelBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-        cancelBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-        cancelBtn.add(cancelBg);
-
-        const cancelText = this.add.text(0, 0, t("cancel"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "11px",
-            color: "#ffffff"
-        }).setOrigin(0.5);
-        cancelText.setStroke("#334155", 2);
-        cancelBtn.add(cancelText);
-
-        const cancelHit = this.add.rectangle(0, 0, btnW, btnH, 0, 0).setInteractive({ useHandCursor: true });
-        cancelBtn.add(cancelHit);
-        this.warningModal.add(cancelBtn);
-
-        cancelHit.on("pointerover", () => cancelBtn.setScale(1.05));
-        cancelHit.on("pointerout", () => cancelBtn.setScale(1.0));
-        cancelHit.on("pointerdown", () => cancelBtn.setScale(0.95));
-        cancelHit.on("pointerup", (pointer) => {
-            cancelBtn.setScale(1.0);
-            if (!checkClick(pointer)) return;
-            this.warningModal.destroy();
-            this.warningModal = null;
-        });
-
-        // Confirm Button (Green)
-        const confirmBtn = this.add.container(modalX + 60, modalY + modalH / 2 - 30);
-        const confirmBg = this.add.graphics();
-        confirmBg.fillStyle(0x10b981, 1); // emerald green
-        confirmBg.lineStyle(1.5, 0x0f172a, 1);
-        confirmBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-        confirmBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 6);
-        confirmBtn.add(confirmBg);
-
-        const confirmText = this.add.text(0, 0, t("confirm"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "11px",
-            color: "#ffffff"
-        }).setOrigin(0.5);
-        confirmText.setStroke("#064e3b", 2);
-        confirmBtn.add(confirmText);
-
-        const confirmHit = this.add.rectangle(0, 0, btnW, btnH, 0, 0).setInteractive({ useHandCursor: true });
-        confirmBtn.add(confirmHit);
-        this.warningModal.add(confirmBtn);
-
-        confirmHit.on("pointerover", () => confirmBtn.setScale(1.05));
-        confirmHit.on("pointerout", () => confirmBtn.setScale(1.0));
-        confirmHit.on("pointerdown", () => confirmBtn.setScale(0.95));
-        confirmHit.on("pointerup", (pointer) => {
-            confirmBtn.setScale(1.0);
-            if (!checkClick(pointer)) return;
-            this.warningModal.destroy();
-            this.warningModal = null;
-            onConfirm();
-        });
-    }
-
-    showFocusChoiceModal(monster) {
-        if (this.focusModal) {
-            this.focusModal.destroy();
-        }
-
-        const modalW = 280;
-        const modalH = 200;
-        const modalX = this.width / 2;
-        const modalY = this.height / 2;
-
-        this.focusModal = this.add.container(0, 0).setDepth(220);
-
-        // Dimmer overlay
-        const dim = this.add.rectangle(0, 0, this.width, this.height, 0x000000, 0.8)
-            .setOrigin(0)
-            .setInteractive();
-        this.focusModal.add(dim);
-
-        // Card
-        const shadow = this.add.graphics();
-        shadow.fillStyle(0x020617, 0.4);
-        shadow.fillRoundedRect(modalX - modalW / 2 + 4, modalY - modalH / 2 + 4, modalW, modalH, 14);
-        this.focusModal.add(shadow);
-
-        const card = this.add.graphics();
-        card.fillStyle(0xf8fafc, 0.98);
-        card.lineStyle(2.5, 0x0f172a, 1);
-        card.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 14);
-        card.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 14);
-        this.focusModal.add(card);
-
-        // Title
-        const titleText = this.add.text(modalX, modalY - modalH / 2 + 25, t("farming_focus"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "16px",
-            color: "#0f172a"
-        }).setOrigin(0.5);
-        this.focusModal.add(titleText);
-
-        const descText = this.add.text(modalX, modalY - modalH / 2 + 55, t("choose_focus"), {
-            fontFamily: "Nunito, sans-serif",
-            fontSize: "11px",
-            fontWeight: "800",
-            color: "#475569",
-            align: "center",
-            wordWrap: { width: modalW - 40 }
-        }).setOrigin(0.5);
-        this.focusModal.add(descText);
-
-        // Focus Buttons: GOLD and CRYSTAL
-        const btnW = 100;
-        const btnH = 34;
-
-        // --- GOLD FOCUS BUTTON ---
-        const goldBtn = this.add.container(modalX - 60, modalY + 20);
-        const gBg = this.add.graphics();
-        gBg.fillStyle(0xd97706, 1);
-        gBg.lineStyle(1.5, 0x0f172a, 1);
-        gBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
-        gBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
-        goldBtn.add(gBg);
-
-        const gTxt = this.add.text(0, 0, t("gold_name"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "12px",
-            color: "#ffffff"
-        }).setOrigin(0.5);
-        gTxt.setStroke("#78350f", 2);
-        goldBtn.add(gTxt);
-
-        const gHit = this.add.rectangle(0, 0, btnW, btnH, 0, 0).setInteractive({ useHandCursor: true });
-        goldBtn.add(gHit);
-        this.focusModal.add(goldBtn);
-
-        gHit.on("pointerup", (pointer) => {
-            if (!checkClick(pointer)) return;
-            this.focusModal.destroy();
-            this.focusModal = null;
-            this.stakeMonster(monster.instanceId, "GOLD");
-        });
-
-        // --- CRYSTAL FOCUS BUTTON ---
-        const cryBtn = this.add.container(modalX + 60, modalY + 20);
-        const cBg = this.add.graphics();
-        cBg.fillStyle(0x8b5cf6, 1);
-        cBg.lineStyle(1.5, 0x0f172a, 1);
-        cBg.fillRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
-        cBg.strokeRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 8);
-        cryBtn.add(cBg);
-
-        const cTxt = this.add.text(0, 0, t("crystal_name"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "12px",
-            color: "#ffffff"
-        }).setOrigin(0.5);
-        cTxt.setStroke("#5b21b6", 2);
-        cryBtn.add(cTxt);
-
-        const cHit = this.add.rectangle(0, 0, btnW, btnH, 0, 0).setInteractive({ useHandCursor: true });
-        cryBtn.add(cHit);
-        this.focusModal.add(cryBtn);
-
-        cHit.on("pointerup", (pointer) => {
-            if (!checkClick(pointer)) return;
-            this.focusModal.destroy();
-            this.focusModal = null;
-            this.stakeMonster(monster.instanceId, "CRYSTAL");
-        });
-
-        // Cancel / Back Button
-        const cancelBtn = this.add.text(modalX, modalY + 75, t("cancel"), {
-            fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
-            fontSize: "12px",
-            color: "#ef4444"
-        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
-        this.focusModal.add(cancelBtn);
-
-        cancelBtn.on("pointerup", (pointer) => {
-            if (!checkClick(pointer)) return;
-            this.focusModal.destroy();
-            this.focusModal = null;
-        });
-    }
-
-    async stakeMonster(monsterId, focus) {
-        createloadingOverlay(this);
-        try {
-            const res = await api.stakeMonster(monsterId, focus);
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-
-            if (res && res.success) {
-                showNotification(this, t("staking_success"));
-                // Clear selection panel
-                if (this.monsterSelectOverlay) {
-                    this.monsterSelectOverlay.destroy();
-                    this.monsterSelectOverlay = null;
-                }
-                this.loadCollectorData(); // Refresh UI
-            } else {
-                showNotification(this, res?.reason || t("staking_failed"));
-            }
-        } catch (err) {
-            if (!this.sys || !this.sys.isActive()) return;
-            destroyloadingOverlay(this);
-            console.error("Error staking monster:", err);
-            showNotification(this, t("staking_failed"));
-        }
-    }
-
-    // --- UTILITIES & DRAWING HELPERS ---
-    getRarityColor(rarity) {
-        const r = rarity?.toLowerCase();
-        if (r === "rare") return "#3b82f6";     // Blue
-        if (r === "epic") return "#a855f7";     // Purple
-        if (r === "legendary") return "#f59e0b"; // Orange/Gold
-        return "#64748b";                       // Slate
-    }
-
-    getRarityColorHex(rarity) {
-        const r = rarity?.toLowerCase();
-        if (r === "rare") return 0x3b82f6;
-        if (r === "epic") return 0xa855f7;
-        if (r === "legendary") return 0xf59e0b;
-        return 0x64748b;
-    }
-
-    getRarityMult(rarity) {
-        const r = rarity?.toLowerCase();
-        if (r === "common") return 1.0;
-        if (r === "rare") return 1.2;
-        if (r === "epic") return 1.4;
-        if (r === "legendary") return 1.8;
-        return 1.0;
-    }
-
-    enableListScrolling() {
-        this.isDragging = false;
-        this.startY = 0;
-
-        const modalX = this.width / 2;
-        const modalY = this.height / 2;
-        const listMinY = this.viewY;
-        const listMaxY = this.viewY + this.viewHeight;
-        const listMinX = modalX - this.viewWidth / 2;
-        const listMaxX = modalX + this.viewWidth / 2;
-
-        this.input.on("pointerdown", (pointer) => {
-            if (pointer.x >= listMinX && pointer.x <= listMaxX && pointer.y >= listMinY && pointer.y <= listMaxY) {
-                this.isDragging = true;
-                this.startY = pointer.y;
-            }
-        });
-
-        this.input.on("pointermove", (pointer) => {
-            if (!this.isDragging) return;
-            const deltaY = pointer.y - this.startY;
-            this.startY = pointer.y;
-
-            this.listContainer.y += deltaY;
-
-            // Clamp container position
-            const minY = this.viewY - Math.max(0, this.listHeight - this.viewHeight);
-            this.listContainer.y = Phaser.Math.Clamp(this.listContainer.y, minY, this.viewY);
-        });
-
-        this.input.on("pointerup", () => {
-            this.isDragging = false;
-        });
-
-        this.input.on("wheel", (pointer, gameObjects, deltaX, deltaY) => {
-            if (pointer.x >= listMinX && pointer.x <= listMaxX && pointer.y >= listMinY && pointer.y <= listMaxY) {
-                this.listContainer.y -= deltaY * 0.45;
-                const minY = this.viewY - Math.max(0, this.listHeight - this.viewHeight);
-                this.listContainer.y = Phaser.Math.Clamp(this.listContainer.y, minY, this.viewY);
-            }
-        });
-    }
-
-    // --- GAME LOOP / UPDATE FOR COUNTDOWN & TICKERS ---
-    update(time, delta) {
-        // 1. Decrement and render countdown timer
-        if (this.countdownSec > 0) {
-            this.countdownSec -= delta / 1000;
-            if (this.countdownSec < 0) this.countdownSec = 0;
-
-            const totalSec = Math.floor(this.countdownSec);
-            const hrs = Math.floor(totalSec / 3600);
-            const mins = Math.floor((totalSec % 3600) / 60);
-            const secs = totalSec % 60;
-
-            const format = (n) => String(n).padStart(2, "0");
-            if (this.timerText) {
-                this.timerText.setText(`Resets in: ${format(hrs)}:${format(mins)}:${format(secs)}`);
-            }
-        } else if (this.countdownSec <= 0 && this.timerText) {
-            this.timerText.setText("Resets in: 00:00:00");
-        }
-
-        // 2. Real-time yield accumulation tickers & progress bars
-        if (this.stakedMonstersInfo.length > 0 && this.statusLoadTime > 0) {
-            const elapsedMs = Date.now() - this.statusLoadTime;
-            const elapsedHours = elapsedMs / 3600000;
-            const cap = this.farmingCapHours || 1.0;
-
-            this.stakedMonstersInfo.forEach((item) => {
-                const totalElapsed = Math.min((item.elapsedHoursAtLoad || 0) + elapsedHours, cap);
-                const currentGold = totalElapsed * item.goldRate;
-                const currentCrystal = totalElapsed * item.crystalRate;
-
-                let displayStr = "";
-                if (item.goldRate > 0 && item.crystalRate > 0) {
-                    displayStr = `Claim: +${currentGold.toFixed(3)}G • +${currentCrystal.toFixed(3)}C`;
-                } else if (item.crystalRate > 0) {
-                    displayStr = `Claim: +${currentCrystal.toFixed(3)} Crystal`;
+    btnClaimAll.on("pointerup", (pointer) => {
+        if (!checkClick(pointer)) return;
+        utility.createloadingOverlay(scene);
+        api.claimCollectorRewards("").then(result => {
+            utility.destroyloadingOverlay(scene);
+            if (result && result.success) {
+                if (result.goldClaimed > 0 || result.crystalClaimed > 0) {
+                    utility.showNotification(scene, `Claimed +${result.goldClaimed.toFixed(2)} Gold & +${result.crystalClaimed.toFixed(2)} Crystal!`);
                 } else {
-                    displayStr = `Claim: +${currentGold.toFixed(3)} Gold`;
+                    utility.showNotification(scene, "No ready rewards to claim.");
                 }
+                refresh();
+            } else {
+                utility.showNotification(scene, result?.reason || "Failed to claim rewards.");
+            }
+        }).catch(err => {
+            utility.destroyloadingOverlay(scene);
+            utility.showNotification(scene, "Connection error.");
+        });
+    });
 
-                if (item.tickerTextObj) {
-                    item.tickerTextObj.setText(displayStr);
-                }
+    refresh();
 
-                // Update 1-hour cycle progress bar
-                if (item.pBarFillObj) {
-                    item.pBarFillObj.clear();
-                    const fraction = Math.min(totalElapsed / cap, 1.0);
-                    item.pBarFillObj.fillStyle(fraction >= 1.0 ? 0x10b981 : 0x3b82f6, 1); // Green if full, blue if farming
-                    item.pBarFillObj.fillRoundedRect(item.xOffset, item.yOffset, 110 * fraction, 5, 2.5);
-                }
-
-                // Update 24-hour total duration text
-                if (item.durationTextObj && item.depositTimeMs) {
-                    const stakedElapsedMs = Date.now() - item.depositTimeMs;
-                    const stakedElapsedHours = Math.min(24.0, Math.max(0, stakedElapsedMs / 3600000));
-                    item.durationTextObj.setText(`Farmed: ${stakedElapsedHours.toFixed(1)}h / 24h`);
-                    
-                    if (stakedElapsedHours >= 23.0) {
-                        item.durationTextObj.setColor("#ef4444"); // Red warning
-                    } else if (stakedElapsedHours >= 18.0) {
-                        item.durationTextObj.setColor("#f59e0b"); // Orange warning
-                    } else {
-                        item.durationTextObj.setColor("#64748b"); // Slate
-                    }
-                }
-            });
-        }
+    function getRarityColor(rarityText) {
+        const r = (rarityText || "common").toLowerCase().trim();
+        if (r === "rare") return "#60a5fa";
+        if (r === "epic") return "#c084fc";
+        if (r === "legendary") return "#fbbf24";
+        return "#cbd5e1";
     }
+}
+
+function showMonsterInfo(scene, monster, onUnstakeSuccess) {
+    const container = scene.add.container(0, 0);
+    container.setDepth(100).setScrollFactor(0);
+
+    const overlay = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 0.7).setOrigin(0);
+    overlay.setInteractive();
+
+    overlay.on("pointerup", () => {
+        container.destroy();
+    });
+
+    const info_panel = scene.add.image(0, 410, `info_${monster.rarity.toLowerCase()}_panel`).setOrigin(0);
+
+    const monsterImg = scene.add.image(200, info_panel.y + info_panel.displayHeight / 2 - 15, `front_${monster.id}`).setOrigin(0, 1);
+    monsterImg.setDisplaySize(monsterImg.displayWidth / 1.5, monsterImg.displayHeight / 1.5);
+
+    const monster_level = scene.add.text(15, 464, `Lv ${monster.level}`, {
+        fontFamily: "Lilita One",
+        fontSize: "12px",
+        color: "#000000"
+    }).setOrigin(0);
+
+    const monster_name = scene.add.text(15, 480, monster.title, {
+        fontFamily: "Lilita One",
+        fontSize: "20px",
+        color: "#ffffff"
+    }).setOrigin(0);
+    monster_name.setStroke("#000000", 2);
+
+    const element_symbol = scene.add.image(monster_name.x + monster_name.displayWidth + 2, monster_name.y - 5, `symbol_${monster.element}`).setOrigin(0);
+    element_symbol.setDisplaySize(element_symbol.displayWidth / 1.3, element_symbol.displayHeight / 1.3);
+
+    // Dynamically compute farming rates
+    const getBaseCollectorRates = (r) => {
+        const rLower = (r || "common").toLowerCase();
+        if (rLower === "rare") return { gold: 5, crystal: 0 };
+        if (rLower === "epic") return { gold: 5, crystal: 2 };
+        if (rLower === "legendary") return { gold: 10, crystal: 3 };
+        return { gold: 3, crystal: 0 };
+    };
+
+    const getCollectorLevelMultiplier = (lvl) => {
+        if (lvl <= 3) return 1;
+        if (lvl <= 5) return 1.1;
+        if (lvl <= 8) return 1.2;
+        if (lvl <= 10) return 1.3;
+        if (lvl <= 15) return 1.4;
+        if (lvl <= 20) return 1.5;
+        if (lvl <= 25) return 1.7;
+        return 2;
+    };
+
+    const baseRates = getBaseCollectorRates(monster.rarity);
+    const levelVal = monster.level || 1;
+    const mult = getCollectorLevelMultiplier(levelVal);
+    const goldRateVal = (monster.goldRate !== undefined && monster.goldRate !== null) ? monster.goldRate : (baseRates.gold * mult);
+    const crystalRateVal = (monster.crystalRate !== undefined && monster.crystalRate !== null) ? monster.crystalRate : (baseRates.crystal * mult);
+
+    const goldFarm = scene.add.image(10, 515, "hud_gold").setOrigin(0);
+    const goldFarmTxt = scene.add.text(goldFarm.x + 45, goldFarm.y + 10, `${goldRateVal.toFixed(1).replace(/\.0$/, "")}/H`, {
+        fontFamily: "Lilita One",
+        fontSize: "14px",
+        color: "#ffffff"
+    }).setOrigin(0);
+
+    // Add base layers to container first
+    container.add([overlay, info_panel, monsterImg, monster_level, monster_name, element_symbol, goldFarm, goldFarmTxt]);
+
+    if (crystalRateVal > 0) {
+        const crystalFarm = scene.add.image(goldFarm.x, goldFarm.y + goldFarm.displayHeight + 10, "hud_crystal").setOrigin(0);
+        const crystalFarmTxt = scene.add.text(crystalFarm.x + 45, crystalFarm.y + 10, `${crystalRateVal.toFixed(1).replace(/\.0$/, "")}/H`, {
+            fontFamily: "Lilita One",
+            fontSize: "14px",
+            color: "#ffffff"
+        }).setOrigin(0);
+        container.add([crystalFarm, crystalFarmTxt]);
+    }
+
+    const monsterHashBar = scene.add.image(19, 635, "info_hashbar").setOrigin(0);
+
+    const monsterHash = scene.add.text(70, 645, monster.instanceId, {
+        fontFamily: "Lilita One",
+        fontSize: "14px",
+        color: "#ffffff"
+    }).setOrigin(0);
+
+    container.add([monsterHashBar, monsterHash]);
+
+    // Since the monster is staked in the collector, we draw the UNSTAKE button at (207, 683)
+    const unstakeBtn = scene.add.image(207, 683, "btn_unstake").setOrigin(0).setInteractive({ useHandCursor: true });
+    container.add(unstakeBtn);
+
+    unstakeBtn.on("pointerdown", () => {
+        showUnstakeConfirmModal(scene, monster, () => {
+            container.destroy();
+            if (onUnstakeSuccess) onUnstakeSuccess();
+        });
+    });
+}
+
+function showUnstakeConfirmModal(scene, monster, onConfirm) {
+    const blocker = scene.add.rectangle(0, 0, scene.scale.width, scene.scale.height, 0x000000, 0.6)
+        .setOrigin(0)
+        .setInteractive()
+        .setDepth(150);
+
+    const modalContainer = scene.add.container(0, 0).setDepth(200);
+
+    const modalW = 280;
+    const modalH = 220;
+    const modalX = scene.scale.width / 2;
+    const modalY = scene.scale.height / 2;
+
+    const card = scene.add.graphics();
+    card.fillStyle(0x000000, 0.35);
+    card.fillRoundedRect(modalX - modalW / 2 + 4, modalY - modalH / 2 + 4, modalW, modalH, 16);
+
+    card.fillStyle(0x1a1a2e, 1);
+    card.fillRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
+
+    card.lineStyle(2, 0xff3b30, 0.8);
+    card.strokeRoundedRect(modalX - modalW / 2, modalY - modalH / 2, modalW, modalH, 16);
+
+    modalContainer.add(card);
+
+    const titleTxt = scene.add.text(modalX, modalY - modalH / 2 + 25, "UNSTAKE MONSTER", {
+        fontFamily: "Lilita One, sans-serif",
+        fontSize: "22px",
+        color: "#ffffff"
+    }).setOrigin(0.5);
+    titleTxt.setStroke("#000000", 4);
+    modalContainer.add(titleTxt);
+
+    const remainingCapacity = monster.collectionHourCap !== undefined ? monster.collectionHourCap : 24;
+    const msg = remainingCapacity > 0
+        ? `Do you want to unstake this\nmonster? It has ${remainingCapacity} hours of\ncapacity left, which will\nbe preserved.`
+        : `Do you want to unstake this\nmonster? Its capacity is\nexhausted and it will go\non a 24-hour cooldown.`;
+
+    const bodyTxt = scene.add.text(modalX, modalY - 15, msg, {
+        fontFamily: "Lilita One, sans-serif",
+        fontSize: "13px",
+        color: "#ffffff",
+        align: "center"
+    }).setOrigin(0.5);
+    modalContainer.add(bodyTxt);
+
+    const btnConfirm = scene.add.graphics();
+    btnConfirm.fillStyle(0xff3b30, 1);
+    btnConfirm.fillRoundedRect(modalX - 105, modalY + 50, 90, 32, 6);
+    btnConfirm.lineStyle(1.5, 0xffffff, 0.9);
+    btnConfirm.strokeRoundedRect(modalX - 105, modalY + 50, 90, 32, 6);
+
+    const confirmText = scene.add.text(modalX - 60, modalY + 66, "UNSTAKE", {
+        fontFamily: "Lilita One, sans-serif",
+        fontSize: "13px",
+        color: "#ffffff"
+    }).setOrigin(0.5);
+    confirmText.setStroke("#000000", 3);
+
+    const hitConfirm = scene.add.rectangle(modalX - 60, modalY + 66, 90, 32, 0x000000, 0)
+        .setInteractive({ useHandCursor: true });
+
+    const btnCancel = scene.add.graphics();
+    btnCancel.fillStyle(0x8e8e93, 1);
+    btnCancel.fillRoundedRect(modalX + 15, modalY + 50, 90, 32, 6);
+    btnCancel.lineStyle(1.5, 0xffffff, 0.9);
+    btnCancel.strokeRoundedRect(modalX + 15, modalY + 50, 90, 32, 6);
+
+    const cancelText = scene.add.text(modalX + 60, modalY + 66, "CANCEL", {
+        fontFamily: "Lilita One, sans-serif",
+        fontSize: "13px",
+        color: "#ffffff"
+    }).setOrigin(0.5);
+    cancelText.setStroke("#000000", 3);
+
+    const hitCancel = scene.add.rectangle(modalX + 60, modalY + 66, 90, 32, 0x000000, 0)
+        .setInteractive({ useHandCursor: true });
+
+    modalContainer.add([btnConfirm, confirmText, hitConfirm, btnCancel, cancelText, hitCancel]);
+
+    hitConfirm.on("pointerup", (pointer) => {
+        if (!checkClick(pointer)) return;
+        blocker.destroy();
+        modalContainer.destroy();
+        utility.createloadingOverlay(scene);
+        api.unstakeMonster(monster.instanceId).then(result => {
+            utility.destroyloadingOverlay(scene);
+            if (result && result.success) {
+                utility.showNotification(scene, "Unstaked successfully!");
+                if (onConfirm) onConfirm();
+            } else {
+                utility.showNotification(scene, result?.reason || "Failed to unstake.");
+            }
+        }).catch(err => {
+            utility.destroyloadingOverlay(scene);
+            console.error(err);
+            utility.showNotification(scene, "Connection error.");
+        });
+    });
+
+    hitCancel.on("pointerup", (pointer) => {
+        if (!checkClick(pointer)) return;
+        blocker.destroy();
+        modalContainer.destroy();
+    });
 }

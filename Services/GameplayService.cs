@@ -213,6 +213,31 @@ namespace monster_world.Services
             
         }
 
+        public double GetCollectorLevelMultiplier(int level)
+        {
+            double multiplier = 1;
+            foreach ( var r in _gameplay.CollectorLevelMultiplier)
+            {
+                if (CheckBetween(level, r.Key))
+                {
+                    multiplier = r.Value;
+                    break;
+                }
+            }
+            return multiplier;
+        }
+
+        public SlotPrice GetCollectorRarity(string rarity)
+        {
+            if (string.IsNullOrEmpty(rarity)) return null;
+            var key = rarity.ToLower().Trim();
+            if (_gameplay.CollectorRarityConfig != null && _gameplay.CollectorRarityConfig.TryGetValue(key, out var val))
+            {
+                return val;
+            }
+            return null;
+        }
+
 
         public Team GetTeamData()
         {
@@ -463,7 +488,8 @@ namespace monster_world.Services
             {
                 "bootcamp" => _gameplay.MapLocations[map],
                 "riverfall" => _gameplay.MapLocations[map],
-                _ => new List<Point>()
+                "costa-gueta" => _gameplay.MapLocations[map],
+                _ => new List<Point>(),
             };
 
             if (!nodes.Any()) return new List<string>();
@@ -582,6 +608,52 @@ namespace monster_world.Services
         public LeaderboardConfig GetLeaderboardConfig()
         {
             return _gameplay.Leaderboard;
+        }
+
+        public double GetDeterministicRate(string rangeStr, string seedInput)
+        {
+            if (string.IsNullOrEmpty(rangeStr)) return 0;
+            
+            if (!rangeStr.Contains("-"))
+            {
+                if (double.TryParse(rangeStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                {
+                    return val;
+                }
+                return 0;
+            }
+            
+            var parts = rangeStr.Split('-');
+            if (parts.Length == 2 &&
+                double.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double min) &&
+                double.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double max))
+            {
+                int hash = seedInput.GetHashCode();
+                var rand = new Random(hash);
+                double fraction = rand.NextDouble();
+                return min + fraction * (max - min);
+            }
+            
+            return 0;
+        }
+
+        public (double GoldRate, double CrystalRate) CalculateMonsterRates(Monster monster)
+        {
+            double levelMult = GetCollectorLevelMultiplier(monster.Level);
+            double goldRate = 0;
+            double crystalRate = 0;
+
+            var CollectorRarity = GetCollectorRarity(monster.Rarity);
+            if (CollectorRarity != null)
+            {
+                double baseGold = CollectorRarity.Farm.ContainsKey("GOLD") ? GetDeterministicRate(CollectorRarity.Farm["GOLD"], monster.InstanceId + "_GOLD") : 0;
+                double baseCrystal = CollectorRarity.Farm.ContainsKey("CRYSTAL") ? GetDeterministicRate(CollectorRarity.Farm["CRYSTAL"], monster.InstanceId + "_CRYSTAL") : 0;
+
+                goldRate = Math.Round(baseGold * levelMult, 2);
+                crystalRate = Math.Round(baseCrystal * levelMult, 2);
+            }
+
+            return (goldRate, crystalRate);
         }
 
 

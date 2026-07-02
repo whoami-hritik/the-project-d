@@ -122,6 +122,12 @@ export class BattleScene extends Phaser.Scene {
         if (this.isMockBattle) {
             this.initBattleTutorial();
         }
+
+        if (this.battleState && this.battleState.extraRewardMessage) {
+            this.time.delayedCall(1200, () => {
+                showNotification(this, this.battleState.extraRewardMessage);
+            });
+        }
     }
 
 

@@ -17,6 +17,10 @@ namespace monster_world.Models.Dto
         public List<string> UnlockedWorlds { get; set; }
         public int UnlockedSlots { get; set; }
         public int UnlockedCollectorSlots { get; set; }
+        public int UnlockedCommonSlots { get; set; }
+        public int UnlockedRareSlots { get; set; }
+        public int UnlockedEpicSlots { get; set; }
+        public int UnlockedLegendarySlots { get; set; }
         public bool Bonus { get; set; }
         public long TotalVictory { get; set; }
         public int TotalBattles { get; set; }
@@ -24,6 +28,8 @@ namespace monster_world.Models.Dto
         public bool Tutorial { get; set; }
         public bool HasAcceptedAgreement { get; set; }
         public int Level { get; set; }
+        public int XP { get; set; }
+        public int MaxXP { get; set; }
         public List<string> Transactions { get; set; }
         public DateTime RegistrationDate { get; set; }
         public int LoginStreak { get; set; }

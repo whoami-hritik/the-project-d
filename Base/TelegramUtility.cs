@@ -14,10 +14,19 @@ namespace monster_world.Base
             user = null;
             startParam = "";
 
-            if (initData == "dev")
+            if (initData.StartsWith("dev"))
             {
-                userId = 123456789;
-                user = new TelegramUser { ID = 123456789, FirstName = "Dev", LastName = "User", Username = "devuser", LanguageCode = "ru" };
+                if (initData.StartsWith("dev_") && long.TryParse(initData.Substring(4), out long parsedId))
+                {
+                    return false;
+                    userId = parsedId;
+                    user = new TelegramUser { ID = parsedId, FirstName = "Dev", LastName = "User", Username = "dev_" + parsedId, LanguageCode = "ru" };
+                }
+                else
+                {
+                    userId = 123456789;
+                    user = new TelegramUser { ID = 123456789, FirstName = "Dev", LastName = "User", Username = "sys_user", LanguageCode = "ru" };
+                }
                 startParam = "";
                 return true;
             }

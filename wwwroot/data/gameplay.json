@@ -1,1101 +1,1105 @@
 {
-    "catchOddRanges": [
+  "withdrawalFee": {
+    "percentage": 0.05,
+    "minFee": 0.1,
+    "maxFee": 1.0,
+    "minWithdrawalAmount": 1.0
+  },
+  "catchOddRanges": [
+    {
+      "rarity": "common",
+      "odds": [
         {
-            "rarity": "common",
-            "odds": [
-                {
-                    "hpWhen": "90:200",
-                    "chance": 0.05
-                },
-                {
-                    "hpWhen": "70:90",
-                    "chance": 0.2
-                },
-                {
-                    "hpWhen": "50:70",
-                    "chance": 0.3
-                },
-                {
-                    "hpWhen": "0:50",
-                    "chance": 0.4
-                }
-            ]
+          "hpWhen": "90:200",
+          "chance": 0.05
         },
         {
-            "rarity": "rare",
-            "odds": [
-                {
-                    "hpWhen": "90:220",
-                    "chance": 0.02
-                },
-                {
-                    "hpWhen": "70:90",
-                    "chance": 0.15
-                },
-                {
-                    "hpWhen": "50:70",
-                    "chance": 0.25
-                },
-                {
-                    "hpWhen": "0:50",
-                    "chance": 0.3
-                }
-            ]
+          "hpWhen": "70:90",
+          "chance": 0.2
         },
         {
-            "rarity": "epic",
-            "odds": [
-                {
-                    "hpWhen": "90:240",
-                    "chance": 0
-                },
-                {
-                    "hpWhen": "70:90",
-                    "chance": 0.1
-                },
-                {
-                    "hpWhen": "50:70",
-                    "chance": 0.12
-                },
-                {
-                    "hpWhen": "0:50",
-                    "chance": 0.25
-                }
-            ]
+          "hpWhen": "50:70",
+          "chance": 0.3
         },
         {
-            "rarity": "legendary",
-            "odds": [
-                {
-                    "hpWhen": "90:260",
-                    "chance": 0
-                },
-                {
-                    "hpWhen": "70:90",
-                    "chance": 0.03
-                },
-                {
-                    "hpWhen": "50:70",
-                    "chance": 0.05
-                },
-                {
-                    "hpWhen": "0:50",
-                    "chance": 0.1
-                }
-            ]
+          "hpWhen": "0:50",
+          "chance": 0.4
         }
-    ],
-    "catchOddsRanges": [
-      {
-        "fromLvl": 1,
-        "data": [
-          {
-            "at": 0.5,
-            "odds": 0.5
-          },
-          {
-            "at": 0.35,
-            "odds": 1
-          }
-        ]
-      },
-      {
-        "fromLvl": 4,
-        "data": [
-          {
-            "at": 0.8,
-            "odds": 0
-          },
-          {
-            "at": 0.25,
-            "odds": 0.9
-          }
-        ]
-      },
-      {
-        "fromLvl": 11,
-        "data": [
-          {
-            "at": 0.8,
-            "odds": 0
-          },
-          {
-            "at": 0.25,
-            "odds": 0.8
-          }
-        ]
-      }
-    ],
-    "levelTables": [ 
+      ]
+    },
+    {
+      "rarity": "rare",
+      "odds": [
         {
-
-            "id": "common-1",
-            "lvlTable": [
-                {
-                "lvl": 1,
-                "xp": 0,
-                "atk": 17,
-                "def": 24,
-                "aim": 42
-                },
-                {
-                "lvl": 2,
-                "xp": 10,
-                "atk": 20,
-                "def": 28,
-                "aim": 44
-                },
-                {
-                "lvl": 3,
-                "xp": 20,
-                "atk": 23,
-                "def": 31,
-                "aim": 45
-                },
-                {
-                "lvl": 4,
-                "xp": 30,
-                "atk": 25,
-                "def": 35,
-                "aim": 47
-                },
-                {
-                "lvl": 5,
-                "xp": 40,
-                "atk": 27,
-                "def": 37,
-                "aim": 48
-                },
-                {
-                "lvl": 6,
-                "xp": 45,
-                "atk": 29,
-                "def": 40,
-                "aim": 48
-                },
-                {
-                "lvl": 7,
-                "xp": 55,
-                "atk": 30,
-                "def": 42,
-                "aim": 49
-                },
-                {
-                "lvl": 8,
-                "xp": 70,
-                "atk": 33,
-                "def": 46,
-                "aim": 50
-                },
-                {
-                "lvl": 9,
-                "xp": 70,
-                "atk": 36,
-                "def": 49,
-                "aim": 51
-                },
-                {
-                "lvl": 10,
-                "xp": 70,
-                "atk": 38,
-                "def": 53,
-                "aim": 52
-                },
-                {
-                "lvl": 11,
-                "xp": 75,
-                "atk": 41,
-                "def": 56,
-                "aim": 53
-                },
-                {
-                "lvl": 12,
-                "xp": 75,
-                "atk": 44,
-                "def": 60,
-                "aim": 54
-                },
-                {
-                "lvl": 13,
-                "xp": 75,
-                "atk": 46,
-                "def": 64,
-                "aim": 55
-                },
-                {
-                "lvl": 14,
-                "xp": 75,
-                "atk": 49,
-                "def": 67,
-                "aim": 56
-                },
-                {
-                "lvl": 15,
-                "xp": 75,
-                "atk": 52,
-                "def": 72,
-                "aim": 57
-                },
-                {
-                "lvl": 16,
-                "xp": 75,
-                "atk": 56,
-                "def": 77,
-                "aim": 57
-                },
-                {
-                "lvl": 17,
-                "xp": 75,
-                "atk": 59,
-                "def": 82,
-                "aim": 58
-                },
-                {
-                "lvl": 18,
-                "xp": 75,
-                "atk": 63,
-                "def": 86,
-                "aim": 59
-                },
-                {
-                "lvl": 19,
-                "xp": 75,
-                "atk": 66,
-                "def": 91,
-                "aim": 60
-                },
-                {
-                "lvl": 20,
-                "xp": 75,
-                "atk": 70,
-                "def": 96,
-                "aim": 61
-                },
-                {
-                "lvl": 21,
-                "xp": 80,
-                "atk": 73,
-                "def": 99,
-                "aim": 62
-                },
-                {
-                "lvl": 22,
-                "xp": 80,
-                "atk": 76,
-                "def": 103,
-                "aim": 63
-                },
-                {
-                "lvl": 23,
-                "xp": 80,
-                "atk": 78,
-                "def": 107,
-                "aim": 64
-                },
-                {
-                "lvl": 24,
-                "xp": 80,
-                "atk": 81,
-                "def": 110,
-                "aim": 65
-                },
-                {
-                "lvl": 25,
-                "xp": 80,
-                "atk": 84,
-                "def": 115,
-                "aim": 66
-                },
-                {
-                "lvl": 26,
-                "xp": 80,
-                "atk": 88,
-                "def": 120,
-                "aim": 66
-                },
-                {
-                "lvl": 27,
-                "xp": 80,
-                "atk": 91,
-                "def": 125,
-                "aim": 67
-                },
-                {
-                "lvl": 28,
-                "xp": 80,
-                "atk": 95,
-                "def": 129,
-                "aim": 68
-                },
-                {
-                "lvl": 29,
-                "xp": 80,
-                "atk": 98,
-                "def": 134,
-                "aim": 69
-                },
-                {
-                "lvl": 30,
-                "xp": 80,
-                "atk": 102,
-                "def": 139,
-                "aim": 70
-                },
-                {
-                "lvl": 31,
-                "xp": 85,
-                "atk": 105,
-                "def": 142,
-                "aim": 71
-                },
-                {
-                "lvl": 32,
-                "xp": 85,
-                "atk": 108,
-                "def": 146,
-                "aim": 72
-                },
-                {
-                "lvl": 33,
-                "xp": 85,
-                "atk": 110,
-                "def": 150,
-                "aim": 73
-                },
-                {
-                "lvl": 34,
-                "xp": 85,
-                "atk": 113,
-                "def": 153,
-                "aim": 74
-                },
-                {
-                "lvl": 35,
-                "xp": 85,
-                "atk": 116,
-                "def": 158,
-                "aim": 75
-                },
-                {
-                "lvl": 36,
-                "xp": 85,
-                "atk": 120,
-                "def": 163,
-                "aim": 75
-                },
-                {
-                "lvl": 37,
-                "xp": 85,
-                "atk": 123,
-                "def": 168,
-                "aim": 76
-                },
-                {
-                "lvl": 38,
-                "xp": 85,
-                "atk": 127,
-                "def": 172,
-                "aim": 77
-                },
-                {
-                "lvl": 39,
-                "xp": 85,
-                "atk": 130,
-                "def": 177,
-                "aim": 78
-                },
-                {
-                "lvl": 40,
-                "xp": 85,
-                "atk": 134,
-                "def": 182,
-                "aim": 79
-                }
-            ]
-       }
-    ],
-
-    "healRoute_general": [
-      {
-        "lvl": 1,
-        "healTime": "0:0:1",
-        "costDust": 1
-      },
-      {
-        "lvl": 2,
-        "healTime": "0:0:1",
-        "costDust": 1
-      },
-      {
-        "lvl": 3,
-        "healTime": "0:0:1",
-        "costDust": 1
-      },
-      {
-        "lvl": 4,
-        "healTime": "0:0:1",
-        "costDust": 1
-      },
-      {
-        "lvl": 5,
-        "healTime": "0:1:0",
-        "costDust": 20
-      },
-      {
-        "lvl": 6,
-        "healTime": "0:2:0",
-        "costDust": 30
-      },
-      {
-        "lvl": 7,
-        "healTime": "0:3:30",
-        "costDust": 50
-      },
-      {
-        "lvl": 8,
-        "healTime": "0:5:0",
-        "costDust": 120
-      },
-      {
-        "lvl": 9,
-        "healTime": "0:8:0",
-        "costDust": 250
-      },
-      {
-        "lvl": 10,
-        "healTime": "0:12:0",
-        "costDust": 320
-      },
-      {
-        "lvl": 11,
-        "healTime": "0:16:0",
-        "costDust": 400
-      },
-      {
-        "lvl": 12,
-        "healTime": "0:20:0",
-        "costDust": 450
-      },
-      {
-        "lvl": 13,
-        "healTime": "0:30:0",
-        "costDust": 500
-      },
-      {
-        "lvl": 14,
-        "healTime": "0:31:0",
-        "costDust": 505
-      },
-      {
-        "lvl": 15,
-        "healTime": "0:33:0",
-        "costDust": 510
-      },
-      {
-        "lvl": 16,
-        "healTime": "0:36:0",
-        "costDust": 520
-      },
-      {
-        "lvl": 17,
-        "healTime": "0:37:0",
-        "costDust": 530
-      },
-      {
-        "lvl": 18,
-        "healTime": "0:38:0",
-        "costDust": 540
-      },
-      {
-        "lvl": 19,
-        "healTime": "0:39:0",
-        "costDust": 550
-      },
-      {
-        "lvl": 20,
-        "healTime": "0:40:0",
-        "costDust": 560
-      },
-      {
-        "lvl": 21,
-        "healTime": "0:41:0",
-        "costDust": 570
-      },
-      {
-        "lvl": 22,
-        "healTime": "0:42:0",
-        "costDust": 580
-      },
-      {
-        "lvl": 23,
-        "healTime": "0:43:0",
-        "costDust": 590
-      },
-      {
-        "lvl": 24,
-        "healTime": "0:44:0",
-        "costDust": 600
-      },
-      {
-        "lvl": 25,
-        "healTime": "0:45:0",
-        "costDust": 625
-      },
-      {
-        "lvl": 26,
-        "healTime": "0:46:0",
-        "costDust": 650
-      },
-      {
-        "lvl": 27,
-        "healTime": "0:47:0",
-        "costDust": 675
-      },
-      {
-        "lvl": 28,
-        "healTime": "0:48:0",
-        "costDust": 700
-      },
-      {
-        "lvl": 29,
-        "healTime": "0:49:0",
-        "costDust": 725
-      },
-      {
-        "lvl": 30,
-        "healTime": "0:50:0",
-        "costDust": 750
-      },
-      {
-        "lvl": 31,
-        "healTime": "0:51:0",
-        "costDust": 775
-      },
-      {
-        "lvl": 32,
-        "healTime": "0:52:0",
-        "costDust": 800
-      },
-      {
-        "lvl": 33,
-        "healTime": "0:53:0",
-        "costDust": 825
-      },
-      {
-        "lvl": 34,
-        "healTime": "0:54:0",
-        "costDust": 850
-      },
-      {
-        "lvl": 35,
-        "healTime": "0:55:0",
-        "costDust": 875
-      },
-      {
-        "lvl": 36,
-        "healTime": "0:56:0",
-        "costDust": 900
-      },
-      {
-        "lvl": 37,
-        "healTime": "0:57:0",
-        "costDust": 925
-      },
-      {
-        "lvl": 38,
-        "healTime": "0:58:0",
-        "costDust": 950
-      },
-      {
-        "lvl": 39,
-        "healTime": "0:59:0",
-        "costDust": 975
-      },
-      {
-        "lvl": 40,
-        "healTime": "1:00:0",
-        "costDust": 1000
-      }
-    ],
-    "xpRoute_slow": [
-      {
-        "lvl": 1,
-        "xp": 0
-      },
-      {
-        "lvl": 2,
-        "xp": 10,
-        "costDust": 5
-      },
-      {
-        "lvl": 3,
-        "xp": 20,
-        "costDust": 5
-      },
-      {
-        "lvl": 4,
-        "xp": 30,
-        "costDust": 5
-      },
-      {
-        "lvl": 5,
-        "xp": 35,
-        "costDust": 5
-      },
-      {
-        "lvl": 6,
-        "xp": 45,
-        "costDust": 5
-      },
-      {
-        "lvl": 7,
-        "xp": 55,
-        "costDust": 5
-      },
-      {
-        "lvl": 8,
-        "xp": 70,
-        "costDust": 5
-      },
-      {
-        "lvl": 9,
-        "xp": 70,
-        "costDust": 5
-      },
-      {
-        "lvl": 10,
-        "xp": 70,
-        "costDust": 5
-      },
-      {
-        "lvl": 11,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 12,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 13,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 14,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 15,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 16,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 17,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 18,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 19,
-        "xp": 75,
-        "costDust": 5
-      },
-      {
-        "lvl": 20,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 21,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 22,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 23,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 24,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 25,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 26,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 27,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 28,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 29,
-        "xp": 80,
-        "costDust": 5
-      },
-      {
-        "lvl": 30,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 31,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 32,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 33,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 34,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 35,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 36,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 37,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 38,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 39,
-        "xp": 85,
-        "costDust": 5
-      },
-      {
-        "lvl": 40,
-        "xp": 85,
-        "costDust": 5
-      }
-    ],
-    "xpRoute_fast": [
-      {
-        "lvl": 1,
-        "xp": 0,
-        "costDust": 0
-      },
-      {
-        "lvl": 2,
-        "xp": 10,
-        "costDust": 70
-      },
-      {
-        "lvl": 3,
-        "xp": 12,
-        "costDust": 80
-      },
-      {
-        "lvl": 4,
-        "xp": 14,
-        "costDust": 90
-      },
-      {
-        "lvl": 5,
-        "xp": 17,
-        "costDust": 100
-      },
-      {
-        "lvl": 6,
-        "xp": 21,
-        "costDust": 125
-      },
-      {
-        "lvl": 7,
-        "xp": 25,
-        "costDust": 160
-      },
-      {
-        "lvl": 8,
-        "xp": 30,
-        "costDust": 200
-      },
-      {
-        "lvl": 9,
-        "xp": 36,
-        "costDust": 270
-      },
-      {
-        "lvl": 10,
-        "xp": 43,
-        "costDust": 360
-      },
-      {
-        "lvl": 11,
-        "xp": 52,
-        "costDust": 480
-      },
-      {
-        "lvl": 12,
-        "xp": 62,
-        "costDust": 650
-      },
-      {
-        "lvl": 13,
-        "xp": 74,
-        "costDust": 900
-      },
-      {
-        "lvl": 14,
-        "xp": 89,
-        "costDust": 1250
-      },
-      {
-        "lvl": 15,
-        "xp": 100,
-        "costDust": 1750
-      },
-      {
-        "lvl": 16,
-        "xp": 105,
-        "costDust": 2500
-      },
-      {
-        "lvl": 17,
-        "xp": 110,
-        "costDust": 3500
-      },
-      {
-        "lvl": 18,
-        "xp": 120,
-        "costDust": 4500
-      },
-      {
-        "lvl": 19,
-        "xp": 130,
-        "costDust": 5500
-      },
-      {
-        "lvl": 20,
-        "xp": 140,
-        "costDust": 6500
-      },
-      {
-        "lvl": 21,
-        "xp": 150,
-        "costDust": 6500
-      },
-      {
-        "lvl": 22,
-        "xp": 160,
-        "costDust": 6500
-      },
-      {
-        "lvl": 23,
-        "xp": 170,
-        "costDust": 6500
-      },
-      {
-        "lvl": 24,
-        "xp": 180,
-        "costDust": 6500
-      },
-      {
-        "lvl": 25,
-        "xp": 190,
-        "costDust": 6500
-      },
-      {
-        "lvl": 26,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 27,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 28,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 29,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 30,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 31,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 32,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 33,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 34,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 35,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 36,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 37,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 38,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 39,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 40,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 41,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 42,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 43,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 44,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 45,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 46,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 47,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 48,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 49,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 50,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 51,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 52,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 53,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 54,
-        "xp": 200,
-        "costDust": 6500
-      },
-      {
-        "lvl": 55,
-        "xp": 200,
-        "costDust": 6500
-      }
-    ],
-    "battleData": {
+          "hpWhen": "90:220",
+          "chance": 0.02
+        },
+        {
+          "hpWhen": "70:90",
+          "chance": 0.15
+        },
+        {
+          "hpWhen": "50:70",
+          "chance": 0.25
+        },
+        {
+          "hpWhen": "0:50",
+          "chance": 0.3
+        }
+      ]
+    },
+    {
+      "rarity": "epic",
+      "odds": [
+        {
+          "hpWhen": "90:240",
+          "chance": 0
+        },
+        {
+          "hpWhen": "70:90",
+          "chance": 0.1
+        },
+        {
+          "hpWhen": "50:70",
+          "chance": 0.12
+        },
+        {
+          "hpWhen": "0:50",
+          "chance": 0.25
+        }
+      ]
+    },
+    {
+      "rarity": "legendary",
+      "odds": [
+        {
+          "hpWhen": "90:260",
+          "chance": 0
+        },
+        {
+          "hpWhen": "70:90",
+          "chance": 0.03
+        },
+        {
+          "hpWhen": "50:70",
+          "chance": 0.05
+        },
+        {
+          "hpWhen": "0:50",
+          "chance": 0.1
+        }
+      ]
+    }
+  ],
+  "catchOddsRanges": [
+    {
+      "fromLvl": 1,
+      "data": [
+        {
+          "at": 0.5,
+          "odds": 0.5
+        },
+        {
+          "at": 0.35,
+          "odds": 1
+        }
+      ]
+    },
+    {
+      "fromLvl": 4,
+      "data": [
+        {
+          "at": 0.8,
+          "odds": 0
+        },
+        {
+          "at": 0.25,
+          "odds": 0.9
+        }
+      ]
+    },
+    {
+      "fromLvl": 11,
+      "data": [
+        {
+          "at": 0.8,
+          "odds": 0
+        },
+        {
+          "at": 0.25,
+          "odds": 0.8
+        }
+      ]
+    }
+  ],
+  "levelTables": [
+    {
+      "id": "common-1",
+      "lvlTable": [
+        {
+          "lvl": 1,
+          "xp": 0,
+          "atk": 17,
+          "def": 24,
+          "aim": 42
+        },
+        {
+          "lvl": 2,
+          "xp": 10,
+          "atk": 20,
+          "def": 28,
+          "aim": 44
+        },
+        {
+          "lvl": 3,
+          "xp": 20,
+          "atk": 23,
+          "def": 31,
+          "aim": 45
+        },
+        {
+          "lvl": 4,
+          "xp": 30,
+          "atk": 25,
+          "def": 35,
+          "aim": 47
+        },
+        {
+          "lvl": 5,
+          "xp": 40,
+          "atk": 27,
+          "def": 37,
+          "aim": 48
+        },
+        {
+          "lvl": 6,
+          "xp": 45,
+          "atk": 29,
+          "def": 40,
+          "aim": 48
+        },
+        {
+          "lvl": 7,
+          "xp": 55,
+          "atk": 30,
+          "def": 42,
+          "aim": 49
+        },
+        {
+          "lvl": 8,
+          "xp": 70,
+          "atk": 33,
+          "def": 46,
+          "aim": 50
+        },
+        {
+          "lvl": 9,
+          "xp": 70,
+          "atk": 36,
+          "def": 49,
+          "aim": 51
+        },
+        {
+          "lvl": 10,
+          "xp": 70,
+          "atk": 38,
+          "def": 53,
+          "aim": 52
+        },
+        {
+          "lvl": 11,
+          "xp": 75,
+          "atk": 41,
+          "def": 56,
+          "aim": 53
+        },
+        {
+          "lvl": 12,
+          "xp": 75,
+          "atk": 44,
+          "def": 60,
+          "aim": 54
+        },
+        {
+          "lvl": 13,
+          "xp": 75,
+          "atk": 46,
+          "def": 64,
+          "aim": 55
+        },
+        {
+          "lvl": 14,
+          "xp": 75,
+          "atk": 49,
+          "def": 67,
+          "aim": 56
+        },
+        {
+          "lvl": 15,
+          "xp": 75,
+          "atk": 52,
+          "def": 72,
+          "aim": 57
+        },
+        {
+          "lvl": 16,
+          "xp": 75,
+          "atk": 56,
+          "def": 77,
+          "aim": 57
+        },
+        {
+          "lvl": 17,
+          "xp": 75,
+          "atk": 59,
+          "def": 82,
+          "aim": 58
+        },
+        {
+          "lvl": 18,
+          "xp": 75,
+          "atk": 63,
+          "def": 86,
+          "aim": 59
+        },
+        {
+          "lvl": 19,
+          "xp": 75,
+          "atk": 66,
+          "def": 91,
+          "aim": 60
+        },
+        {
+          "lvl": 20,
+          "xp": 75,
+          "atk": 70,
+          "def": 96,
+          "aim": 61
+        },
+        {
+          "lvl": 21,
+          "xp": 80,
+          "atk": 73,
+          "def": 99,
+          "aim": 62
+        },
+        {
+          "lvl": 22,
+          "xp": 80,
+          "atk": 76,
+          "def": 103,
+          "aim": 63
+        },
+        {
+          "lvl": 23,
+          "xp": 80,
+          "atk": 78,
+          "def": 107,
+          "aim": 64
+        },
+        {
+          "lvl": 24,
+          "xp": 80,
+          "atk": 81,
+          "def": 110,
+          "aim": 65
+        },
+        {
+          "lvl": 25,
+          "xp": 80,
+          "atk": 84,
+          "def": 115,
+          "aim": 66
+        },
+        {
+          "lvl": 26,
+          "xp": 80,
+          "atk": 88,
+          "def": 120,
+          "aim": 66
+        },
+        {
+          "lvl": 27,
+          "xp": 80,
+          "atk": 91,
+          "def": 125,
+          "aim": 67
+        },
+        {
+          "lvl": 28,
+          "xp": 80,
+          "atk": 95,
+          "def": 129,
+          "aim": 68
+        },
+        {
+          "lvl": 29,
+          "xp": 80,
+          "atk": 98,
+          "def": 134,
+          "aim": 69
+        },
+        {
+          "lvl": 30,
+          "xp": 80,
+          "atk": 102,
+          "def": 139,
+          "aim": 70
+        },
+        {
+          "lvl": 31,
+          "xp": 85,
+          "atk": 105,
+          "def": 142,
+          "aim": 71
+        },
+        {
+          "lvl": 32,
+          "xp": 85,
+          "atk": 108,
+          "def": 146,
+          "aim": 72
+        },
+        {
+          "lvl": 33,
+          "xp": 85,
+          "atk": 110,
+          "def": 150,
+          "aim": 73
+        },
+        {
+          "lvl": 34,
+          "xp": 85,
+          "atk": 113,
+          "def": 153,
+          "aim": 74
+        },
+        {
+          "lvl": 35,
+          "xp": 85,
+          "atk": 116,
+          "def": 158,
+          "aim": 75
+        },
+        {
+          "lvl": 36,
+          "xp": 85,
+          "atk": 120,
+          "def": 163,
+          "aim": 75
+        },
+        {
+          "lvl": 37,
+          "xp": 85,
+          "atk": 123,
+          "def": 168,
+          "aim": 76
+        },
+        {
+          "lvl": 38,
+          "xp": 85,
+          "atk": 127,
+          "def": 172,
+          "aim": 77
+        },
+        {
+          "lvl": 39,
+          "xp": 85,
+          "atk": 130,
+          "def": 177,
+          "aim": 78
+        },
+        {
+          "lvl": 40,
+          "xp": 85,
+          "atk": 134,
+          "def": 182,
+          "aim": 79
+        }
+      ]
+    }
+  ],
+  "healRoute_general": [
+    {
+      "lvl": 1,
+      "healTime": "0:0:1",
+      "costDust": 1
+    },
+    {
+      "lvl": 2,
+      "healTime": "0:0:1",
+      "costDust": 1
+    },
+    {
+      "lvl": 3,
+      "healTime": "0:0:1",
+      "costDust": 1
+    },
+    {
+      "lvl": 4,
+      "healTime": "0:0:1",
+      "costDust": 1
+    },
+    {
+      "lvl": 5,
+      "healTime": "0:1:0",
+      "costDust": 20
+    },
+    {
+      "lvl": 6,
+      "healTime": "0:2:0",
+      "costDust": 30
+    },
+    {
+      "lvl": 7,
+      "healTime": "0:3:30",
+      "costDust": 50
+    },
+    {
+      "lvl": 8,
+      "healTime": "0:5:0",
+      "costDust": 120
+    },
+    {
+      "lvl": 9,
+      "healTime": "0:8:0",
+      "costDust": 250
+    },
+    {
+      "lvl": 10,
+      "healTime": "0:12:0",
+      "costDust": 320
+    },
+    {
+      "lvl": 11,
+      "healTime": "0:16:0",
+      "costDust": 400
+    },
+    {
+      "lvl": 12,
+      "healTime": "0:20:0",
+      "costDust": 450
+    },
+    {
+      "lvl": 13,
+      "healTime": "0:30:0",
+      "costDust": 500
+    },
+    {
+      "lvl": 14,
+      "healTime": "0:31:0",
+      "costDust": 505
+    },
+    {
+      "lvl": 15,
+      "healTime": "0:33:0",
+      "costDust": 510
+    },
+    {
+      "lvl": 16,
+      "healTime": "0:36:0",
+      "costDust": 520
+    },
+    {
+      "lvl": 17,
+      "healTime": "0:37:0",
+      "costDust": 530
+    },
+    {
+      "lvl": 18,
+      "healTime": "0:38:0",
+      "costDust": 540
+    },
+    {
+      "lvl": 19,
+      "healTime": "0:39:0",
+      "costDust": 550
+    },
+    {
+      "lvl": 20,
+      "healTime": "0:40:0",
+      "costDust": 560
+    },
+    {
+      "lvl": 21,
+      "healTime": "0:41:0",
+      "costDust": 570
+    },
+    {
+      "lvl": 22,
+      "healTime": "0:42:0",
+      "costDust": 580
+    },
+    {
+      "lvl": 23,
+      "healTime": "0:43:0",
+      "costDust": 590
+    },
+    {
+      "lvl": 24,
+      "healTime": "0:44:0",
+      "costDust": 600
+    },
+    {
+      "lvl": 25,
+      "healTime": "0:45:0",
+      "costDust": 625
+    },
+    {
+      "lvl": 26,
+      "healTime": "0:46:0",
+      "costDust": 650
+    },
+    {
+      "lvl": 27,
+      "healTime": "0:47:0",
+      "costDust": 675
+    },
+    {
+      "lvl": 28,
+      "healTime": "0:48:0",
+      "costDust": 700
+    },
+    {
+      "lvl": 29,
+      "healTime": "0:49:0",
+      "costDust": 725
+    },
+    {
+      "lvl": 30,
+      "healTime": "0:50:0",
+      "costDust": 750
+    },
+    {
+      "lvl": 31,
+      "healTime": "0:51:0",
+      "costDust": 775
+    },
+    {
+      "lvl": 32,
+      "healTime": "0:52:0",
+      "costDust": 800
+    },
+    {
+      "lvl": 33,
+      "healTime": "0:53:0",
+      "costDust": 825
+    },
+    {
+      "lvl": 34,
+      "healTime": "0:54:0",
+      "costDust": 850
+    },
+    {
+      "lvl": 35,
+      "healTime": "0:55:0",
+      "costDust": 875
+    },
+    {
+      "lvl": 36,
+      "healTime": "0:56:0",
+      "costDust": 900
+    },
+    {
+      "lvl": 37,
+      "healTime": "0:57:0",
+      "costDust": 925
+    },
+    {
+      "lvl": 38,
+      "healTime": "0:58:0",
+      "costDust": 950
+    },
+    {
+      "lvl": 39,
+      "healTime": "0:59:0",
+      "costDust": 975
+    },
+    {
+      "lvl": 40,
+      "healTime": "1:00:0",
+      "costDust": 1000
+    }
+  ],
+  "xpRoute_slow": [
+    {
+      "lvl": 1,
+      "xp": 0
+    },
+    {
+      "lvl": 2,
+      "xp": 10,
+      "costDust": 5
+    },
+    {
+      "lvl": 3,
+      "xp": 20,
+      "costDust": 5
+    },
+    {
+      "lvl": 4,
+      "xp": 30,
+      "costDust": 5
+    },
+    {
+      "lvl": 5,
+      "xp": 35,
+      "costDust": 5
+    },
+    {
+      "lvl": 6,
+      "xp": 45,
+      "costDust": 5
+    },
+    {
+      "lvl": 7,
+      "xp": 55,
+      "costDust": 5
+    },
+    {
+      "lvl": 8,
+      "xp": 70,
+      "costDust": 5
+    },
+    {
+      "lvl": 9,
+      "xp": 70,
+      "costDust": 5
+    },
+    {
+      "lvl": 10,
+      "xp": 70,
+      "costDust": 5
+    },
+    {
+      "lvl": 11,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 12,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 13,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 14,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 15,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 16,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 17,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 18,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 19,
+      "xp": 75,
+      "costDust": 5
+    },
+    {
+      "lvl": 20,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 21,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 22,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 23,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 24,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 25,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 26,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 27,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 28,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 29,
+      "xp": 80,
+      "costDust": 5
+    },
+    {
+      "lvl": 30,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 31,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 32,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 33,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 34,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 35,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 36,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 37,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 38,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 39,
+      "xp": 85,
+      "costDust": 5
+    },
+    {
+      "lvl": 40,
+      "xp": 85,
+      "costDust": 5
+    }
+  ],
+  "xpRoute_fast": [
+    {
+      "lvl": 1,
+      "xp": 0,
+      "costDust": 0
+    },
+    {
+      "lvl": 2,
+      "xp": 10,
+      "costDust": 70
+    },
+    {
+      "lvl": 3,
+      "xp": 12,
+      "costDust": 80
+    },
+    {
+      "lvl": 4,
+      "xp": 14,
+      "costDust": 90
+    },
+    {
+      "lvl": 5,
+      "xp": 17,
+      "costDust": 100
+    },
+    {
+      "lvl": 6,
+      "xp": 21,
+      "costDust": 125
+    },
+    {
+      "lvl": 7,
+      "xp": 25,
+      "costDust": 160
+    },
+    {
+      "lvl": 8,
+      "xp": 30,
+      "costDust": 200
+    },
+    {
+      "lvl": 9,
+      "xp": 36,
+      "costDust": 270
+    },
+    {
+      "lvl": 10,
+      "xp": 43,
+      "costDust": 360
+    },
+    {
+      "lvl": 11,
+      "xp": 52,
+      "costDust": 480
+    },
+    {
+      "lvl": 12,
+      "xp": 62,
+      "costDust": 650
+    },
+    {
+      "lvl": 13,
+      "xp": 74,
+      "costDust": 900
+    },
+    {
+      "lvl": 14,
+      "xp": 89,
+      "costDust": 1250
+    },
+    {
+      "lvl": 15,
+      "xp": 100,
+      "costDust": 1750
+    },
+    {
+      "lvl": 16,
+      "xp": 105,
+      "costDust": 2500
+    },
+    {
+      "lvl": 17,
+      "xp": 110,
+      "costDust": 3500
+    },
+    {
+      "lvl": 18,
+      "xp": 120,
+      "costDust": 4500
+    },
+    {
+      "lvl": 19,
+      "xp": 130,
+      "costDust": 5500
+    },
+    {
+      "lvl": 20,
+      "xp": 140,
+      "costDust": 6500
+    },
+    {
+      "lvl": 21,
+      "xp": 150,
+      "costDust": 6500
+    },
+    {
+      "lvl": 22,
+      "xp": 160,
+      "costDust": 6500
+    },
+    {
+      "lvl": 23,
+      "xp": 170,
+      "costDust": 6500
+    },
+    {
+      "lvl": 24,
+      "xp": 180,
+      "costDust": 6500
+    },
+    {
+      "lvl": 25,
+      "xp": 190,
+      "costDust": 6500
+    },
+    {
+      "lvl": 26,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 27,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 28,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 29,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 30,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 31,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 32,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 33,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 34,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 35,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 36,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 37,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 38,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 39,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 40,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 41,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 42,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 43,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 44,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 45,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 46,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 47,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 48,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 49,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 50,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 51,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 52,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 53,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 54,
+      "xp": 200,
+      "costDust": 6500
+    },
+    {
+      "lvl": 55,
+      "xp": 200,
+      "costDust": 6500
+    }
+  ],
+  "battleData": {
     "maxHP": 100,
     "missReduceAfterMiss": 35,
     "aiming": [
@@ -1210,45 +1214,311 @@
       }
     ]
   },
-  "mapLocations":
-    { 
-      "bootcamp":[
-        { "name": "A", "x": 320, "y": 500, "monsters": ["pyropine", "duckron", "tuffnut","tortunk", "sluglug"] },
-        { "name": "B", "x": 241, "y": 526, "monsters": ["pyropine", "duckron", "tuffnut","tortunk"] },
-        { "name": "C", "x": 154, "y": 502, "monsters": ["pyropine", "duckron", "tuffnut","tortunk"] },
-        { "name": "D", "x": 118, "y": 435, "monsters": ["pyropine", "duckron","tortunk", "hopchop"] },
-        { "name": "E", "x": 208, "y": 402, "monsters": ["pyropine", "duckron", "tuffnut","tortunk", "sluglug"] },
-        { "name": "F", "x": 300, "y": 420, "monsters": ["pyropine", "duckron", "tuffnut", "psython"] },
-        { "name": "G", "x": 159, "y": 352, "monsters": ["pyropine", "duckron", "tuffnut","tortunk", "sluglug"] },
-        { "name": "H", "x": 240, "y": 315, "monsters": ["duckron", "tuffnut","tortunk", "sluglug", "humzee"] },
-        { "name": "I", "x": 173, "y": 275, "monsters": ["pyropine", "duckron", "tuffnut","tortunk", "sluglug", "psython", "hopchop"]},
-        { "name": "J", "x": 310, "y": 283, "monsters": ["pyropine", "duckron","tortunk", "hopchop", "psython", "humzee"] },
-        { "name": "K", "x": 385, "y": 275, "monsters": ["pyropine", "duckron", "tuffnut","tortunk", "hopchop", "psython", "humzee"] },
-        { "name": "L", "x": 474,  "y": 256, "monsters": ["tuffnut","tortunk", "hopchop", "psython", "humzee"]  },
-        { "name": "M", "x": 561, "y": 279, "monsters": ["pyropine", "tuffnut","tortunk", "hopchop", "humzee"]  },
-        { "name": "N", "x": 608, "y": 228, "monsters": ["pyropine","tortunk", "hopchop", "psython", "humzee"] },
-        { "name": "O", "x": 706, "y": 236, "monsters": ["tuffnut","tortunk", "hopchop", "psython", "humzee"]  },
-        { "name": "P", "x": 759, "y": 346, "monsters": ["pyropine", "duckron", "tuffnut","tortunk", "sluglug"] },
-        { "name": "Q", "x": 643, "y": 383, "monsters": ["duckron", "tuffnut","tortunk", "hopchop", "psython", "humzee"] },
-        { "name": "R", "x": 729, "y": 425, "monsters": ["pyropine", "tuffnut","tortunk", "hopchop"]},
-        { "name": "S", "x": 621, "y": 482, "monsters": ["pyropine", "tuffnut","tortunk", "hopchop"] },
-        { "name": "T", "x": 699, "y": 515, "monsters": ["tuffnut","tortunk", "sluglug", "hopchop", "psython", "humzee"] }
-      ],
-      "riverfall": []
-    },
-    "mapMonsters":
-    {
-      "bootcamp": ["duckron","tuffnut", "pyropine", "hopchop", "sluglug", "tortunk", "psython", "humzee"],
-      "riverfall": ["flamboar","podapod", "flowingo", "tacofox", "duckron", "grubble", "hydron", "pumpking", "aviatos", "foxcarf", "vampix", "shadowl", "snorky"]
-    },
-    "healingTable": [
-      { "level": 1, "healSpray": 1 },
-      { "level": 3, "healSpray": 2 },
-      { "level": 5, "healSpray": 3 },
-      { "level": 8, "healSpray": 4 },
-      { "level": 10, "healSpray": 5 },
-      { "level": 14, "healSpray": 8 },
-      { "level": 20, "healSpray": 10 },
-      { "level": 25, "healSpray": 15}
+  "mapLocations": {
+    "bootcamp": [
+      {
+        "name": "A",
+        "x": 320,
+        "y": 500,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "tortunk",
+          "sluglug"
+        ]
+      },
+      {
+        "name": "B",
+        "x": 241,
+        "y": 526,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "tortunk"
+        ]
+      },
+      {
+        "name": "C",
+        "x": 154,
+        "y": 502,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "tortunk"
+        ]
+      },
+      {
+        "name": "D",
+        "x": 118,
+        "y": 435,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tortunk",
+          "hopchop"
+        ]
+      },
+      {
+        "name": "E",
+        "x": 208,
+        "y": 402,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "tortunk",
+          "sluglug"
+        ]
+      },
+      {
+        "name": "F",
+        "x": 300,
+        "y": 420,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "psython"
+        ]
+      },
+      {
+        "name": "G",
+        "x": 159,
+        "y": 352,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "tortunk",
+          "sluglug"
+        ]
+      },
+      {
+        "name": "H",
+        "x": 240,
+        "y": 315,
+        "monsters": [
+          "duckron",
+          "tuffnut",
+          "tortunk",
+          "sluglug",
+          "humzee"
+        ]
+      },
+      {
+        "name": "I",
+        "x": 173,
+        "y": 275,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "tortunk",
+          "sluglug",
+          "psython",
+          "hopchop"
+        ]
+      },
+      {
+        "name": "J",
+        "x": 310,
+        "y": 283,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tortunk",
+          "hopchop",
+          "psython",
+          "humzee"
+        ]
+      },
+      {
+        "name": "K",
+        "x": 385,
+        "y": 275,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "tortunk",
+          "hopchop",
+          "psython",
+          "humzee"
+        ]
+      },
+      {
+        "name": "L",
+        "x": 474,
+        "y": 256,
+        "monsters": [
+          "tuffnut",
+          "tortunk",
+          "hopchop",
+          "psython",
+          "humzee"
+        ]
+      },
+      {
+        "name": "M",
+        "x": 561,
+        "y": 279,
+        "monsters": [
+          "pyropine",
+          "tuffnut",
+          "tortunk",
+          "hopchop",
+          "humzee"
+        ]
+      },
+      {
+        "name": "N",
+        "x": 608,
+        "y": 228,
+        "monsters": [
+          "pyropine",
+          "tortunk",
+          "hopchop",
+          "psython",
+          "humzee"
+        ]
+      },
+      {
+        "name": "O",
+        "x": 706,
+        "y": 236,
+        "monsters": [
+          "tuffnut",
+          "tortunk",
+          "hopchop",
+          "psython",
+          "humzee"
+        ]
+      },
+      {
+        "name": "P",
+        "x": 759,
+        "y": 346,
+        "monsters": [
+          "pyropine",
+          "duckron",
+          "tuffnut",
+          "tortunk",
+          "sluglug"
+        ]
+      },
+      {
+        "name": "Q",
+        "x": 643,
+        "y": 383,
+        "monsters": [
+          "duckron",
+          "tuffnut",
+          "tortunk",
+          "hopchop",
+          "psython",
+          "humzee"
+        ]
+      },
+      {
+        "name": "R",
+        "x": 729,
+        "y": 425,
+        "monsters": [
+          "pyropine",
+          "tuffnut",
+          "tortunk",
+          "hopchop"
+        ]
+      },
+      {
+        "name": "S",
+        "x": 621,
+        "y": 482,
+        "monsters": [
+          "pyropine",
+          "tuffnut",
+          "tortunk",
+          "hopchop"
+        ]
+      },
+      {
+        "name": "T",
+        "x": 699,
+        "y": 515,
+        "monsters": [
+          "tuffnut",
+          "tortunk",
+          "sluglug",
+          "hopchop",
+          "psython",
+          "humzee"
+        ]
+      }
+    ],
+    "riverfall": []
+  },
+  "mapMonsters": {
+    "bootcamp": [
+      "duckron",
+      "tuffnut",
+      "pyropine",
+      "hopchop",
+      "sluglug",
+      "tortunk",
+      "psython",
+      "humzee"
+    ],
+    "riverfall": [
+      "flamboar",
+      "podapod",
+      "flowingo",
+      "tacofox",
+      "duckron",
+      "grubble",
+      "hydron",
+      "pumpking",
+      "aviatos",
+      "foxcarf",
+      "vampix",
+      "shadowl",
+      "snorky"
     ]
+  },
+  "healingTable": [
+    {
+      "level": 1,
+      "healSpray": 1
+    },
+    {
+      "level": 3,
+      "healSpray": 2
+    },
+    {
+      "level": 5,
+      "healSpray": 3
+    },
+    {
+      "level": 8,
+      "healSpray": 4
+    },
+    {
+      "level": 10,
+      "healSpray": 5
+    },
+    {
+      "level": 14,
+      "healSpray": 8
+    },
+    {
+      "level": 20,
+      "healSpray": 10
+    },
+    {
+      "level": 25,
+      "healSpray": 15
+    }
+  ]
 }

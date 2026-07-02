@@ -225,7 +225,10 @@ export class LabScene extends Phaser.Scene {
         // Show level up button only when monster XP reaches to MAX XP
         if (this.monsInfo.xp >= (this.monsInfo.maxXP || 100)) {
             const levelUpX = healBtn ? 245 : 125;
-            const levelUpGoldCost = 100 * this.monsInfo.level;
+            const costData = getLevelUpCost(this.monsInfo);
+            const levelUpLabel = costData.currency === "CRYSTAL" 
+                ? t("level_up_cost_crystal", { cost: costData.cost })
+                : t("level_up_cost", { cost: costData.cost });
 
             // Create premium level up button container
             const levelupContainer = this.add.container(levelUpX, 550);
@@ -237,7 +240,7 @@ export class LabScene extends Phaser.Scene {
             graphics.lineStyle(2, 0xffffff, 0.9);
             graphics.strokeRoundedRect(0, 0, 115, 38, 10);
 
-            const text = this.add.text(57.5, 19, t("level_up_cost", { cost: levelUpGoldCost }), {
+            const text = this.add.text(57.5, 19, levelUpLabel, {
                 fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                 fontSize: "11px",
                 color: "#ffffff",
@@ -459,7 +462,10 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                 ease: "Power2",
                 onComplete: () => {
                     if (monsInfo.xp >= monsInfo.maxXP) {
-                        const levelUpGoldCost = 100 * monsInfo.level;
+                        const costData = getLevelUpCost(monsInfo);
+                        const levelUpLabel = costData.currency === "CRYSTAL"
+                            ? t("level_up_cost_crystal", { cost: costData.cost })
+                            : t("level_up_cost", { cost: costData.cost });
 
                         // Create a premium container for Level Up button
                         const levelUpBtnContainer = scene.add.container(105, 455);
@@ -470,7 +476,7 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
                         graphics.lineStyle(2, 0xffffff, 0.9);
                         graphics.strokeRoundedRect(0, 0, 140, 44, 12);
 
-                        const text = scene.add.text(70, 22, t("level_up_cost", { cost: levelUpGoldCost }), {
+                        const text = scene.add.text(70, 22, levelUpLabel, {
                             fontFamily: "Lilita One, Coiny, Nunito, sans-serif",
                             fontSize: "12px",
                             color: "#ffffff",
@@ -556,4 +562,30 @@ export function MonsterUpgradeScreen(scene, monsInfo, callback) {
 
 
 
+}
+
+function getLevelUpCost(monsInfo) {
+    const rarity = (monsInfo.rarity || "common").toLowerCase().trim();
+    const isPremium = rarity === "epic" || rarity === "legendary";
+    
+    const getMultiplier = (lvl) => {
+        if (lvl <= 3) return 1.0;
+        if (lvl <= 5) return 1.1;
+        if (lvl <= 8) return 1.2;
+        if (lvl <= 10) return 1.3;
+        if (lvl <= 15) return 1.4;
+        if (lvl <= 20) return 1.5;
+        if (lvl <= 25) return 1.7;
+        return 2.0;
+    };
+
+    if (isPremium) {
+        const baseCrystalRate = rarity === "epic" ? 2.0 : 3.0;
+        const multiplier = getMultiplier(monsInfo.level);
+        const cost = Math.round(baseCrystalRate * multiplier * 24.0);
+        return { cost, currency: "CRYSTAL" };
+    } else {
+        const cost = 100 * monsInfo.level;
+        return { cost, currency: "GOLD" };
+    }
 }

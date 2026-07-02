@@ -51,27 +51,45 @@ namespace TGBOT
         
         public async Task Notify(long chatId, string message)
         {
-            try
+            int maxRetries = 3;
+            int delayMs = 1000;
+            for (int i = 0; i < maxRetries; i++)
             {
-                await _bot.SendMessage(chatId, message);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[TELEGRAM_BOT] Failed to send message to {chatId}: {ex.Message}");
+                try
+                {
+                    // Use HTML parse mode for standard notifications
+                    await _bot.SendMessage(chatId, message, parseMode: Telegram.Bot.Types.Enums.ParseMode.Html);
+                    return; // Success!
+                }
+                catch (Telegram.Bot.Exceptions.ApiRequestException apiEx) when (apiEx.ErrorCode == 429)
+                {
+                    int retryAfter = apiEx.Parameters?.RetryAfter ?? 5;
+                    Console.WriteLine($"[TELEGRAM_BOT] Rate limit hit (429) for chat {chatId}. Retrying after {retryAfter}s...");
+                    await Task.Delay(retryAfter * 1000);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[TELEGRAM_BOT] Failed to send message to {chatId} (attempt {i+1}): {ex.Message}");
+                    if (i == maxRetries - 1) throw;
+                    await Task.Delay(delayMs);
+                    delayMs *= 2; // Exponential backoff
+                }
             }
         }
 
         public async Task NotifyAdmin(string message)
         {
-            try
+            foreach (var adminId in ADMINS)
             {
-                // Sends the message to all admins at the same time
-                var tasks = ADMINS.Select(adminId => _bot.SendMessage(adminId, message));
-                await Task.WhenAll(tasks);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[TELEGRAM_BOT] Failed to notify admins: {ex.Message}");
+                try
+                {
+                    await Notify(adminId, message);
+                    await Task.Delay(100); // 100ms throttle between admin messages
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[TELEGRAM_BOT] Failed to notify admin {adminId}: {ex.Message}");
+                }
             }
         }
 

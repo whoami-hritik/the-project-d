@@ -23,6 +23,34 @@ namespace monster_world.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("monster_world.Models.Collector", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<List<string>>("CommonSpecies")
+                        .HasColumnType("text[]");
+
+                    b.Property<List<string>>("EpicSpecies")
+                        .HasColumnType("text[]");
+
+                    b.Property<DateTime>("LastEligibleTime")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<List<string>>("LegendarySpecies")
+                        .HasColumnType("text[]");
+
+                    b.Property<List<string>>("RareSpecies")
+                        .HasColumnType("text[]");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Collectors");
+                });
+
             modelBuilder.Entity("monster_world.Models.Deposit", b =>
                 {
                     b.Property<Guid>("Id")
@@ -164,6 +192,106 @@ namespace monster_world.Migrations
                     b.ToTable("MapLiquidity");
                 });
 
+            modelBuilder.Entity("monster_world.Models.MarketplaceBase", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<long>("BuyerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("text");
+
+                    b.Property<int>("InitialQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsSold")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("ItemId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ListedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ListingType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MonsterId")
+                        .HasColumnType("text");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("SellerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime>("SoldDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("Marketplace");
+                });
+
+            modelBuilder.Entity("monster_world.Models.MarketplaceLog", b =>
+                {
+                    b.Property<Guid>("ID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActivityType")
+                        .HasColumnType("text");
+
+                    b.Property<long?>("BuyerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("BuyerUsername")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Details")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ListingType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("MonsterInstanceId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("MonsterLevel")
+                        .HasColumnType("integer");
+
+                    b.Property<double>("Price")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("SellerId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("SellerUsername")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TargetId")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("ID");
+
+                    b.ToTable("MarketplaceLogs");
+                });
+
             modelBuilder.Entity("monster_world.Models.Mission", b =>
                 {
                     b.Property<Guid>("MissionId")
@@ -221,6 +349,9 @@ namespace monster_world.Migrations
 
                     b.Property<string>("CapturedMap")
                         .HasColumnType("text");
+
+                    b.Property<int>("CollectionHourCap")
+                        .HasColumnType("integer");
 
                     b.Property<DateTime?>("CollectorDepositTime")
                         .HasColumnType("timestamp with time zone");
@@ -395,7 +526,13 @@ namespace monster_world.Migrations
                     b.Property<int>("Level")
                         .HasColumnType("integer");
 
+                    b.Property<List<string>>("ListedMonsters")
+                        .HasColumnType("text[]");
+
                     b.Property<int>("LoginStreak")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MaxXP")
                         .HasColumnType("integer");
 
                     b.Property<List<string>>("Missions")
@@ -422,6 +559,9 @@ namespace monster_world.Migrations
                     b.Property<int>("Role")
                         .HasColumnType("integer");
 
+                    b.Property<List<string>>("StakedMonsters")
+                        .HasColumnType("text[]");
+
                     b.Property<bool>("StreakClaimed")
                         .HasColumnType("boolean");
 
@@ -443,6 +583,18 @@ namespace monster_world.Migrations
                     b.Property<int>("UnlockedCollectorSlots")
                         .HasColumnType("integer");
 
+                    b.Property<int>("UnlockedCommonSlots")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UnlockedEpicSlots")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UnlockedLegendarySlots")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UnlockedRareSlots")
+                        .HasColumnType("integer");
+
                     b.Property<int>("UnlockedSlots")
                         .HasColumnType("integer");
 
@@ -451,6 +603,9 @@ namespace monster_world.Migrations
 
                     b.Property<string>("Username")
                         .HasColumnType("text");
+
+                    b.Property<int>("XP")
+                        .HasColumnType("integer");
 
                     b.HasKey("ID");
 
@@ -486,20 +641,38 @@ namespace monster_world.Migrations
                     b.Property<bool>("Completed")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("Currency")
                         .HasColumnType("text");
+
+                    b.Property<double>("Fee")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("Hash")
                         .HasColumnType("text");
 
+                    b.Property<double>("NetAmount")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("PlayerStatsJson")
+                        .HasColumnType("text");
+
                     b.Property<bool>("Processing")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("Status")
+                        .HasColumnType("text");
 
                     b.Property<long?>("UserBaseID")
                         .HasColumnType("bigint");
 
                     b.Property<long>("UserID")
                         .HasColumnType("bigint");
+
+                    b.Property<string>("WalletAddress")
+                        .HasColumnType("text");
 
                     b.HasKey("ID");
 

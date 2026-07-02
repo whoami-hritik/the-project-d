@@ -39,6 +39,7 @@ namespace monster_world.Controller
         private readonly TGBOT.TelegramBot _tgbot;
         private readonly PoolService _poolService;
         private readonly Telegram.Bot.ITelegramBotClient _botClient;
+        private readonly IServiceProvider _serviceProvider;
         private static readonly HttpClient _httpClient = new HttpClient();
         private static readonly object _pollLock = new object();
         private static DateTime _lastGlobalDepositPollTime = DateTime.MinValue;
@@ -52,7 +53,8 @@ namespace monster_world.Controller
             GameplayService gameplayService,
             PoolService poolService,
             MapService mapService,
-            Telegram.Bot.ITelegramBotClient botClient)
+            Telegram.Bot.ITelegramBotClient botClient,
+            IServiceProvider serviceProvider)
         {
             _context = context;
             _tgbot = tgbot;
@@ -62,16 +64,37 @@ namespace monster_world.Controller
             _poolService = poolService;
             _botClient = botClient;
             _mapService = mapService;
+            _serviceProvider = serviceProvider;
         }        
         
         [ValidateRequestIgnore]
         [HttpPost("telegram/update")]
         public async Task<IActionResult> TGUpdate([FromBody]Update update)
         {
-            
-            if (update.Message!= null)
+            try
             {
-                await _tgbot.OnMessage(update);
+                if (update.Message != null)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            using (var scope = _serviceProvider.CreateScope())
+                            {
+                                var scopedTgBot = scope.ServiceProvider.GetRequiredService<TGBOT.TelegramBot>();
+                                await scopedTgBot.OnMessage(update);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[TELEGRAM_BOT] Exception handling message in background: {ex.Message}");
+                        }
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TELEGRAM_BOT] Exception receiving update: {ex.Message}");
             }
             return Ok();
         }
@@ -1139,7 +1162,43 @@ namespace monster_world.Controller
             return maps[index].Map;
         }
 
-        private List<string> GetEligibleCollectorMonsters()
+        private async Task<List<string>> GetEligibleCollectorMonsters()
+        {
+            var RarityCollector = await _context.Collectors.FirstOrDefaultAsync(x => x.Id == 1);
+            if (RarityCollector == null)
+            {
+                RarityCollector = new Collector();
+                await _context.Collectors.AddAsync(RarityCollector);
+                await _context.SaveChangesAsync();
+            }
+
+            RarityCollector.CommonSpecies ??= new List<string>();
+            RarityCollector.RareSpecies ??= new List<string>();
+            RarityCollector.EpicSpecies ??= new List<string>();
+            RarityCollector.LegendarySpecies ??= new List<string>();
+
+            if (!RarityCollector.CommonSpecies.Any() || 
+                !RarityCollector.RareSpecies.Any() || 
+                !RarityCollector.EpicSpecies.Any() || 
+                !RarityCollector.LegendarySpecies.Any())
+            {
+                await GetEligibleCollectorMonsters("common");
+                RarityCollector = await _context.Collectors.FirstOrDefaultAsync(x => x.Id == 1);
+                RarityCollector.CommonSpecies ??= new List<string>();
+                RarityCollector.RareSpecies ??= new List<string>();
+                RarityCollector.EpicSpecies ??= new List<string>();
+                RarityCollector.LegendarySpecies ??= new List<string>();
+            }
+
+            var eligibleList = new List<string>();
+            eligibleList.AddRange(RarityCollector.CommonSpecies);
+            eligibleList.AddRange(RarityCollector.RareSpecies);
+            eligibleList.AddRange(RarityCollector.EpicSpecies);
+            eligibleList.AddRange(RarityCollector.LegendarySpecies);
+            return eligibleList.Select(id => id.ToLower()).Distinct().ToList();
+        }
+
+        private async Task<List<string>> GetEligibleCollectorMonsters(string rarity)
         {
             var collectorConfig = _gameplayService.GetCollectorData();
             int rotationDays = collectorConfig?.RotationDays ?? 3;
@@ -1153,10 +1212,41 @@ namespace monster_world.Controller
             var mapMonstersList = _gameplayService.Gameplay.MapMonsters;
             if (mapMonstersList == null) return eligibleList;
             
-            var commonIds = _gameplayService.GetRarityMons("common")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
-            var rareIds = _gameplayService.GetRarityMons("rare")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
-            var epicIds = _gameplayService.GetRarityMons("epic")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
-            var legendaryIds = _gameplayService.GetRarityMons("legendary")?.Select(m => m.MonsterId.ToLower()).ToList() ?? new List<string>();
+            var commonIds = _gameplayService.GetRarityMons("common")?.Select(m => m.MonsterId?.ToLower()).Where(id => id != null).ToList() ?? new List<string>();
+            var rareIds = _gameplayService.GetRarityMons("rare")?.Select(m => m.MonsterId?.ToLower()).Where(id => id != null).ToList() ?? new List<string>();
+            var epicIds = _gameplayService.GetRarityMons("epic")?.Select(m => m.MonsterId?.ToLower()).Where(id => id != null).ToList() ?? new List<string>();
+            var legendaryIds = _gameplayService.GetRarityMons("legendary")?.Select(m => m.MonsterId?.ToLower()).Where(id => id != null).ToList() ?? new List<string>();
+
+            var RarityCollector = await _context.Collectors.FirstOrDefaultAsync(x => x.Id == 1);
+            if (RarityCollector == null)
+            {
+                RarityCollector = new Collector();
+                await _context.Collectors.AddAsync(RarityCollector);
+                await _context.SaveChangesAsync();
+            }
+
+            RarityCollector.CommonSpecies ??= new List<string>();
+            RarityCollector.RareSpecies ??= new List<string>();
+            RarityCollector.EpicSpecies ??= new List<string>();
+            RarityCollector.LegendarySpecies ??= new List<string>();
+
+            bool needRegen = !RarityCollector.CommonSpecies.Any() || 
+                             !RarityCollector.RareSpecies.Any() || 
+                             !RarityCollector.EpicSpecies.Any() || 
+                             !RarityCollector.LegendarySpecies.Any();
+
+            if (RarityCollector.LastEligibleTime.AddDays(rotationDays) > DateTime.UtcNow && !needRegen)
+            {
+                if (rarity == "common") return RarityCollector.CommonSpecies;
+                if (rarity == "rare") return RarityCollector.RareSpecies;
+                if (rarity == "epic") return RarityCollector.EpicSpecies;
+                if (rarity == "legendary") return RarityCollector.LegendarySpecies;
+            }
+
+            RarityCollector.CommonSpecies?.Clear();
+            RarityCollector.RareSpecies?.Clear();
+            RarityCollector.EpicSpecies?.Clear();
+            RarityCollector.LegendarySpecies?.Clear();
 
             foreach (var mapInfo in mapMonstersList)
             {
@@ -1170,104 +1260,149 @@ namespace monster_world.Controller
                 
                 if (mapCommons.Any())
                 {
-                    eligibleList.Add(mapCommons[rnd.Next(mapCommons.Count)]);
+                    var unused = mapCommons.Where(id => !RarityCollector.CommonSpecies.Contains(id)).ToList();
+                    RarityCollector.CommonSpecies.Add(unused.Any() ? unused[rnd.Next(unused.Count)] : mapCommons[rnd.Next(mapCommons.Count)]);
                 }
                 if (mapRares.Any())
                 {
-                    eligibleList.Add(mapRares[rnd.Next(mapRares.Count)]);
+                    var unused = mapRares.Where(id => !RarityCollector.RareSpecies.Contains(id)).ToList();
+                    RarityCollector.RareSpecies.Add(unused.Any() ? unused[rnd.Next(unused.Count)] : mapRares[rnd.Next(mapRares.Count)]);
                 }
                 if (mapEpics.Any())
                 {
-                    eligibleList.Add(mapEpics[rnd.Next(mapEpics.Count)]);
+                    var unused = mapEpics.Where(id => !RarityCollector.EpicSpecies.Contains(id)).ToList();
+                    RarityCollector.EpicSpecies.Add(unused.Any() ? unused[rnd.Next(unused.Count)] : mapEpics[rnd.Next(mapEpics.Count)]);
                 }
                 if (mapLegendaries.Any())
                 {
-                    eligibleList.Add(mapLegendaries[rnd.Next(mapLegendaries.Count)]);
+                    var unused = mapLegendaries.Where(id => !RarityCollector.LegendarySpecies.Contains(id)).ToList();
+                    RarityCollector.LegendarySpecies.Add(unused.Any() ? unused[rnd.Next(unused.Count)] : mapLegendaries[rnd.Next(mapLegendaries.Count)]);
                 }
             }
-            
-            return eligibleList.Select(id => id.ToLower()).Distinct().ToList();
+
+            RarityCollector.LastEligibleTime = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            switch (rarity)
+            {
+                case "common":
+                    return RarityCollector.CommonSpecies;
+                case "rare":
+                    return RarityCollector.RareSpecies;
+                case "epic":
+                    return RarityCollector.EpicSpecies;
+                case "legendary":
+                    return RarityCollector.LegendarySpecies;
+                default:
+                    return eligibleList;
+            }
         }
 
-        private async Task ProcessExpiredCollectorStakes(long userId)
+        private double GetLevelMultiplier(int level)
         {
-            var stakedMonsters = await _context.Monsters
-                .Where(m => m.OwnerID == userId && m.StakedInCollector)
+            if (level >= 1 && level <= 3) return 1.0;
+            if (level >= 4 && level <= 10) return 1.2;
+            if (level >= 11 && level <= 15) return 1.4;
+            if (level >= 16 && level <= 20) return 1.6;
+            if (level >= 21 && level <= 25) return 1.8;
+            if (level >= 26) return 2.0;
+            return 1.0;
+        }
+
+        private double GetDeterministicRate(string rangeStr, string seedInput)
+        {
+            if (string.IsNullOrEmpty(rangeStr)) return 0;
+            
+            if (!rangeStr.Contains("-"))
+            {
+                if (double.TryParse(rangeStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double val))
+                {
+                    return val;
+                }
+                return 0;
+            }
+            
+            var parts = rangeStr.Split('-');
+            if (parts.Length == 2 &&
+                double.TryParse(parts[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double min) &&
+                double.TryParse(parts[1], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double max))
+            {
+                int hash = seedInput.GetHashCode();
+                var rand = new Random(hash);
+                double fraction = rand.NextDouble();
+                return min + fraction * (max - min);
+            }
+            
+            return 0;
+        }
+
+        private (double Gold, double Crystal, double GoldRate, double CrystalRate, double ElapsedHours) CalculateMonsterYield(Monster monster, List<string> eligibleIds)
+        {
+            double levelMult = _gameplayService.GetCollectorLevelMultiplier(monster.Level);
+            double goldRate = 0;
+            double crystalRate = 0;
+
+            var CollectorRarity = _gameplayService.GetCollectorRarity(monster.Rarity);
+            if (CollectorRarity != null)
+            {
+                double baseGold = CollectorRarity.Farm.ContainsKey("GOLD") ? GetDeterministicRate(CollectorRarity.Farm["GOLD"], monster.InstanceId + "_GOLD") : 0;
+                double baseCrystal = CollectorRarity.Farm.ContainsKey("CRYSTAL") ? GetDeterministicRate(CollectorRarity.Farm["CRYSTAL"], monster.InstanceId + "_CRYSTAL") : 0;
+
+                goldRate = baseGold * levelMult;
+                crystalRate = baseCrystal * levelMult;
+            }
+
+            if (eligibleIds == null || !eligibleIds.Contains(monster.Id.ToLower()))
+            {
+                return (0, 0, 0, 0, 0);
+            }
+
+            double elapsedHours = 0;
+            if (monster.StakedInCollector && monster.CollectorLastClaimTime.HasValue)
+            {
+                elapsedHours = (DateTime.UtcNow - monster.CollectorLastClaimTime.Value).TotalHours;
+                if (elapsedHours < 0) elapsedHours = 0;
+            }
+
+            double yieldHours = (elapsedHours >= 1.0 && monster.CollectionHourCap > 0) ? 1.0 : 0.0;
+
+            double goldEarned = yieldHours * goldRate;
+            double crystalEarned = yieldHours * crystalRate;
+
+            return (goldEarned, crystalEarned, goldRate, crystalRate, elapsedHours);
+        }
+
+        private async Task CleanNonEligibleStakes(UserBase user)
+        {
+            var eligibleCommon = await GetEligibleCollectorMonsters("common");
+            var eligibleRare = await GetEligibleCollectorMonsters("rare");
+            var eligibleEpic = await GetEligibleCollectorMonsters("epic");
+            var eligibleLegendary = await GetEligibleCollectorMonsters("legendary");
+
+            var staked = await _context.Monsters
+                .Where(m => user.StakedMonsters.Contains(m.InstanceId))
                 .ToListAsync();
 
-            if (!stakedMonsters.Any()) return;
-
-            var activeMap = GetActiveExhibitionMap();
             bool changed = false;
-            
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == userId);
-            if (user == null) return;
-
-            foreach (var monster in stakedMonsters)
+            foreach (var m in staked)
             {
-                if (monster.CollectorDepositTime.HasValue)
+                var eligibleList = m.Rarity?.ToLower() switch
                 {
-                    double totalStakedHours = (DateTime.UtcNow - monster.CollectorDepositTime.Value).TotalHours;
-                    if (totalStakedHours >= 24.0)
-                    {
-                        double claimableHours = 0;
-                        if (monster.CollectorLastClaimTime.HasValue)
-                        {
-                            var limitTime = monster.CollectorDepositTime.Value.AddHours(24.0);
-                            claimableHours = (limitTime - monster.CollectorLastClaimTime.Value).TotalHours;
-                            if (claimableHours < 0) claimableHours = 0;
+                    "common" => eligibleCommon,
+                    "rare" => eligibleRare,
+                    "epic" => eligibleEpic,
+                    "legendary" => eligibleLegendary,
+                    _ => null
+                };
 
-                            var collectorConfig = _gameplayService.GetCollectorData();
-                            double capHours = collectorConfig?.FarmingCapHours ?? 1.0;
-                            if (claimableHours > capHours) claimableHours = capHours;
-                        }
-
-                        double baseScale = Math.Ceiling(monster.Level / 5.0);
-                        double matchBonus = (monster.CapturedMap?.ToLower() == activeMap?.ToLower()) ? 0.2 : 0.0;
-                        double multiplier = GetRarityMultiplier(monster.Rarity) + matchBonus;
-
-                        double goldRate = 0;
-                        double crystalRate = 0;
-                        string r = monster.Rarity?.ToLower() ?? "common";
-                        if (r == "common")
-                        {
-                            goldRate = baseScale * 1.0 * multiplier;
-                        }
-                        else if (r == "rare")
-                        {
-                            if (monster.CollectorFocus?.ToLower() == "crystal")
-                            {
-                                crystalRate = baseScale * 0.5 * multiplier;
-                            }
-                            else
-                            {
-                                goldRate = baseScale * 1.0 * multiplier;
-                            }
-                        }
-                        else
-                        {
-                            goldRate = baseScale * 1.0 * multiplier;
-                            crystalRate = baseScale * 0.5 * multiplier;
-                        }
-
-                        double goldEarned = claimableHours * goldRate;
-                        double crystalEarned = claimableHours * crystalRate;
-
-                        if (goldEarned > 0)
-                        {
-                            user.Balance.GOLD += Math.Round(goldEarned, 4);
-                        }
-                        if (crystalEarned > 0)
-                        {
-                            user.Balance.CRYSTAL += Math.Round(crystalEarned, 4);
-                        }
-
-                        monster.StakedInCollector = false;
-                        monster.CollectorDepositTime = DateTime.UtcNow.AddHours(24.0); // Cooldown end time
-                        monster.CollectorLastClaimTime = null;
-                        
-                        changed = true;
-                    }
+                if (eligibleList == null || !eligibleList.Contains(m.Id.ToLower()))
+                {
+                    m.StakedInCollector = false;
+                    m.CollectorDepositTime = null;
+                    m.CollectorLastClaimTime = null;
+                    m.CollectorFocus = null;
+                    user.StakedMonsters.Remove(m.InstanceId);
+                    changed = true;
                 }
             }
 
@@ -1277,73 +1412,118 @@ namespace monster_world.Controller
             }
         }
 
-        private double GetRarityMultiplier(string rarity)
+        private async Task ProcessExpiredCollectorStakes(long userId)
         {
-            if (string.IsNullOrEmpty(rarity)) return 1.0;
-            return rarity.ToLower() switch
+            // Disabled under the 1-hour claim cycle mechanism (monsters remain staked indefinitely)
+            await Task.CompletedTask;
+        }
+
+        [HttpPost("collector/{rarity}")]
+        public async Task<IActionResult> GetRarityCollector(string rarity)
+        {
+            HttpContext.Items.TryGetValue("User", out var user);
+            UserBase User = await _userService.GetOrCreateUser((TelegramUser) user);
+
+            if(_gameplayService.Gameplay.AvilableRarity == null || !_gameplayService.Gameplay.AvilableRarity.Contains(rarity))
             {
-                "common" => 1.0,
-                "rare" => 1.2,
-                "epic" => 1.4,
-                "legendary" => 1.8,
-                _ => 1.0
+                return Ok( new { success = false, reason = "invalid rarity" });
+            }
+
+            await CleanNonEligibleStakes(User);
+
+            List<string> EligibleMonsters = await GetEligibleCollectorMonsters(rarity);
+
+            int TotalUnlockedSlots = rarity.ToLower() switch
+            {
+                "common" => User.UnlockedCommonSlots,
+                "rare" => User.UnlockedRareSlots,
+                "epic" => User.UnlockedEpicSlots,
+                "legendary" => User.UnlockedLegendarySlots,
+                _ => 0
             };
+
+            List<Monster> StakedMonsters = await _context.Monsters.Where(x => User.StakedMonsters.Contains(x.InstanceId)).ToListAsync();
+
+            List<Monster> StakedRarityMonsters = StakedMonsters.Where(x => x.Rarity == rarity).ToList();
+
+            var collectorRarity = _gameplayService.GetCollectorRarity(rarity);
+
+            var stakedRarityDetails = StakedRarityMonsters.Select(m => {
+                var yield = CalculateMonsterYield(m, EligibleMonsters);
+                double cooldownRemainingSeconds = 0;
+                if (m.CollectionHourCap <= 0 && m.CollectorDepositTime.HasValue)
+                {
+                    cooldownRemainingSeconds = (m.CollectorDepositTime.Value - DateTime.UtcNow).TotalSeconds;
+                    if (cooldownRemainingSeconds < 0) cooldownRemainingSeconds = 0;
+                }
+
+                return new {
+                    globalID = m.GlobalID,
+                    instanceId = m.InstanceId,
+                    id = m.Id,
+                    title = m.Title,
+                    desc = m.Desc,
+                    ownerID = m.OwnerID,
+                    rarity = m.Rarity,
+                    role = m.Role,
+                    isBoss = m.IsBoss,
+                    element = m.Element,
+                    level = m.Level,
+                    maxHP = m.MaxHP,
+                    hp = m.HP,
+                    lastHpRegenAt = m.LastHpRegenAt,
+                    isRegenerating = m.IsRegenerating,
+                    atk = m.ATK,
+                    def = m.DEF,
+                    spd = m.SPD,
+                    maxXP = m.MaxXP,
+                    xp = m.XP,
+                    isFighting = m.IsFighting,
+                    isCaptured = m.IsCaptured,
+                    captureAt = m.CaptureAt,
+                    stakedInCollector = m.StakedInCollector,
+                    collectorDepositTime = m.CollectorDepositTime,
+                    collectorLastClaimTime = m.CollectorLastClaimTime,
+                    collectionHourCap = m.CollectionHourCap,
+                    capturedMap = m.CapturedMap,
+                    collectorFocus = m.CollectorFocus,
+                    cooldownRemainingSeconds = cooldownRemainingSeconds,
+                    
+                    goldRate = Math.Round(yield.GoldRate, 2),
+                    crystalRate = Math.Round(yield.CrystalRate, 2),
+                    goldEarned = Math.Round(yield.Gold, 4),
+                    crystalEarned = Math.Round(yield.Crystal, 4),
+                    elapsedHours = Math.Round(yield.ElapsedHours, 4)
+                };
+            }).ToList();
+
+            var collectorData = _gameplayService.GetCollectorData();
+            int rotationDays = collectorData?.RotationDays ?? 3;
+            long unixTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            long epoch = unixTime / (rotationDays * 24 * 3600);
+            long nextResetUnix = (epoch + 1) * (rotationDays * 24 * 3600);
+            double countdownSeconds = nextResetUnix - unixTime;
+
+            return Ok( new { 
+                success = true, 
+                TotalSlots = TotalUnlockedSlots, 
+                StakedCount = StakedRarityMonsters.Count, 
+                StakedMonsters = stakedRarityDetails, 
+                EligibleMonsters = EligibleMonsters,
+                farm = collectorRarity?.Farm,
+                countdownSeconds = countdownSeconds
+            });
         }
 
-        private (double Gold, double Crystal, double GoldRate, double CrystalRate) CalculateMonsterYield(Monster monster, string activeMap)
-        {
-            double baseScale = Math.Ceiling(monster.Level / 5.0);
-            double matchBonus = (monster.CapturedMap?.ToLower() == activeMap?.ToLower()) ? 0.2 : 0.0;
-            double multiplier = GetRarityMultiplier(monster.Rarity) + matchBonus;
-
-            double goldRate = 0;
-            double crystalRate = 0;
-
-            string r = monster.Rarity?.ToLower() ?? "common";
-            if (r == "common")
-            {
-                goldRate = baseScale * 1.0 * multiplier;
-            }
-            else if (r == "rare")
-            {
-                if (monster.CollectorFocus?.ToLower() == "crystal")
-                {
-                    crystalRate = baseScale * 0.5 * multiplier;
-                }
-                else
-                {
-                    goldRate = baseScale * 1.0 * multiplier;
-                }
-            }
-            else // epic & legendary
-            {
-                goldRate = baseScale * 1.0 * multiplier;
-                crystalRate = baseScale * 0.5 * multiplier;
-            }
-
-            double elapsedHours = 0;
-            if (monster.StakedInCollector && monster.CollectorLastClaimTime.HasValue)
-            {
-                elapsedHours = (DateTime.UtcNow - monster.CollectorLastClaimTime.Value).TotalHours;
-                if (elapsedHours < 0) elapsedHours = 0;
-
-                var collectorConfig = _gameplayService.GetCollectorData();
-                double capHours = collectorConfig?.FarmingCapHours ?? 1.0;
-                if (elapsedHours > capHours) elapsedHours = capHours;
-            }
-
-            double goldEarned = elapsedHours * goldRate;
-            double crystalEarned = elapsedHours * crystalRate;
-
-            return (goldEarned, crystalEarned, goldRate, crystalRate);
-        }
-
+        [HttpPost("collector/status")]
         [HttpGet("collector/status")]
         public async Task<IActionResult> GetCollectorStatus()
         {
             HttpContext.Items.TryGetValue("User", out var userVal);
             if (userVal == null) return Unauthorized();
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
+
+            await CleanNonEligibleStakes(User);
 
             await ProcessExpiredCollectorStakes(User.ID);
 
@@ -1357,46 +1537,50 @@ namespace monster_world.Controller
             long nextResetUnix = (epoch + 1) * (rotationDays * 24 * 3600);
             double countdownSeconds = nextResetUnix - unixTime;
 
-            double nextSlotCost = User.UnlockedCollectorSlots * (collectorData?.CostOfSlot?["GOLD"] ?? 500);
-
-            var stakedMonsters = await _context.Monsters
-                .Where(m => m.OwnerID == User.ID && m.StakedInCollector)
+            var allUserMonsters = await _context.Monsters
+                .Where(m => m.OwnerID == User.ID)
                 .ToListAsync();
 
-            var availableMonsters = await _context.Monsters
-                .Where(m => m.OwnerID == User.ID && !m.StakedInCollector && !m.IsFighting)
-                .ToListAsync();
-
-            bool anyRegen = false;
-            foreach (var m in availableMonsters)
+            bool anyChanges = false;
+            foreach (var m in allUserMonsters)
             {
+                if (await CheckAndResetBattleState(m))
+                {
+                    anyChanges = true;
+                }
                 if (m.ApplyPassiveRegen())
                 {
-                    anyRegen = true;
+                    _context.Monsters.Update(m);
+                    anyChanges = true;
                 }
             }
-            if (anyRegen)
+            if (anyChanges)
             {
                 await _context.SaveChangesAsync();
             }
 
-            var eligibleIds = GetEligibleCollectorMonsters();
-            var eligibleAvailable = availableMonsters
-                .Where(m => eligibleIds.Contains(m.Id.ToLower()))
-                .ToList();
+            var stakedMonsters = allUserMonsters.Where(m => m.StakedInCollector).ToList();
+            var availableMonsters = allUserMonsters.Where(m => !m.StakedInCollector && !m.IsFighting).ToList();
+
+            var eligibleIds = await GetEligibleCollectorMonsters();
 
             var stakedDetails = stakedMonsters.Select(m => {
-                var yield = CalculateMonsterYield(m, activeMap);
-                double elapsedHours = m.CollectorLastClaimTime.HasValue 
-                    ? Math.Max(0, (DateTime.UtcNow - m.CollectorLastClaimTime.Value).TotalHours)
-                    : 0;
+                var yield = CalculateMonsterYield(m, eligibleIds);
+                double cooldownRemainingSeconds = 0;
+                if (m.CollectionHourCap <= 0 && m.CollectorDepositTime.HasValue)
+                {
+                    cooldownRemainingSeconds = (m.CollectorDepositTime.Value - DateTime.UtcNow).TotalSeconds;
+                    if (cooldownRemainingSeconds < 0) cooldownRemainingSeconds = 0;
+                }
+
                 return new {
                     Monster = m,
+                    CooldownRemainingSeconds = cooldownRemainingSeconds,
                     GoldRate = Math.Round(yield.GoldRate, 2),
                     CrystalRate = Math.Round(yield.CrystalRate, 2),
                     GoldEarned = Math.Round(yield.Gold, 4),
                     CrystalEarned = Math.Round(yield.Crystal, 4),
-                    ElapsedHours = elapsedHours
+                    ElapsedHours = Math.Round(yield.ElapsedHours, 4)
                 };
             }).ToList();
 
@@ -1408,59 +1592,117 @@ namespace monster_world.Controller
                 activeExhibitionMap = activeMap,
                 activeExhibitionTitle = activeMap.ToUpper() + " COLLECTION",
                 countdownSeconds = countdownSeconds,
-                unlockedSlots = User.UnlockedCollectorSlots,
-                maxSlots = maxSlots,
-                nextSlotCost = nextSlotCost,
                 stakedMonsters = stakedDetails,
-                availableMonsters = eligibleAvailable,
+                availableMonsters = availableMonsters,
                 eligibleMonsters = eligibleIds,
-                farmingCapHours = collectorData?.FarmingCapHours ?? 1.0,
                 totalGoldEarned = Math.Round(totalGoldEarned, 4),
                 totalCrystalEarned = Math.Round(totalCrystalEarned, 4),
                 User = MapTo.UserBaseDto(User)
             });
         }
 
-        public class StakeRequest
-        {
-            public string MonsterId { get; set; }
-            public string Focus { get; set; } = "GOLD";
-        }
-
+      
         [HttpPost("collector/stake")]
-        public async Task<IActionResult> StakeMonster([FromBody] StakeRequest request)
+        public async Task<IActionResult> StakeMonster()
         {
             HttpContext.Items.TryGetValue("User", out var userVal);
-            if (userVal == null) return Unauthorized();
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
 
-            await ProcessExpiredCollectorStakes(User.ID);
+            var form = await GetForm( new {
+                MonsterId = "",
+                Focus = "GOLD"
+            });
 
-            if (request == null || string.IsNullOrEmpty(request.MonsterId))
+            
+            if (form == null || string.IsNullOrEmpty(form.MonsterId))
             {
                 return BadRequest(new { success = false, reason = "invalid request parameters" });
             }
 
             var monster = await _context.Monsters
-                .FirstOrDefaultAsync(m => m.OwnerID == User.ID && m.InstanceId == request.MonsterId);
+                .FirstOrDefaultAsync(m => m.OwnerID == User.ID && m.InstanceId == form.MonsterId);
 
             if (monster == null)
             {
                 return Ok(new { success = false, reason = "monster not found or not owned by you" });
             }
 
+            var CollectorSpecies = await _context.Collectors.FirstOrDefaultAsync(x => x.Id == 1);
+            if (CollectorSpecies == null)
+            {
+                CollectorSpecies = new Collector();
+                await _context.Collectors.AddAsync(CollectorSpecies);
+                await _context.SaveChangesAsync();
+            }
+
+            //Check eligible species
+            if (monster.Rarity == "common")
+            {
+                if (CollectorSpecies.CommonSpecies == null || !CollectorSpecies.CommonSpecies.Contains(monster.Id.ToLower()))
+                {
+                    return Ok(new { success = false, reason = "monster is not eligible for staking" });
+                }
+                int unlockedSlots = User.UnlockedCommonSlots;
+                int stakedSlots = await _context.Monsters
+                    .Where(m => User.StakedMonsters.Contains(m.InstanceId) && m.Rarity == "common")
+                    .CountAsync();
+                if (stakedSlots >= unlockedSlots)
+                {
+                    return Ok(new { success = false, reason = "you have reached the maximum number of common monsters you can stake" });
+                }
+            }
+            if (monster.Rarity == "rare")
+            {
+                if (CollectorSpecies.RareSpecies == null || !CollectorSpecies.RareSpecies.Contains(monster.Id.ToLower()))
+                {
+                    return Ok(new { success = false, reason = "monster is not eligible for staking" });
+                }
+                int unlockedSlots = User.UnlockedRareSlots;
+                int stakedSlots = await _context.Monsters
+                    .Where(m => User.StakedMonsters.Contains(m.InstanceId) && m.Rarity == "rare")
+                    .CountAsync();
+                if (stakedSlots >= unlockedSlots)
+                {
+                    return Ok(new { success = false, reason = "you have reached the maximum number of rare monsters you can stake" });
+                }
+            }
+            if (monster.Rarity == "epic")
+            {
+                if (CollectorSpecies.EpicSpecies == null || !CollectorSpecies.EpicSpecies.Contains(monster.Id.ToLower()))
+                {
+                    return Ok(new { success = false, reason = "monster is not eligible for staking" });
+                }
+                int unlockedSlots = User.UnlockedEpicSlots;
+                int stakedSlots = await _context.Monsters
+                    .Where(m => User.StakedMonsters.Contains(m.InstanceId) && m.Rarity == "epic")
+                    .CountAsync();
+                if (stakedSlots >= unlockedSlots)
+                {
+                    return Ok(new { success = false, reason = "you have reached the maximum number of epic monsters you can stake" });
+                }
+            }
+            if (monster.Rarity == "legendary")
+            {
+                if (CollectorSpecies.LegendarySpecies == null || !CollectorSpecies.LegendarySpecies.Contains(monster.Id.ToLower()))
+                {
+                    return Ok(new { success = false, reason = "monster is not eligible for staking" });
+                }
+                int unlockedSlots = User.UnlockedLegendarySlots;
+                int stakedSlots = await _context.Monsters
+                    .Where(m => User.StakedMonsters.Contains(m.InstanceId) && m.Rarity == "legendary")
+                    .CountAsync();
+                if (stakedSlots >= unlockedSlots)
+                {
+                    return Ok(new { success = false, reason = "you have reached the maximum number of legendary monsters you can stake" });
+                }
+            }
+            
             if (!monster.StakedInCollector && monster.CollectorDepositTime.HasValue && DateTime.UtcNow < monster.CollectorDepositTime.Value)
             {
                 var remainingSec = (monster.CollectorDepositTime.Value - DateTime.UtcNow).TotalSeconds;
                 int hours = (int)(remainingSec / 3600);
                 int minutes = (int)((remainingSec % 3600) / 60);
                 return Ok(new { success = false, reason = $"Monster is on staking cooldown. Available in {hours}h {minutes}m." });
-            }
-
-            var eligibleIds = GetEligibleCollectorMonsters();
-            if (!eligibleIds.Contains(monster.Id.ToLower()))
-            {
-                return Ok(new { success = false, reason = "This monster species is not eligible for the current exhibition." });
             }
 
             if (monster.StakedInCollector)
@@ -1473,69 +1715,119 @@ namespace monster_world.Controller
                 return Ok(new { success = false, reason = "monster is currently in a battle" });
             }
 
+            string rarity = monster.Rarity?.ToLower() ?? "common";
             int currentlyStakedCount = await _context.Monsters
-                .CountAsync(m => m.OwnerID == User.ID && m.StakedInCollector);
+                .CountAsync(m => m.OwnerID == User.ID && m.StakedInCollector && (m.Rarity ?? "common").ToLower() == rarity);
 
-            if (currentlyStakedCount >= User.UnlockedCollectorSlots)
+            int allowedSlots = rarity switch
             {
-                return Ok(new { success = false, reason = "all unlocked collector slots are occupied" });
+                "common" => User.UnlockedCommonSlots,
+                "rare" => User.UnlockedRareSlots,
+                "epic" => User.UnlockedEpicSlots,
+                "legendary" => User.UnlockedLegendarySlots,
+                _ => 0
+            };
+
+            if (currentlyStakedCount >= allowedSlots)
+            {
+                return Ok(new { success = false, reason = $"all unlocked {rarity} collector slots are occupied" });
             }
 
-            string focus = "GOLD";
-            if (monster.Rarity?.ToLower() == "rare" && !string.IsNullOrEmpty(request.Focus))
+            if (monster.CollectionHourCap <= 0 && (!monster.CollectorDepositTime.HasValue || DateTime.UtcNow >= monster.CollectorDepositTime.Value))
             {
-                if (request.Focus.ToUpper() == "CRYSTAL")
-                {
-                    focus = "CRYSTAL";
-                }
+                monster.CollectionHourCap = 24;
+                monster.CollectorDepositTime = null;
             }
 
             monster.StakedInCollector = true;
             monster.CollectorDepositTime = DateTime.UtcNow;
             monster.CollectorLastClaimTime = DateTime.UtcNow;
-            monster.CollectorFocus = focus;
+            monster.CollectorFocus = null;
+            
+            if (!User.StakedMonsters.Contains(monster.InstanceId))
+            {
+                User.StakedMonsters.Add(monster.InstanceId);
+            }
 
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, User = MapTo.UserBaseDto(User), monster });
         }
 
-        public class ClaimRequest
-        {
-            public string MonsterId { get; set; }
-        }
-
         [HttpPost("collector/claim")]
-        public async Task<IActionResult> ClaimCollectorRewards([FromBody] ClaimRequest request)
+        public async Task<IActionResult> ClaimCollectorRewards()
         {
             HttpContext.Items.TryGetValue("User", out var userVal);
-            if (userVal == null) return Unauthorized();
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
 
-            await ProcessExpiredCollectorStakes(User.ID);
+            var form = await GetForm( new {
+                MonsterId = ""
+            });
 
-            var activeMap = GetActiveExhibitionMap();
+            await CleanNonEligibleStakes(User);
+
             List<Monster> monstersToClaim = new();
+            var eligibleIds = await GetEligibleCollectorMonsters();
 
-            if (request != null && !string.IsNullOrEmpty(request.MonsterId))
+
+            if (!string.IsNullOrEmpty(form.MonsterId))
             {
                 var monster = await _context.Monsters
-                    .FirstOrDefaultAsync(m => m.OwnerID == User.ID && m.InstanceId == request.MonsterId && m.StakedInCollector);
-                if (monster != null)
+                    .FirstOrDefaultAsync(m => m.OwnerID == User.ID && m.InstanceId == form.MonsterId && m.StakedInCollector);
+                if (monster == null)
                 {
-                    monstersToClaim.Add(monster);
+                    return Ok(new { success = false, reason = "staked monster not found" });
                 }
+
+                double elapsedHours = monster.CollectorLastClaimTime.HasValue 
+                    ? (DateTime.UtcNow - monster.CollectorLastClaimTime.Value).TotalHours
+                    : 0;
+
+                if (elapsedHours < 1.0)
+                {
+                    double remainingMinutes = Math.Ceiling((1.0 - elapsedHours) * 60.0);
+                    return Ok(new { success = false, reason = $"Farming not complete. Please wait another {remainingMinutes} minutes." });
+                }
+
+                monstersToClaim.Add(monster);
             }
             else
             {
-                monstersToClaim = await _context.Monsters
+                var allStaked = await _context.Monsters
                     .Where(m => m.OwnerID == User.ID && m.StakedInCollector)
                     .ToListAsync();
-            }
 
-            if (monstersToClaim.Count == 0)
-            {
-                return Ok(new { success = false, reason = "no staked monsters found to claim rewards for" });
+                foreach (var m in allStaked)
+                {
+                    double elapsedHours = m.CollectorLastClaimTime.HasValue 
+                        ? (DateTime.UtcNow - m.CollectorLastClaimTime.Value).TotalHours
+                        : 0;
+
+                    if (elapsedHours >= 1.0)
+                    {
+                        monstersToClaim.Add(m);
+                    }
+                }
+
+                if (monstersToClaim.Count == 0)
+                {
+                    if (allStaked.Count == 0)
+                    {
+                        return Ok(new { success = false, reason = "no staked monsters found to claim rewards for" });
+                    }
+
+                    double minRemaining = 60.0;
+                    foreach (var m in allStaked)
+                    {
+                        double elapsed = m.CollectorLastClaimTime.HasValue 
+                            ? (DateTime.UtcNow - m.CollectorLastClaimTime.Value).TotalHours
+                            : 0;
+                        double remaining = (1.0 - elapsed) * 60.0;
+                        if (remaining < minRemaining) minRemaining = remaining;
+                    }
+                    int remMin = (int)Math.Ceiling(minRemaining);
+                    return Ok(new { success = false, reason = $"No monsters are ready to claim yet. Please wait another {remMin} minutes." });
+                }
             }
 
             double totalGold = 0;
@@ -1543,11 +1835,22 @@ namespace monster_world.Controller
 
             foreach (var monster in monstersToClaim)
             {
-                var yield = CalculateMonsterYield(monster, activeMap);
+                var yield = CalculateMonsterYield(monster, eligibleIds);
                 totalGold += yield.Gold;
                 totalCrystal += yield.Crystal;
 
-                monster.CollectorLastClaimTime = DateTime.UtcNow;
+                monster.CollectionHourCap = Math.Max(0, monster.CollectionHourCap - 1);
+                if (monster.CollectionHourCap <= 0)
+                {
+                    monster.StakedInCollector = false;
+                    User.StakedMonsters.Remove(monster.InstanceId);
+                    monster.CollectorDepositTime = DateTime.UtcNow.AddHours(24.0); // 24-hour cooldown on exhaustion
+                    monster.CollectorLastClaimTime = null;
+                }
+                else
+                {
+                    monster.CollectorLastClaimTime = DateTime.UtcNow;
+                }
             }
 
             if (totalGold > 0)
@@ -1596,8 +1899,8 @@ namespace monster_world.Controller
                 return Ok(new { success = false, reason = "staked monster not found or not owned by you" });
             }
 
-            var activeMap = GetActiveExhibitionMap();
-            var yield = CalculateMonsterYield(monster, activeMap);
+            var eligibleIds = await GetEligibleCollectorMonsters();
+            var yield = CalculateMonsterYield(monster, eligibleIds);
 
             if (yield.Gold > 0)
             {
@@ -1608,17 +1911,21 @@ namespace monster_world.Controller
                 User.Credit("CRYSTAL", Math.Round(yield.Crystal, 4), $"collector_unstake_crystal={monster.InstanceId}");
             }
 
-            monster.StakedInCollector = false;
-            if (monster.CollectorDepositTime.HasValue)
+            if (yield.ElapsedHours >= 1.0 && monster.CollectionHourCap > 0)
             {
-                var stakedDuration = DateTime.UtcNow - monster.CollectorDepositTime.Value;
-                if (stakedDuration < TimeSpan.Zero) stakedDuration = TimeSpan.Zero;
-                if (stakedDuration.TotalHours > 24.0) stakedDuration = TimeSpan.FromHours(24.0);
-                monster.CollectorDepositTime = DateTime.UtcNow.Add(stakedDuration);
+                monster.CollectionHourCap = Math.Max(0, monster.CollectionHourCap - 1);
+            }
+
+            monster.StakedInCollector = false;
+            User.StakedMonsters.Remove(monster.InstanceId);
+
+            if (monster.CollectionHourCap <= 0)
+            {
+                monster.CollectorDepositTime = DateTime.UtcNow.AddHours(24.0); // Cooldown applies because cap is fully exhausted
             }
             else
             {
-                monster.CollectorDepositTime = null;
+                monster.CollectorDepositTime = null; // No cooldown since capacity remains
             }
             monster.CollectorLastClaimTime = null;
 
@@ -1633,31 +1940,95 @@ namespace monster_world.Controller
             });
         }
 
+        public class UnlockSlotRequest
+        {
+            public string Rarity { get; set; }
+            public string Currency { get; set; } // "GOLD" or "TON"
+        }
+
         [HttpPost("collector/unlock-slot")]
-        public async Task<IActionResult> UnlockCollectorSlot()
+        public async Task<IActionResult> UnlockCollectorSlot([FromBody] UnlockSlotRequest request)
         {
             HttpContext.Items.TryGetValue("User", out var userVal);
             if (userVal == null) return Unauthorized();
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)userVal);
 
-            var collectorData = _gameplayService.GetCollectorData();
-            int maxSlots = collectorData?.MaxSlots ?? 10;
-            double cost = collectorData?.CostOfSlot?["GOLD"] ?? 500;
-
-            if (User.UnlockedCollectorSlots >= maxSlots)
+            if (request == null || string.IsNullOrEmpty(request.Rarity))
             {
-                return Ok(new { success = false, reason = "max collector slots already unlocked" });
+                return BadRequest(new { success = false, reason = "invalid request parameters" });
             }
 
-            double unlockCost = User.UnlockedCollectorSlots * cost;
+            string rarity = request.Rarity.ToLower();
+            string currency = (request.Currency ?? "GOLD").ToUpper();
 
-            if (User.Balance.GOLD < unlockCost)
+            if (rarity != "common" && rarity != "rare" && rarity != "epic" && rarity != "legendary")
             {
-                return Ok(new { success = false, reason = $"insufficient gold balance. Required: {unlockCost} GOLD." });
+                return Ok(new { success = false, reason = "invalid rarity" });
             }
 
-            User.Credit("GOLD", -unlockCost, $"unlock_collector_slot={User.UnlockedCollectorSlots + 1}");
-            User.UnlockedCollectorSlots += 1;
+            double goldCost = 0;
+            double tonCost = 0;
+
+            if (rarity == "common")
+            {
+                int currentSlots = User.UnlockedCommonSlots;
+                int idx = currentSlots; 
+                goldCost = (idx - 1) * 500;
+                tonCost = (idx - 1) * 0.1;
+            }
+            else if (rarity == "rare")
+            {
+                int currentSlots = User.UnlockedRareSlots;
+                int idx = currentSlots; 
+                goldCost = idx * 1000;
+                tonCost = idx * 0.2;
+            }
+            else if (rarity == "epic")
+            {
+                int currentSlots = User.UnlockedEpicSlots;
+                int idx = currentSlots;
+                tonCost = 0.5 + idx * 0.3;
+                currency = "TON";
+            }
+            else if (rarity == "legendary")
+            {
+                int currentSlots = User.UnlockedLegendarySlots;
+                int idx = currentSlots;
+                tonCost = 1.0 + idx * 0.2;
+                currency = "TON";
+            }
+
+            int newSlotsCount = rarity switch
+            {
+                "common" => User.UnlockedCommonSlots + 1,
+                "rare" => User.UnlockedRareSlots + 1,
+                "epic" => User.UnlockedEpicSlots + 1,
+                "legendary" => User.UnlockedLegendarySlots + 1,
+                _ => 1
+            };
+
+            if (currency == "GOLD")
+            {
+                if (User.Balance.GOLD < goldCost)
+                {
+                    return Ok(new { success = false, reason = $"insufficient GOLD balance. Required: {goldCost} GOLD." });
+                }
+                User.Credit("GOLD", -goldCost, $"unlock_collector_slot_{rarity}={newSlotsCount}");
+            }
+            else // TON
+            {
+                if (User.Balance.TON < tonCost)
+                {
+                    return Ok(new { success = false, reason = $"insufficient TON balance. Required: {tonCost} TON." });
+                }
+                User.Credit("TON", -tonCost, $"unlock_collector_slot_{rarity}={newSlotsCount}");
+            }
+
+            // Increment slot count
+            if (rarity == "common") User.UnlockedCommonSlots += 1;
+            else if (rarity == "rare") User.UnlockedRareSlots += 1;
+            else if (rarity == "epic") User.UnlockedEpicSlots += 1;
+            else if (rarity == "legendary") User.UnlockedLegendarySlots += 1;
 
             await _context.SaveChangesAsync();
 
@@ -1740,6 +2111,10 @@ namespace monster_world.Controller
                         {
                             return Ok(new { success = false, reason = "monster already in battle" });
                         }
+                    }
+                    else
+                    {
+                        monster.IsFighting = false;
                     }
                 }
                 monster.ApplyPassiveRegen();
@@ -1851,7 +2226,9 @@ namespace monster_world.Controller
                 List<MonsDef> monsDefs = _gameplayService.GetRandomNodeMonster(form.Map, randomRarity, form.Node);
                 MonsDef monsDef = _gameplayService.RandomMons(monsDefs);
                 Console.WriteLine($"[CONSOLE]monsDef = {monsDef.MonsterId} {monsDef.Title} {monsDef.Element}");
-                int rndLevel = Math.Min(rnd.Next(1, User.Level + 3), 30);
+                var mapData = _gameplayService.GetMapData().FirstOrDefault(m => m.Map == form.Map);
+                int maxLvlCap = mapData?.MaxMonsterLevel ?? 30;
+                int rndLevel = Math.Min(rnd.Next(1, User.Level + 3), maxLvlCap);
 
                 var monster = _gameplayService.CreateMonsterInstance(monsDef.MonsterId, 0, rndLevel);
                 Enemymonsters.Add(monster);
@@ -1881,6 +2258,26 @@ namespace monster_world.Controller
             User.TotalBattles += 1;
             User.DailyBattles += 1;
 
+            bool hasEpicOrLegendary = battleState.EnemyMonsters.Any(m => 
+                !string.IsNullOrEmpty(m.Rarity) && 
+                (m.Rarity.ToLower() == "epic" || m.Rarity.ToLower() == "legendary")
+            );
+
+            if (hasEpicOrLegendary)
+            {
+                var encounteredRarities = battleState.EnemyMonsters
+                    .Where(m => !string.IsNullOrEmpty(m.Rarity) && (m.Rarity.ToLower() == "epic" || m.Rarity.ToLower() == "legendary"))
+                    .Select(m => m.Rarity.ToUpper())
+                    .Distinct()
+                    .ToList();
+
+                string rarityStr = string.Join("/", encounteredRarities);
+                
+                User.AddItems("MonstaBall", 1, $"Encounter {rarityStr} Reward");
+                battleState.ExtraRewardMessage = $"Encountered {rarityStr} monster! Extra MonstaBall rewarded!";
+            }
+
+            _context.Users.Update(User);
 
             if (battleState.EnemyMonsters.Any(x => x.IsBoss == true))
             {
@@ -1894,7 +2291,7 @@ namespace monster_world.Controller
             AttackResult playerAttack = new AttackResult();
             AttackResult enemyAttack = new AttackResult();
 
-            return Ok(new { success = true, battleState, playerAttack, enemyAttack, rewards });
+            return Ok(new { success = true, battleState, playerAttack, enemyAttack, rewards, User = Mapper.MapTo.UserBaseDto(User) });
         }
 
         private void DistributeRewards(ref UserBase User, Dictionary<string, double> Rewards)
@@ -2127,6 +2524,10 @@ namespace monster_world.Controller
                 }
             }
             int upXP = _gameplayService.GetMonsterXp(AttackingMonster.Role);
+            if (battleState.BossBattle)
+            {
+                upXP *= 4;
+            }
 
 
             // battleState.PlayerState = PlayerState;
@@ -2147,6 +2548,12 @@ namespace monster_world.Controller
                     battleState.Status = BattleStatus.Completed;
 
                     AttackingMonster.AddXP(upXP);
+                    int oldLvl1 = User.Level;
+                    User.AddXP(upXP);
+                    if (User.Level > oldLvl1)
+                    {
+                        await CheckAndRewardReferrer(User);
+                    }
 
                     rewards = await _mapService.CalculateRewards(battleState);
                     DistributeRewards(ref User, rewards);
@@ -2170,6 +2577,12 @@ namespace monster_world.Controller
                 battleState.Status = BattleStatus.Completed;
 
                 AttackingMonster.AddXP(upXP*2);
+                int oldLvl2 = User.Level;
+                User.AddXP(upXP*2);
+                if (User.Level > oldLvl2)
+                {
+                    await CheckAndRewardReferrer(User);
+                }
 
                 //give victory reward to player
                 rewards = await _mapService.CalculateRewards(battleState);
@@ -2216,6 +2629,12 @@ namespace monster_world.Controller
 
 
                 AttackingMonster.AddXP(upXP*2);
+                int oldLvl3 = User.Level;
+                User.AddXP(upXP*2);
+                if (User.Level > oldLvl3)
+                {
+                    await CheckAndRewardReferrer(User);
+                }
 
 
                 //give victory reward to player
@@ -2241,6 +2660,12 @@ namespace monster_world.Controller
                     battleState.Status = BattleStatus.Completed;
 
                     AttackingMonster.AddXP(upXP);
+                    int oldLvl4 = User.Level;
+                    User.AddXP(upXP);
+                    if (User.Level > oldLvl4)
+                    {
+                        await CheckAndRewardReferrer(User);
+                    }
 
                     rewards = await _mapService.CalculateRewards(battleState);
                     DistributeRewards(ref User, rewards);
@@ -2336,6 +2761,10 @@ namespace monster_world.Controller
             Random random = new Random();
 
             int upXP = _gameplayService.GetMonsterXp(DefendingMonster.Role);
+            if (battleState.BossBattle)
+            {
+                upXP *= 4;
+            }
             Dictionary<string, double> rewards = new();
 
             AttackResult playerAttack = new();
@@ -2368,6 +2797,12 @@ namespace monster_world.Controller
                 //give the victory rewards
 
                 AttackingMonster.AddXP(upXP*2);
+                int oldLvl5 = User.Level;
+                User.AddXP(upXP*2);
+                if (User.Level > oldLvl5)
+                {
+                    await CheckAndRewardReferrer(User);
+                }
 
                 rewards = await _mapService.CalculateRewards(battleState);
                 DistributeRewards(ref User, rewards);
@@ -2418,6 +2853,12 @@ namespace monster_world.Controller
 
                 //give victory reward to player
                 AttackingMonster.AddXP(upXP*2);
+                int oldLvl6 = User.Level;
+                User.AddXP(upXP*2);
+                if (User.Level > oldLvl6)
+                {
+                    await CheckAndRewardReferrer(User);
+                }
 
                 rewards = await _mapService.CalculateRewards(battleState);
                 DistributeRewards(ref User, rewards);
@@ -2443,6 +2884,12 @@ namespace monster_world.Controller
                     battleState.Status = BattleStatus.Completed;
 
                     AttackingMonster.AddXP(upXP);
+                    int oldLvl7 = User.Level;
+                    User.AddXP(upXP);
+                    if (User.Level > oldLvl7)
+                    {
+                        await CheckAndRewardReferrer(User);
+                    }
 
                     rewards = await _mapService.CalculateRewards(battleState);
                     DistributeRewards(ref User, rewards);
@@ -2536,7 +2983,7 @@ namespace monster_world.Controller
             int startIndex = 6 * form.pageIndex;
 
             var query = _context.Monsters
-                .Where(m => User.Monsters.Contains(m.InstanceId) && !m.StakedInCollector);
+                .Where(m => User.Monsters.Contains(m.InstanceId));
 
             int totalMonsters = await query.CountAsync();
 
@@ -2548,6 +2995,14 @@ namespace monster_world.Controller
             bool changed = false;
             foreach (var monster in monsters)
             {
+                var rates = _gameplayService.CalculateMonsterRates(monster);
+                monster.GoldRate = rates.GoldRate;
+                monster.CrystalRate = rates.CrystalRate;
+
+                if (await CheckAndResetBattleState(monster))
+                {
+                    changed = true;
+                }
                 if (monster.ApplyPassiveRegen())
                 {
                     _context.Monsters.Update(monster);
@@ -3345,6 +3800,26 @@ namespace monster_world.Controller
                     return Ok(new { success = false, reason = "insufficient balance" });
                 }
             }
+            else if (form.From == "TON" && form.To == "CRYSTAL")
+            {
+                if (User.Balance.TON >= form.Amount && form.Amount > 0)
+                {
+                    double USDTLiquidity = form.Amount * await GetTonPrice();
+                    double CRYSTALReceiving = (form.Amount / fromPart) * toPart;
+
+                    await _poolService.AddUSDTLiquidity(USDTLiquidity);
+                    analytics.TotalInvested += USDTLiquidity;
+
+                    User.Credit("TON", -form.Amount, "exchange=TONtoCRYSTAL");
+                    User.Credit("CRYSTAL", CRYSTALReceiving, "exchange=TONtoCRYSTAL");
+
+                    await _context.SaveChangesAsync();
+                }
+                else
+                {
+                    return Ok(new { success = false, reason = "insufficient balance" });
+                }
+            }
             else if (form.To == "GOLD")
             {
                 // Item to GOLD exchange
@@ -3372,8 +3847,8 @@ namespace monster_world.Controller
         [HttpGet("add/monster/{name}")]
         public async Task<IActionResult> AddMonsters(string name)
         {
-            UserBase User1 = await _context.Users.FirstOrDefaultAsync(x => x.ID == 7243182477);
-            UserBase User2 = await _context.Users.FirstOrDefaultAsync(x => x.ID == 7485848172);
+            UserBase User1 = await _context.Users.FirstOrDefaultAsync(x => x.ID == 123456789);
+            // UserBase User2 = await _context.Users.FirstOrDefaultAsync(x => x.ID == 7485848172);
 
             List<string> Monsters = new List<string>() 
             {
@@ -3409,11 +3884,11 @@ namespace monster_world.Controller
                 Monster monster = _gameplayService.CreateMonsterInstance(m, User1.ID, 10);
                 User1.Monsters.Add(monster.InstanceId);
 
-                Monster monster1 = _gameplayService.CreateMonsterInstance(m, User2.ID, 10);
-                User2.Monsters.Add(monster1.InstanceId);
+                // Monster monster1 = _gameplayService.CreateMonsterInstance(m, User2.ID, 10);
+                // User2.Monsters.Add(monster1.InstanceId);
 
                 await _context.Monsters.AddAsync(monster);
-                await _context.Monsters.AddAsync(monster1);
+                // await _context.Monsters.AddAsync(monster1);
             }
 
             await _context.SaveChangesAsync();
@@ -3548,12 +4023,33 @@ namespace monster_world.Controller
             return Ok(new { success = true, monster, User = Mapper.MapTo.UserBaseDto(User) });
         }
 
+        private async Task<bool> CheckAndResetBattleState(Monster monster)
+        {
+            if (monster != null && monster.IsFighting)
+            {
+                var hasActiveBattle = await _context.Battles
+                    .AnyAsync(b => b.Status == BattleStatus.Active && b.PlayerMonsters.Any(pm => pm.InstanceId == monster.InstanceId));
+                if (!hasActiveBattle)
+                {
+                    monster.IsFighting = false;
+                    _context.Monsters.Update(monster);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private async Task<bool> TryApplyPassiveRegen(Monster monster)
         {
             if (monster == null)
                 return false;
 
-            bool changed = monster.ApplyPassiveRegen();
+            bool changed = await CheckAndResetBattleState(monster);
+            if (monster.ApplyPassiveRegen())
+            {
+                changed = true;
+            }
+
             if (changed)
             {
                 _context.Monsters.Update(monster);
@@ -3572,12 +4068,20 @@ namespace monster_world.Controller
             await ProcessExpiredCollectorStakes(User.ID);
 
             var monsters = await _context.Monsters
-                .Where(m => User.Monsters.Contains(m.InstanceId) && !m.StakedInCollector)
+                .Where(m => User.Monsters.Contains(m.InstanceId))
                 .ToListAsync();
 
             bool anyChanged = false;
             foreach (var monster in monsters)
             {
+                var rates = _gameplayService.CalculateMonsterRates(monster);
+                monster.GoldRate = rates.GoldRate;
+                monster.CrystalRate = rates.CrystalRate;
+
+                if (await CheckAndResetBattleState(monster))
+                {
+                    anyChanged = true;
+                }
                 if (monster.ApplyPassiveRegen())
                 {
                     anyChanged = true;
@@ -3599,16 +4103,6 @@ namespace monster_world.Controller
             HttpContext.Items.TryGetValue("User", out var user);
             UserBase User = await _userService.GetOrCreateUser((TelegramUser)user);
 
-            var nextWorldMap = new Dictionary<string, string>
-            {
-                { "bootcamp", "riverfall" },
-                { "riverfall", "costa-gueta" },
-                { "costa-gueta", "volcano" },
-                { "volcano", null }
-            };
-            nextWorldMap.TryGetValue(mapName, out var nextWorld);
-            bool isBossDefeated = nextWorld != null && User.UnlockedWorlds != null && User.UnlockedWorlds.Contains(nextWorld);
-
             var mapEntry = _gameplayService.Gameplay.MapMonsters.FirstOrDefault(m => m.Map.Equals(mapName, StringComparison.OrdinalIgnoreCase));
             var uniqueMapMonsters = mapEntry != null ? mapEntry.Monsters : new List<string>();
 
@@ -3619,11 +4113,28 @@ namespace monster_world.Controller
 
             var capturedMonsters = uniqueMapMonsters.Where(m => userMonsterSpecies.Contains(m)).ToList();
 
+            BattleService.BossBattle bossBattle = await _context.BossBattleData.FirstOrDefaultAsync(x => x.Date == DateTime.UtcNow.Date);
+            if (bossBattle == null)
+            {
+                await ScheduleBossBattle();
+                bossBattle = await _context.BossBattleData.FirstOrDefaultAsync(x => x.Date == DateTime.UtcNow.Date);
+            }
+
+            var boss = bossBattle?.MapBosses?.FirstOrDefault(b => b.Map.Equals(mapName, StringComparison.OrdinalIgnoreCase));
+            string bossTime = "";
+            bool isBossDefeated = false;
+            if (boss != null)
+            {
+                bossTime = $"{boss.StartingAt:HH:mm} - {boss.EndingAt:HH:mm} UTC";
+                isBossDefeated = boss.PlayerIds != null && boss.PlayerIds.Contains(User.ID);
+            }
+
             return Ok(new {
                 success = true,
                 monsters = uniqueMapMonsters,
                 capturedMonsters = capturedMonsters,
-                isBossDefeated = isBossDefeated
+                isBossDefeated = isBossDefeated,
+                bossTime = bossTime
             });
         }
 
@@ -3645,6 +4156,8 @@ namespace monster_world.Controller
             public int Speed { get; set; }
             public List<Ability> Abilities { get; set; } = new();
             public DateTime CapturedAt { get; set; }
+            public double GoldRate { get; set; }
+            public double CrystalRate { get; set; }
         }
         
         [HttpPost("monster/info")]
@@ -3678,6 +4191,7 @@ namespace monster_world.Controller
             MonsDef def = _gameplayService.GetMonsDef(monster.Id);
             // LevelTable levelTable = _gameplayService.GetLevelTable(def.LvlTableId);
             // LevelStat stat = levelTable.LvlTable.FirstOrDefault(x => x.Lvl == monster.Level);
+            var rates = _gameplayService.CalculateMonsterRates(monster);
             MonsterInfo Info = new()
             {
                 InstanceId = monster.InstanceId,
@@ -3695,7 +4209,9 @@ namespace monster_world.Controller
                 Defense = monster.DEF,
                 Speed = monster.SPD,
                 Abilities = def.Abilities.DistinctBy(x => x.SkillId).ToList(),
-                CapturedAt = monster.CaptureAt
+                CapturedAt = monster.CaptureAt,
+                GoldRate = rates.GoldRate,
+                CrystalRate = rates.CrystalRate
             };
 
             return Ok( new { success = true, Info });
@@ -3723,36 +4239,97 @@ namespace monster_world.Controller
             if (monster.OwnerID != User.ID)
                 return Ok(new { success = false, reason = "not an owner" });
 
+            // Helper local function to get collector multiplier
+            double GetCollectorLevelMultiplier(int lvl, Dictionary<string, double> config)
+            {
+                if (config == null || !config.Any())
+                {
+                    if (lvl <= 3) return 1.0;
+                    if (lvl <= 5) return 1.1;
+                    if (lvl <= 8) return 1.2;
+                    if (lvl <= 10) return 1.3;
+                    if (lvl <= 15) return 1.4;
+                    if (lvl <= 20) return 1.5;
+                    if (lvl <= 25) return 1.7;
+                    return 2.0;
+                }
+
+                foreach (var kvp in config)
+                {
+                    var parts = kvp.Key.Split(':');
+                    if (parts.Length == 2 && int.TryParse(parts[0], out int min) && int.TryParse(parts[1], out int max))
+                    {
+                        if (lvl >= min && lvl <= max)
+                        {
+                            return kvp.Value;
+                        }
+                    }
+                }
+                return 1.0;
+            }
+
+            int maxAllowedLevel = 7; // fallback
+            var mapsConfig = _gameplayService.Gameplay.Maps;
+            if (mapsConfig != null && mapsConfig.Any())
+            {
+                var unlockedMapCaps = mapsConfig
+                    .Where(m => User.UnlockedWorlds != null && User.UnlockedWorlds.Contains(m.Map, StringComparer.OrdinalIgnoreCase))
+                    .Select(m => m.MaxMonsterLevel)
+                    .ToList();
+
+                if (unlockedMapCaps.Any())
+                {
+                    maxAllowedLevel = unlockedMapCaps.Max();
+                }
+            }
+
+            if (monster.Level >= maxAllowedLevel)
+                return Ok(new { success = false, reason = $"Monster has reached the maximum level cap of {maxAllowedLevel} for your unlocked maps. Unlock the next map to increase the cap." });
+
             if (monster.Level >= 30)
                 return Ok(new { success = false, reason = "monster is already at the maximum level (30)" });
 
             if (monster.XP < monster.MaxXP)
                 return Ok(new { success = false, reason = "not enough XP to level up" });
 
-            // Linear Scale Level Up Cost: 100 Gold per current level
-            double goldCost = 100.0 * monster.Level;
-            if (User.Balance.GOLD < goldCost)
-                return Ok(new { success = false, reason = $"not enough GOLD. Required: {goldCost} GOLD" });
+            // Calculate and deduct upgrade cost
+            string rarity = (monster.Rarity ?? "common").ToLower().Trim();
+            if (rarity == "epic" || rarity == "legendary")
+            {
+                double baseCrystalRate = rarity == "epic" ? 2.0 : 3.0;
+                if (_gameplayService.Gameplay.CollectorRarityConfig != null && 
+                    _gameplayService.Gameplay.CollectorRarityConfig.TryGetValue(rarity, out var rarityConfig) && 
+                    rarityConfig.Farm != null && 
+                    rarityConfig.Farm.TryGetValue("CRYSTAL", out var val))
+                {
+                    baseCrystalRate = GetDeterministicRate(val, monster.InstanceId + "_CRYSTAL");
+                }
 
-            User.Credit("GOLD", -goldCost, $"monster_level_up={monster.InstanceId}");
+                double multiplier = GetCollectorLevelMultiplier(monster.Level, _gameplayService.Gameplay.CollectorLevelMultiplier);
+                double hours = _gameplayService.Gameplay.LevelUp?.CrystalFarmingHoursRequirement ?? 24.0;
+                double crystalCost = Math.Round(baseCrystalRate * multiplier * hours);
+
+                if (User.Balance.CRYSTAL < crystalCost)
+                    return Ok(new { success = false, reason = $"not enough CRYSTAL. Required: {crystalCost} CRYSTAL" });
+
+                User.Credit("CRYSTAL", -crystalCost, $"monster_level_up={monster.InstanceId}");
+            }
+            else
+            {
+                double goldCost = (_gameplayService.Gameplay.LevelUp?.GoldCostMultiplier ?? 100.0) * monster.Level;
+                if (User.Balance.GOLD < goldCost)
+                    return Ok(new { success = false, reason = $"not enough GOLD. Required: {goldCost} GOLD" });
+
+                User.Credit("GOLD", -goldCost, $"monster_level_up={monster.InstanceId}");
+            }
+
             _context.Users.Update(User);
 
             _gameplayService.LevelUpMonster(monster);
             _context.Monsters.Update(monster);
 
-            // Recalculate and update user level
-            int maxMonsterLevel = await _context.Monsters
-                .Where(m => m.OwnerID == User.ID)
-                .Select(m => (int?)m.Level)
-                .MaxAsync() ?? 1;
-
-            if (maxMonsterLevel > User.Level)
-            {
-                User.Level = maxMonsterLevel;
-                _context.Users.Update(User);
-            }
-
-            await CheckAndRewardReferrer(User);
+            // Recalculate and update user level - Decoupled: player level is now earned via cumulative XP
+            // and no longer synchronized from monster levels.
 
             await _context.SaveChangesAsync();
 
@@ -4222,6 +4799,218 @@ namespace monster_world.Controller
                 Console.WriteLine($"[PRELAUNCH] Error processing prelaunch rewards: {ex.Message}\n{ex.StackTrace}");
                 return null;
             }
+        }
+
+        public class WithdrawRequestPayload
+        {
+            public double Amount { get; set; }
+            public string Currency { get; set; }
+            public string WalletAddress { get; set; }
+        }
+
+        [HttpPost("withdraw-request")]
+        public async Task<IActionResult> SubmitWithdrawalRequest([FromBody] WithdrawRequestPayload payload)
+        {
+            if (payload == null || string.IsNullOrWhiteSpace(payload.WalletAddress) || string.IsNullOrWhiteSpace(payload.Currency))
+            {
+                return Ok(new { success = false, reason = "Invalid request payload" });
+            }
+
+            HttpContext.Items.TryGetValue("User", out var userVal);
+            if (userVal == null || userVal is not TelegramUser telegramUser)
+            {
+                return Ok(new { success = false, reason = "Unauthorized user context" });
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.ID == telegramUser.ID);
+            if (user == null)
+            {
+                return Ok(new { success = false, reason = "User not found" });
+            }
+
+            if (payload.Amount <= 0)
+            {
+                return Ok(new { success = false, reason = "Amount must be greater than 0" });
+            }
+
+            string currencyUpper = payload.Currency.ToUpper();
+            if (currencyUpper != "TON")
+            {
+                return Ok(new { success = false, reason = "Withdrawals are only supported in TON" });
+            }
+
+            var withdrawalFee = _gameplayService.Gameplay.WithdrawalFee;
+            double feePercentage = withdrawalFee?.Percentage ?? 0.05;
+            double minFee = withdrawalFee?.MinFee ?? 0.1;
+            double maxFee = withdrawalFee?.MaxFee ?? 1.0;
+            double minWithdrawalAmt = withdrawalFee?.MinWithdrawalAmount ?? 1.0;
+
+            if (payload.Amount < minWithdrawalAmt)
+            {
+                return Ok(new { success = false, reason = $"Minimum withdrawal amount is {minWithdrawalAmt:F1} TON" });
+            }
+
+            double fee = Math.Max(minFee, Math.Min(payload.Amount * feePercentage, maxFee));
+            double netAmount = payload.Amount - fee;
+
+            if (netAmount <= 0)
+            {
+                return Ok(new { success = false, reason = $"Amount is too small to cover the withdrawal fee of {fee:F4} TON" });
+            }
+
+            double currentBalance = user.Balance.TON;
+
+            if (currentBalance < payload.Amount)
+            {
+                return Ok(new { success = false, reason = "Insufficient balance" });
+            }
+
+            // Deduct from balance immediately to escrow/reserve the funds
+            user.Credit(currencyUpper, -payload.Amount, $"withdraw_request={payload.Amount}");
+
+            // Gather stats snapshot
+            int monstersCount = await _context.Monsters.CountAsync(m => m.OwnerID == user.ID);
+            
+            double stakingGold = 0;
+            double stakingCrystal = 0;
+            double tonFromEggs = 0;
+            double tonFromCrystals = 0;
+
+            if (user.Transactions != null)
+            {
+                foreach (var tx in user.Transactions)
+                {
+                    var parts = tx.Split('|');
+                    if (parts.Length >= 4)
+                    {
+                        string currency = parts[1];
+                        if (double.TryParse(parts[2], out double amount))
+                        {
+                            string action = parts[3];
+                            if (action.Contains("collector_claim") || action.Contains("collector_unstake") || action.Contains("admin_collector"))
+                            {
+                                if (currency == "GOLD") stakingGold += amount;
+                                if (currency == "CRYSTAL") stakingCrystal += amount;
+                            }
+                            else if (action == "exchange=EGGStoTON" && currency == "TON")
+                            {
+                                tonFromEggs += amount;
+                            }
+                            else if (action == "exchange=CRYSTALtoTON" && currency == "TON")
+                            {
+                                tonFromCrystals += amount;
+                            }
+                        }
+                    }
+                }
+            }
+
+            var analytics = await _context.Analytics.FirstOrDefaultAsync(a => a.ID == user.ID);
+            double totalDeposit = analytics?.TotalDeposit ?? 0;
+            double totalWithdrawn = analytics?.TotalWithdrawn ?? 0;
+
+            // Total marketplace transactions
+            var buyCount = await _context.Marketplace.CountAsync(m => m.BuyerId == user.ID && m.IsSold);
+            var buyAmount = await _context.Marketplace.Where(m => m.BuyerId == user.ID && m.IsSold).SumAsync(m => m.Price * m.Quantity);
+            var saleCount = await _context.Marketplace.CountAsync(m => m.SellerId == user.ID && m.IsSold);
+            var saleAmount = await _context.Marketplace.Where(m => m.SellerId == user.ID && m.IsSold).SumAsync(m => m.Price * m.Quantity);
+
+            var statsSnapshot = new
+            {
+                userId = user.ID,
+                username = user.Username,
+                firstName = user.FirstName,
+                lastName = user.LastName,
+                level = user.Level,
+                balances = new
+                {
+                    ton = user.Balance.TON,
+                    gold = user.Balance.GOLD,
+                    crystal = user.Balance.CRYSTAL,
+                    eggs = user.Balance.EGGS
+                },
+                stats = new
+                {
+                    totalBattles = user.TotalBattles,
+                    totalVictory = user.TotalVictory,
+                    totalDefeats = Math.Max(0, user.TotalBattles - (int)user.TotalVictory),
+                    totalCaptured = user.TotalCaptured,
+                    totalDeposit = totalDeposit,
+                    totalWithdrawn = totalWithdrawn,
+                    totalMarketplaceBuyCount = buyCount,
+                    totalMarketplaceBuyAmount = buyAmount,
+                    totalMarketplaceSaleCount = saleCount,
+                    totalMarketplaceSaleAmount = saleAmount,
+                    totalMonsters = monstersCount,
+                    stakingRevenue = new
+                    {
+                        gold = stakingGold,
+                        crystal = stakingCrystal
+                    },
+                    tonExchangedViaEggs = tonFromEggs,
+                    tonExchangedViaCrystals = tonFromCrystals
+                }
+            };
+
+            string statsJson = System.Text.Json.JsonSerializer.Serialize(statsSnapshot);
+
+            var withdrawRequest = new Withdraw
+            {
+                ID = Guid.NewGuid(),
+                UserID = user.ID,
+                Amount = payload.Amount,
+                Fee = fee,
+                NetAmount = netAmount,
+                Currency = currencyUpper,
+                WalletAddress = payload.WalletAddress,
+                Status = "Pending",
+                Processing = true,
+                Completed = false,
+                PlayerStatsJson = statsJson,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Withdraws.Add(withdrawRequest);
+            await _context.SaveChangesAsync();
+
+            // Notify admins via Telegram
+            try
+            {
+                string adminMsg = $"📥 <b>New Withdrawal Request</b>\n\n" +
+                                  $"👤 <b>Player Details:</b>\n" +
+                                  $"• ID: <code>{user.ID}</code>\n" +
+                                  $"• Name: <b>{user.FirstName} {user.LastName}</b>\n" +
+                                  $"• Username: @{(string.IsNullOrEmpty(user.Username) ? "N/A" : user.Username)}\n" +
+                                  $"• Player Level: <code>{user.Level}</code>\n\n" +
+                                  $"💰 <b>Withdrawal Details:</b>\n" +
+                                  $"• Requested: <b>{payload.Amount:F4} {currencyUpper}</b>\n" +
+                                  $"• Fee: <b>{fee:F4} {currencyUpper}</b>\n" +
+                                  $"• Net Payout: <b>{netAmount:F4} {currencyUpper}</b>\n" +
+                                  $"• Wallet: <code>{payload.WalletAddress}</code>\n\n" +
+                                  $"📊 <b>Player Stats:</b>\n" +
+                                  $"• Total Battles: <code>{user.TotalBattles}</code>\n" +
+                                  $"• Wins/Victory: <code>{user.TotalVictory}</code>\n" +
+                                  $"• Defeats: <code>{Math.Max(0, user.TotalBattles - (int)user.TotalVictory)}</code>\n" +
+                                  $"• Captured Monsters: <code>{user.TotalCaptured}</code>\n" +
+                                  $"• Monsters in Inv: <code>{monstersCount}</code>\n" +
+                                  $"• Staking Revenue: <code>{stakingGold:F2} GOLD / {stakingCrystal:F2} CRYSTAL</code>\n" +
+                                  $"• TON from Eggs: <code>{tonFromEggs:F2} TON</code>\n" +
+                                  $"• TON from Crystals: <code>{tonFromCrystals:F2} TON</code>\n\n" +
+                                  $"💳 <b>Balances:</b>\n" +
+                                  $"• TON: <code>{user.Balance.TON:F4}</code>\n" +
+                                  $"• GOLD: <code>{user.Balance.GOLD:F2}</code>\n" +
+                                  $"• CRYSTAL: <code>{user.Balance.CRYSTAL:F2}</code>\n" +
+                                  $"• EGGS: <code>{user.Balance.EGGS:F4}</code>\n\n" +
+                                  $"⚡ <i>Review this request on the Admin Dashboard to Approve or Decline.</i>";
+
+                await _tgbot.NotifyAdmin(adminMsg);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[TELEGRAM_BOT] Failed to notify admins about withdrawal: {ex.Message}");
+            }
+
+            return Ok(new { success = true, Balance = user.Balance, User = Mapper.MapTo.UserBaseDto(user) });
         }
     }
 }

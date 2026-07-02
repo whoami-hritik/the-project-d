@@ -14,9 +14,12 @@ import { LeaderboardScene } from "./leaderboard.js";
 import { NotificationScene } from "./notification.js";
 import { MissionScene } from "./mission.js";
 import { ProfileScene } from "./profile.js";
+import { WithdrawalScene } from "./withdrawal.js";
 import { StreakScene } from "./streak.js";
 import { TutorialScene } from "./tutorial.js";
 import { CollectorScene } from "./collector.js";
+import { MarketplaceScene } from "./marketplace.js";
+import { KeyboardScene } from "./keyboard.js";
 
 class MainScene extends Phaser.Scene {
     constructor() {
@@ -24,7 +27,7 @@ class MainScene extends Phaser.Scene {
     }
 
     preload() {
-        this.load.image("loading_bg", "images/bgs/loading_bg.png");
+        this.load.image("loading_bg", "images/bgs/loading_bg-1.png");
         console.log("Main loaded");
     }
 
@@ -51,7 +54,29 @@ export function startGame() {
             mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH
         },
-        scene: [MainScene, PreloadScene, WorldScene, MapScene, InventoryScene, LabScene, BattleScene, ItemScene, ShopScene, ReferralScene, TestScene, LeaderboardScene, NotificationScene, MissionScene, ProfileScene, StreakScene, TutorialScene, CollectorScene],
+        scene: [
+            MainScene,
+            PreloadScene,
+            WorldScene,
+            MapScene,
+            BattleScene,
+            ItemScene,
+            ShopScene,
+            ReferralScene,
+            TestScene,
+            LeaderboardScene,
+            MissionScene,
+            ProfileScene,
+            WithdrawalScene,
+            StreakScene,
+            CollectorScene,
+            InventoryScene,
+            LabScene,
+            TutorialScene,
+            MarketplaceScene,
+            NotificationScene,
+            KeyboardScene
+        ],
         plugins: {
             scene: [{
                 key: 'rexVirtualJoystick',

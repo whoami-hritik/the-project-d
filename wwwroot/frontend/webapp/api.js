@@ -156,6 +156,22 @@ export async function Attack(BattleId, SkillId, MonsterId) {
     }
 }
 
+export async function GetCollectorRarityInfo(rarity) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: {}
+    }
+    const result = await post("collector/" + rarity, options);
+    if (result) {
+        console.log("Collector info loaded");
+        return result;
+    }
+}
+
 export async function EscapeBattle(battleId) {
     const options = {
         method: "POST",
@@ -578,14 +594,14 @@ export async function getCollectorStatus() {
     }
 }
 
-export async function stakeMonster(monsterId, focus) {
+export async function stakeMonster(monsterId) {
     const options = {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "InitData": init
         },
-        body: { MonsterId: monsterId, Focus: focus }
+        body: { MonsterId: monsterId }
     };
     const result = await post("collector/stake", options);
     if (result) {
@@ -623,16 +639,107 @@ export async function unstakeMonster(monsterId) {
     }
 }
 
-export async function unlockCollectorSlot() {
+export async function unlockCollectorSlot(rarity, currency) {
     const options = {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
             "InitData": init
-        }
+        },
+        body: { Rarity: rarity, Currency: currency }
     };
     const result = await post("collector/unlock-slot", options);
     if (result) {
+        return result;
+    }
+}
+
+export async function getMarketplace(listingType = "monster", pageIndex = 0, pageSize = 10, searchQuery = "", filterType = "public") {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { ListingType: listingType, PageIndex: pageIndex, PageSize: pageSize, SearchQuery: searchQuery, FilterType: filterType }
+    };
+    return await post("marketplace", options);
+}
+
+export async function listInMarketplace(id, listingType, price, currency = "TON", quantity = 1) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { Id: id, ListingType: listingType, Price: price, Currency: currency, Quantity: quantity }
+    };
+    return await post("marketplace/list", options);
+}
+
+export async function buyInMarketplace(marketplaceId) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { MarketplaceId: marketplaceId }
+    };
+    return await post("marketplace/buy", options);
+}
+
+export async function removeMarketplaceListing(marketplaceId) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { MarketplaceId: marketplaceId }
+    };
+    return await post("marketplace/remove", options);
+}
+
+export async function recommendMarketplacePrice(monsterId) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { MonsterId: monsterId }
+    };
+    return await post("marketplace/recommend-price", options);
+}
+
+export async function recommendMarketplaceItemPrice(itemId) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { ItemId: itemId }
+    };
+    return await post("marketplace/recommend-item-price", options);
+}
+
+export async function submitWithdrawalRequest(amount, currency, walletAddress) {
+    const options = {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "InitData": init
+        },
+        body: { Amount: amount, Currency: currency, WalletAddress: walletAddress }
+    };
+    const result = await post("withdraw-request", options);
+    if (result) {
+        if (result.success && (result.User || result.user)) {
+            state.user = result.User || result.user;
+        }
         return result;
     }
 }

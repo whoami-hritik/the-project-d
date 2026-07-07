@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, interactive-widget=overlays-content">
-    <title>Monster-World</title>
+    <!-- Mobile Web App Capability / Fullscreen Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Project D</title>
     <script>
         // Monkeypatch window.addEventListener globally to intercept and block 'resize' events when keyboard is open
         const originalAddEventListener = window.addEventListener;
@@ -83,6 +87,36 @@
         originalAddEventListener.call(window, 'orientationchange', () => {
             setTimeout(lockViewportHeight, 200);
         });
+
+        // Detect if it is a mobile browser and NOT the Telegram App Webview, and handle fullscreen overlay
+        originalAddEventListener.call(window, 'DOMContentLoaded', () => {
+            const isMobileBrowser = /Mobi|Android|iPhone|iPod|iPad/i.test(navigator.userAgent);
+            const isTelegramApp = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData && window.Telegram.WebApp.initData !== "";
+            const overlay = document.getElementById("fullscreen-overlay");
+
+            if (isMobileBrowser && !isTelegramApp) {
+                if (overlay) {
+                    overlay.style.display = "flex";
+                    const enterFullscreen = () => {
+                        const targetEl = document.getElementById("game-container") || document.body || document.documentElement;
+                        const requestFS = targetEl.requestFullscreen || targetEl.mozRequestFullScreen || targetEl.webkitRequestFullscreen || targetEl.msRequestFullscreen;
+                        if (requestFS) {
+                            requestFS.call(targetEl).catch((err) => {
+                                console.log("Fullscreen request deferred or blocked:", err);
+                            });
+                        }
+                        overlay.style.opacity = 0;
+                        setTimeout(() => overlay.remove(), 300);
+                    };
+                    overlay.addEventListener("click", enterFullscreen);
+                    overlay.addEventListener("touchstart", enterFullscreen);
+                }
+            } else {
+                if (overlay) {
+                    overlay.remove();
+                }
+            }
+        });
     </script>
     <style>
         html, body {
@@ -105,6 +139,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Coiny&family=Press+Start+2P&family=Rubik+Spray+Paint&family=Lilita+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+    <!-- Fullscreen overlay for mobile browsers -->
+    <div id="fullscreen-overlay" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(29, 29, 29, 0.98); display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 99999; color: white; font-family: 'Lilita One', sans-serif; cursor: pointer; transition: opacity 0.3s ease;">
+        <div style="font-size: 32px; margin-bottom: 12px; color: #ffd700; text-shadow: 2px 2px 0px #000; letter-spacing: 2px;">PROJECT D</div>
+        <div style="font-size: 16px; color: #ffffff; animation: pulse 1.5s infinite; letter-spacing: 1px;">TAP TO START FULLSCREEN</div>
+        <style>
+            @keyframes pulse {
+                0% { opacity: 0.6; }
+                50% { opacity: 1; }
+                100% { opacity: 0.6; }
+            }
+        </style>
+    </div>
+
     <!-- Hidden DOM elements using the web fonts to force browser caching/preloading -->
     <div style="font-family: 'Lilita One'; position: absolute; left: -9999px; visibility: hidden;">Lilita One Preload</div>
     <div style="font-family: 'Coiny'; position: absolute; left: -9999px; visibility: hidden;">Coiny Preload</div>

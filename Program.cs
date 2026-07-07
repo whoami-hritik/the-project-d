@@ -17,8 +17,11 @@ builder.Services.AddControllers()
             System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles);
 
 
-string connectionString = System.Environment.GetEnvironmentVariable("DB_CONNECTION_STRING")
-    ?? "Host=localhost;Port=5432;Database=monsterworlddb;Username=hritik;Password=weewee";
+string? connectionString = System.Environment.GetEnvironmentVariable("DB_CONNECTION_STRING");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Database connection string is not configured. Please define DB_CONNECTION_STRING in your environment or .env file.");
+}
 
 builder.Services.AddDbContext<monster_world.DBContext.AppDbContext>(options =>
     options.UseNpgsql(connectionString));

@@ -19,6 +19,23 @@ export class MarketplaceScene extends Phaser.Scene {
         if (this.scrollContainer && typeof this.scrollY !== "undefined") {
             const lerpFactor = 0.15;
             this.scrollContainer.y += (this.scrollY - this.scrollContainer.y) * lerpFactor;
+
+            // Dynamically disable input for scroll slots that are out of bounds (masked)
+            this.scrollContainer.list.forEach(container => {
+                if (container && container.list) {
+                    const absY = container.y + this.scrollContainer.y;
+                    const slot = container.list[0];
+                    if (slot) {
+                        const slotHeight = slot.displayHeight || 200;
+                        const isVisible = (absY + slotHeight >= 230) && (absY <= this.scale.height - 10);
+                        container.list.forEach(child => {
+                            if (child.input) {
+                                child.input.enabled = isVisible;
+                            }
+                        });
+                    }
+                }
+            });
         }
     }
 
@@ -61,10 +78,10 @@ export class MarketplaceScene extends Phaser.Scene {
         // Semi-transparent header overlay covering the title area up to the search bar
         const headerOverlay = this.add.rectangle(0, 120, this.scale.width, this.scale.height - 120, 0x000000, 0.6).setOrigin(0);
 
-        const title = this.add.image(90, 30, "marketplace_title").setOrigin(0);
+        const title = this.add.image(90, 30, "marketplace_title").setOrigin(0).setDepth(15);
 
         // Create Phaser-native Search Bar Container
-        this.searchBarContainer = this.add.container(0, 0);
+        this.searchBarContainer = this.add.container(0, 0).setDepth(15);
 
         // Search Bar Background
         const searchBg = this.add.graphics();
@@ -123,14 +140,14 @@ export class MarketplaceScene extends Phaser.Scene {
         });
 
         // Repositioned buttons to prevent overlap with the search bar
-        const btnWishlist = this.add.image(260, 130, "icon_wishlist").setOrigin(0).setInteractive({ useHandCursor: true });
+        const btnWishlist = this.add.image(260, 130, "icon_wishlist").setOrigin(0).setInteractive({ useHandCursor: true }).setDepth(15);
 
 
-        const btnFilter = this.add.image(320, 130, "icon_filter").setOrigin(0).setInteractive({ useHandCursor: true });
+        const btnFilter = this.add.image(320, 130, "icon_filter").setOrigin(0).setInteractive({ useHandCursor: true }).setDepth(15);
 
-        const MonsterMarket = this.add.image(16, 183, "btn_monsters_market").setOrigin(0).setInteractive({ useHandCursor: true });
-        const ItemsMarket = this.add.image(139, 183, "btn_items_market").setOrigin(0).setInteractive({ useHandCursor: true });
-        const MyListings = this.add.image(262, 183, "btn_mylistings").setOrigin(0).setInteractive({ useHandCursor: true });
+        const MonsterMarket = this.add.image(16, 183, "btn_monsters_market").setOrigin(0).setInteractive({ useHandCursor: true }).setDepth(15);
+        const ItemsMarket = this.add.image(139, 183, "btn_items_market").setOrigin(0).setInteractive({ useHandCursor: true }).setDepth(15);
+        const MyListings = this.add.image(262, 183, "btn_mylistings").setOrigin(0).setInteractive({ useHandCursor: true }).setDepth(15);
 
         MonsterMarket.on("pointerup", (pointer) => {
             if (!checkClick(pointer)) return;
@@ -151,7 +168,8 @@ export class MarketplaceScene extends Phaser.Scene {
             .image(20, 35, "btn-back-map")
             .setDisplaySize(80, 35)
             .setOrigin(0).setScrollFactor(0)
-            .setInteractive({ useHandCursor: true });
+            .setInteractive({ useHandCursor: true })
+            .setDepth(15);
 
         btnBack.on("pointerup", (pointer) => {
             if (!checkClick(pointer)) return;
